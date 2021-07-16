@@ -1,0 +1,15 @@
+Source: xtoolplaces
+Section: non-free/x11
+Priority: optional
+Maintainer: Debian QA Group <packages@qa.debian.org>
+Standards-Version: 3.5.6
+Build-Depends: debhelper (>= 2.0.40)
+
+Package: xtoolplaces
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Save current desktop state
+ This program will collect state information from any windows
+ currently running on an X desktop.  This information can then
+ be used to start X to return to the current desktop state.
+ This is the X equivalent of Sunview's toolplaces program.

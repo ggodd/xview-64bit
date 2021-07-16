@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -e
+
+#DEBHELPER#
+
+case "$1" in
+  upgrade) ;;
+  remove|failed-upgrade|deconfigure)
+    update-alternatives --remove x-window-manager /usr/bin/X11/olvwm-x-window-manager
+    ;;
+esac

@@ -1,0 +1,6 @@
+"Editors" TITLE PIN
+
+"Textedit (OpenWindows Text Editor)" DEFAULT	exec $OPENWINHOME/bin/textedit
+"GNU Emacs" 					exec /usr/bin/emacs
+"Jove"						exec xterm -fn 7x14 -e /usr/bin/jove
+"Xedit" 					exec /usr/X11R6/bin/xedit

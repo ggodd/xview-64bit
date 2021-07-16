@@ -1,0 +1,188 @@
+This is the README file for xtoolplaces.
+
+Author:
+
+  Adam Stein (adam@iset.scan.mc.xerox.com)
+
+Copyright:
+
+  Copyright (c) 1993-1998 Xerox Corporation.  All Rights Reserved.
+
+  Permission to use, copy, modify  and  distribute  without  charge
+  this  software,  documentation, images, etc. is granted, provided
+  that this copyright and the author's name is retained.
+
+  A fee may be charged for this program ONLY to recover  costs  for
+  distribution  (i.e.  media costs).  No profit can be made on this
+  program.
+
+  The author assumes no responsibility for  disasters  (natural  or
+  otherwise) as a consequence of use of this software.
+
+Description:
+
+  This program will collect state information from any windows
+  currently running on an X desktop.  This information can then
+  be used to start X to return to the current desktop state.
+  This is the X equivalent of Sunview's toolplaces program.
+
+  Xtoolplaces is currently at v1.7.1 (patchlevel 8).
+
+Installation:
+
+  This program has only been compiled and tested on BSD or BSD/SYS5
+  mixed systems.  There is support for SYS5 systems (see below).
+  
+  This program can be compiled with gcc.
+
+  System 5 support is for systems not having the gethostname() function
+  and/or having strchr()/strrchr() instead of index()/rindex().  If your system
+  does have the gethostname() function, uncomment the
+  
+        "GETHOST ="
+
+  line in Imakefile or Makefile.simple.  If your system has the
+  strchr()/strrchr() string functions instead of index()/rindex(), uncomment
+  the
+
+        "ANSI_STR = -DANSI_STR"
+
+  line in Imakefile or Makefile.simple.
+
+  If your system libraries are lacking the strdup() function, uncomment the
+
+	"STRDUP=-DNEED_STRDUP"
+
+  line in Imakefile or Makefile.simple.
+
+  If your system libraries are lacking the strstr() function, uncomment the
+
+	"STRSTR=-DNEED_STRSTR"
+
+  line in Imakefile or Makefile.simple.
+
+  If you are using a NCR 3350 running SVR4, define (in Imakefile)
+  NCRArchitecture or uncomment the
+  
+	"SYS_LIBRARIES = -L/usr/ucblib -lucb"
+	
+  line in Makefile.simple.  Having this defined will cause
+  xtoolplaces to link with 2 additional libraries that the NCR needs linked
+  in.
+
+  To compile using imake use:
+
+                xmkmf ; make
+
+  or if you don't have xmkmf use:
+
+                imake -e
+
+  and to install the program and man page use
+
+                make install install.man
+
+  again, if you don't have xmkmf to create a Makefile, use:
+
+                imake -e install install.man
+
+  To compile using make instead, use:
+
+                make -f Makefile.simple
+
+  and to install the program and man page use
+
+                make -f Makefile.simple install
+
+
+Methodology:
+
+  This program works by following these steps:
+
+  I.   Change cursor to a watch, grab the pointer so that the
+       user can't change anything during execution, and ring
+       the bell once to let the user know the program has started.
+
+  II.  Loop through each screen to save from:
+
+       a. Loop through each window in the tree to:
+
+          1. See if it's a window worth saving.  It has to meet
+             eight conditions:
+
+             a. it has WM_NAME set (so we know it's not a pop-up, etc)
+
+	     b. it must not have a class named "Dtterm"
+
+	     c. it must not be a window of size: 1x1
+
+             d. it's a group leader or assume it's ok if group leader
+                isn't set
+
+             e. it's parent is the root window
+
+             f. it has a WM_COMMAND property to save, is a console
+                window or is on a list specified with the '-m' option
+
+	     g. it isn't on the "ignore" list (specified with the '-i' option)
+
+	     h. the "ignore CDE dt* apps" option was set and the window in
+		question isn't a CDE dt* app (i.e. dtpad, dtcalc, etc.)
+
+          2. Tell window to update it's current state if it knows
+             about the WM_SAVE_YOURSELF message.
+  
+          3. See if it either:  has a state to save (WM_COMMAND);
+             is a console window or is on the missing applications
+             list (-m option)
+
+          4. If window doesn't know how to save itself (doesn't
+             understand WM_SAVE_YOURSELF), extract geometry
+             information manually.
+
+          5. If console checking is enabled (-c), check to see if
+             window is a console and write 'if ... fi' clause to
+             only have it start up if X is starting on /dev/console.
+
+          6. Check to see if window is a remote application and
+             put the appropriate remote command (default 'rsh -n') to
+             start application.
+
+          7. Save current window state.
+
+          8. If add arguments is enabled (-a), check to see if this
+             window applications has any arguments to add to it's
+             command line.
+
+  III. Release pointer (which changes the cursor back to normal) and ring
+       the bell twice to let the user know that the program is finished.
+
+Bugs/Additions:
+
+  I would appreciate knowing about any bugs either found or
+  fixed and any enhancements made.  I would like to keep a
+  centralized version with the upgrades so that there aren't
+  50 million versions posted to the net.  I can't make any
+  guarantees to when bug fixes would be made (if any are
+  found :-{), but I'll do my best.
+
+  For some reason, this program crashes Lotus Notes (don't know what
+  versions are affected, maybe all?).  I don't run Notes, so I can't
+  fix this.  If anybody does have a fix, let me know and I'll add it
+  to the code.
+
+  I hope this program is of use to you, either in it's capacity or as simple
+  example in X programming.
+
+Acknowledgements:
+
+  For v1.0
+  --------
+  I would like to thank my original beta testers, Donn Morrill and
+  Bill Fuss for helping to make sure the first version of this program
+  worked and keeping me honest.
+
+  For v1.1 Beta -> present
+  --------------------------
+  See CHANGES file.
+

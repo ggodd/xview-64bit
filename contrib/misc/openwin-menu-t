@@ -1,0 +1,12 @@
+"Tools" TITLE PIN
+
+"Xfilemanager (File Manager)"		exec /usr/X11R6/bin/xfilemanager
+"Xfm 1.2 (File Manager)"		exec /usr/X11R6/bin/xfm
+"Xman (View Manual Pages)"  		exec /usr/X11R6/bin/xman
+"Seyon (Communications Package)"	exec /usr/X11R6/bin/seyon -modem /dev/modem
+"Xcalc (Calculator)"        		exec /usr/X11R6/bin/xcalc
+"Xspread (Spreadsheet)"	    		exec /usr/X11R6/bin/xspread
+"Xxgdb (Debugger)"	    		exec /usr/X11R6/bin/xxgdb
+"Xconsole (Console messages)"   	exec /usr/X11R6/bin/xconsole
+"Xmag (Magnifying glass)"   		exec /usr/X11R6/bin/xmag
+"Clocks" MENU				$OPENWINHOME/lib/openwin-menu-clocks

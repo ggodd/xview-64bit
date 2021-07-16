@@ -1,0 +1,3 @@
+#!/bin/sh
+# Use xtoolplaces as a replacement for owplaces.
+exec xtoolplaces -f $HOME/.openwin-init

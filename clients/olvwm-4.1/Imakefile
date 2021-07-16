@@ -1,0 +1,161 @@
+XCOMM # If you want to install the help files for olvwm, set HasInfoFiles to YES
+#define HasInfoFiles	YES
+
+XCOMM # If you haven't installed olwm from xview3 or from Sun's OpenWindows,
+XCOMM # and you want to install the olwm man page (which discusses most of the
+XCOMM # window operations), defind NeedOlwmManPage to YES
+#define NeedOlwmManPage	YES
+
+XCOMM #
+XCOMM # Set MORECCFLAGS to any options you want to pass to the compiler.  These
+XCOMM # include and defines, and debugging and/or optimization flags, and the like.
+XCOMM # Also, if you have headers for things like the XPM library in a non-standard
+XCOMM # place, include the appropriate -I flag here.
+XCOMM #
+XCOMM # There are a bunch of defines, and I can't honestly say I've used or even
+XCOMM # tested all of them (since much of this code came from the xview 3.2 release)
+XCOMM # and certainly I haven't used all combinations of them.  See below for
+XCOMM # suggested settings:
+XCOMM #
+XCOMM # Here's a set of possible defines:
+XCOMM #  -DALLPLANES          Support the AllPlanes extension (valid in SunOs/Solaris)
+XCOMM #  -DDEBUG              Include some debugging code
+XCOMM #  -DIDENT              Include ident directives for the compiler
+XCOMM #  -DMAXPID=32768       For 386BSD
+XCOMM #  -DMEMDEBUG           To debug the memory allocation
+XCOMM #  -DOW_I18N_L3         Include support for Level 3 internationalization
+XCOMM #                           (Note:  I haven't tested without this, and I can't
+XCOMM #                            test it in any locale but C, so include it, but
+XCOMM #                            take it with a grain of salt -- the original olwm
+XCOMM #                            code will work, but the olvwm extensions may not
+XCOMM #                            support the correctinternationalization)
+XCOMM #  -DOW_I18N_L4         Include support for Level 4 internationalization
+XCOMM #                           (Note:  This is not yet supported, but it may work)
+XCOMM #  -DREGEXP             Support for the 386 BSD regular expression library
+
+XCOMM #  -DRLIMIT_NOFILE      Support for the 386BSD/Ultrix RLIMIT calls
+XCOMM #  -DSHAPE              Support the shapes extension (valid in SunOS/Solaris)
+XCOMM #  -DSYSV               Support for System V (Release 3 or 4)
+XCOMM #  -DSVR4               Support for System V Release 4 (you must also include
+XCOMM #                               -DSYSV)
+XCOMM #  -DXPM                Support the XPM color pixmaps -- requires that you
+XCOMM #                               have the xpm library (version 3.0) somewhere
+XCOMM #                               If your xpm header isn't in /usr/openwin/include 
+XCOMM #                               make sure to add the appropriate -I flag to #                               MORECCFLAGS.  Also remember to add the 
+XCOMM #                               library name to LDFLAGS. 
+XCOMM #
+XCOMM # I haven't tested this on Solaris 1.x, but I'd suggest
+XCOMM #MORECCFLAGS=-DOW_I18N_L3 -DSHAPE -DIDENT
+
+XCOMM # For a generic Solaris 2.x system, I'd suggest
+XCOMM #MORECCFLAGS=-DOW_I18N_L3 -DSHAPE -DSVR4 -DSYSV -DIDENT -x O4
+
+XCOMM # Linux/ELF
+XCOMM # libc 5
+XCOMM #MORECCFLAGS=-DOW_I18N_L3 -DSHAPE -DXPM -DXVIEW32 -DMAXPID=32768 -I/usr/include/bsd -include /usr/include/bsd/bsd.h -I$(INCROOT)/X11
+XCOMM # GNU libc2
+MORECCFLAGS=-DOW_I18N_L3 -DIDENT -DXPM -DSHAPE -DXVIEW32 -DMAXPID=32768 -I$(INCROOT)/X11
+
+XCOMM #
+XCOMM # Set MORELDFLAGS to any link options you want.  Be sure to add -lxpm if you
+XCOMM # want to include XPM support.  For a generic Solaris 1.x
+XCOMM # system, I'd suggest
+XCOMM #MORELDFLAGS=-L${OPENWINHOME}/lib
+XCOMM #
+XCOMM # For Solaris 2.x, I'd suggest
+XCOMM #MORELDFLAGS=-L${OPENWINHOME}/lib -R ${OPENWINHOME}/lib -lintl
+XCOMM #SYS_LIBRARIES = -ll -lm
+
+XCOMM # Linux/ELF
+XCOMM # libc 5
+XCOMM #MORELDFLAGS=-lbsd -lXpm
+XCOMM #SYS_LIBRARIES = -lfl -lm
+XCOMM # GNU libc2
+MORELDFLAGS=-lXpm
+SYS_LIBRARIES = -lfl #-lm
+
+XCOMM # No more changes needed
+
+#include <XView.tmpl>
+
+XCOMM # Link libolgx static
+OLGXLIB = -Wl,-Bstatic -lolgx -Wl,-Bdynamic
+
+XCOMM #########################################################################
+XCOMM # @(#)Imakefile	1.5 10/4/91 SMI
+XCOMM # Imakefile for olwm release 3.0.
+
+DEFINES =  $(MORECCFLAGS)
+INCLUDES = -I$(HEADER_DEST) -I$(TOP) $(XPMINCDIR) 
+DEPLIBS = 
+LOCAL_LIBRARIES = $(MORELDFLAGS) $(OLGXLIB) $(XLIB)
+
+HEADERS = client.h cmdstream.h cursors.h debug.h defaults.h dsdm.h environ.h error.h \
+          evbind.h events.h gettext.h globals.h group.h helpcmd.h i18n.h iconimage.h \
+          iconmask.h info.h kbdfuncs.h list.h mem.h menu.h notice.h olcursor.h \
+          olgx_impl.h ollocale.h olwm.h patchlevel.h pixmap.h properties.h resources.h \
+          screen.h selection.h services.h slots.h st.h states.h usermenu.h virtual.h win.h
+
+INFOFILES = olvwm.info
+#if NeedOlwmManPage
+MANPAGES = olwm.man olvwmrc.man
+#else
+MANPAGES = olvwmrc.man
+#endif
+BITMAPS = iconbitmap.h
+SCRIPTS = 
+MISC 	= openwin-menu
+
+SRCS	= atom.c client.c cmdstream.c cursors.c debug.c defaults.c dsdm.c \
+       environ.c error.c evbind.c events.c fontset.c gettext.c gif.c group.c \
+       helpsend.c i18n.c images.c info.c kbdfuncs.c list.c mem.c menu.c \
+       moveresize.c notice.c ol_button.413.c ol_button.svr4.c olvwmrc.c \
+       olwm.c pixmap.c properties.c reduce.c resources.c screen.c \
+       selection.c services.c slave.c slots.c st.c states.c usermenu.c \
+       usleep.c virtual.c win.c winbusy.c winbutton.c wincolor.c winframe.c \
+       wingframe.c winicon.c winipane.c winmenu.c winnofoc.c winpane.c \
+       winpinmenu.c winpush.c winresize.c winroot.c
+
+OBJS	= atom.o client.o cmdstream.o cursors.o debug.o defaults.o dsdm.o \
+       environ.o error.o evbind.o events.o fontset.o gettext.o gif.o group.o \
+       helpsend.o i18n.o images.o info.o kbdfuncs.o list.o mem.o menu.o \
+       moveresize.o notice.o ol_button.413.o ol_button.svr4.o olvwmrc.o \
+       olwm.o pixmap.o properties.o reduce.o resources.o screen.o \
+       selection.o services.o slave.o slots.o st.o states.o usermenu.o \
+       usleep.o virtual.o win.o winbusy.o winbutton.o wincolor.o winframe.o \
+       wingframe.o winicon.o winipane.o winmenu.o winnofoc.o winpane.o \
+       winpinmenu.o winpush.o winresize.o winroot.o
+
+
+ALLFILES = \
+	${HEADERS} ${BITMAPS} ${SRCS} \
+	${MISC} ${INFOFILES} ${MANPAGES} ${SCRIPTS}
+
+LexFile(parse)
+
+YaccFileNoFlags(olvwmrc)
+
+olvwmrc.o: parse.c olvwmrc.c
+
+version.c: ${SRCS} ${HEADERS}
+	@echo '#ident "@(#)olvwm version compiled '`date`'"' > version.c
+
+ComplexProgramTarget(olvwm)
+
+#if NeedMenuFile
+InstallNonExecList($(MISC),$(LIBRARY_DEST))
+#endif
+
+clean::
+	/bin/rm -f parse.c olvwmrc.c version.c
+
+install.man:: $(MANPAGES)
+	@if [ -d $(DESTDIR)$(MANDIR) ]; then set +x; \
+	else (set -x; $(MKDIRHIER) $(DESTDIR)$(MANDIR)); fi
+	@for i in $(MANPAGES) ;\
+	do \
+	echo "installing $$i"; \
+	$(INSTALL) -c $(INSTMANFLAGS) $$i $(DESTDIR)$(MANDIR)/`basename $$i .man`.$(MANSUFFIX) ; \
+	done
+
+#include <XView.prog>

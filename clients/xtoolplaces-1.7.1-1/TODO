@@ -1,0 +1,9 @@
+Future plans (in no particular order):
+-------------------------------------
+1.  Get the border size used by the running window manager and adjust the
+    values of the window geometry accordingly (suggested by John R. Johns II)
+
+    [ed note: I think xtoolplaces already compensates for the window manager
+     border size.  Unless somebody tells me something different, I won't bother
+     with this one]
+

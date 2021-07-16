@@ -1,0 +1,5 @@
+?package(olwm):needs="wm" section="Window Managers" \
+                title="Olwm"\
+                command="/usr/bin/olwm"\
+		longtitle="OpenLook window manager"\
+		description="Olwm: Traditional OpenLook window manager"

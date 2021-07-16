@@ -1,0 +1,3 @@
+#undef AMD64Architecture
+#define i386Architecture
+

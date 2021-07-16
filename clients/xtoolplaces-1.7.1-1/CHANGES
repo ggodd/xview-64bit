@@ -1,0 +1,184 @@
+From 1.7 (patchlevel 7) -> 1.7.1 (patchlevel 8):
+-----------------------------------------------
+  - Added ability to ignore all CDE dt* applications (i.e. dtcalc, dtmail,
+    etc.).  This can be set either using the "-idt" command line option,
+    or the ".ignoredt" X resource setting. (suggested by Denis Beauchemin)
+
+  - Changed looking for dtterm by matching the class name against "Dtterm"
+    (the old way of looking at the name fails when using the -name arg when
+     starting dtterm) (suggested by Denis Beauchemin)
+
+  - When checking a window against the ignore and missing lists, BOTH the
+    name and class is checked, not just the name. (suggested by Denis
+    Beauchemin)
+
+  - Moved the checking to see if the window is on the ignore list forward
+    so that if it is, no processing on that window is done at all.  This
+    prevents xtoolplaces from crashing Lotus Notes. (suggested by Denis
+    Beauchemin)
+
+From 1.6 (patchlevel 6) -> 1.7 (patchlevel 7):
+---------------------------------------------
+  - Fixed to enable running under CDE v1.2 (and perhaps other versions)
+    [The terminal windows were causing Xtoolplaces to wait indefinitely
+     on the call to XNextEvent()]
+
+  - Added lines in the Imakefile and Makefile.simple files to bring in
+    strdup() and strstr() if needed.  By default, they are not compiled in
+    and the OS version is used.  Hopefully, this will stop Linux users from
+    having problems with different function prototypes since they don't
+    need xtoolplaces's versions of these functions.
+
+  - Fixed potential bug where getting the command line of a program returns
+    a successful status, but there are no arguments
+
+  - Changed Imakefile/Makefile.simple to use gcc as the default compiler and
+    changed the settings to allow compiling on Solaris (rather than SunOS).
+
+From 1.5 (patchlevel 5) -> 1.6 (patchlevel 6):
+-----------------------------------------------
+
+  - Fixed command line to escape pound signs (change supplied by John R.
+    Johns II)
+
+  - Xtoolplaces wouldn't match any arguments when it was called with a
+    leading path (i.e. ./xtoolplaces).  This is now fixed.
+
+  - Added ability to specify a list of windows to ignore (and so they are
+    NOT saved) (suggested by Hermann Kneissel).  This file can be specified
+    via the "-i" command line switch or by the "xtoolplaces.ignore" X resource
+    setting.
+
+From 1.4a (patchlevel 4a) -> 1.5 (patchlevel 5):
+-----------------------------------------------
+  - Added option "-w" to use "xtoolwait", a Sun OpenWindows "toolwait"
+    look-alike.  Command line option is "-w" and X-resource
+    "xtoolplaces.toolwait" (change supplied by Richard Huveneers)
+
+  - Added option to use other programs than "xtoolwait".  Command line
+    option is "-p" and X-resource "xtoolplaces.toolwaitprog".  Also
+    edited the manual a little to reflect the new options and
+    resources (change supplied by Richard Huveneers)
+
+  - Strip the program name of any leading path information (change supplied
+    by Peter Bollerman)
+
+  - Fixed bug in strip_arg2() where the string position was being
+    calculated one position too far foward (change supplied by John R.
+    Johns II)
+
+  - Fixed removing of icon geometry from command line (change supplied by
+    John R. Johns II)
+
+  - Fixed up declaring of system function prototypes in xtoolplaces.h,
+    changed to declare index()/rindex() macros for those people with
+    System 5 string functions instead of doing #ifdef's everywhere
+    index()/rindex() is being used.
+
+From 1.4 (patchlevel 4) -> 1.4a (patchlevel 4a):
+-----------------------------------------------
+  - In Xtoolplaces.ad, changed the default remote command to "rsh -n" (from
+    just "rsh")
+
+  - Modified to compile under X11R6.  Instead of finding out which X server
+    xtoolplaces is running under (R6 didn't seem to have the structure field
+    I was using), it is assumed to be 0
+
+From 1.3.1 (patchlevel 3.1) -> 1.4 (patchlevel 4):
+---------------------------------------------------
+  - took out an unneeded include file so that it compiles (and works)
+    for X11R4 and X11R5 (I don't know about R6) (suggested by Donn Morrill)
+
+  - Added vroot.h to handle mwm and tvtwm.  Haven't tested this with
+    tvtwm, but I have with MOTIF.  (suggested by Lars Huttar, Jonathan
+    Brazier)
+
+  - Modifed to handle EMACS 19 (this will probably break working with
+    older versions) (brought to my attention by John Hempe)
+
+  - Fixed handling of xterm's scrollbars (-sb and -b) options so that
+    the correct geometry is calculated (brought to my attention by
+    Roar Smith)
+
+  - Fixed various compiler problems such as having register variables
+    and taking the address of that variable, illegal pointer argument
+    to malloc(), and not including <ctype.h> (various compile bugs
+    brought to my attention by Tom McConnell, Hermann Kneissel, John
+    Tillema, Pete Lancashire, Joe Kiniry)
+
+  - Took out unneeded (I think) XFree() calls.  I was sending an
+    illegal argument in the first place.  I don't think I need them
+    since the variable in question had no allocated (by any alloc()
+    routine) space.  (illegal arguments to these XFree() calls
+    brought to my attention by Kevin Fisher, Hermann Kneissel, John
+    Tillema, Pete Lancashire, Joe Kiniry)
+
+  - Added support for NCRArchitecture in Imakefile and Makefile.
+    If this is defined, additional libraries will be on the link
+    line (suggested by Tom McConnell)
+
+  - Fixed the problem of the remote program variable being NULL
+    (brought to my attention by Tom McConnell)
+
+  - Added "#define <sys/time.h>" so that xtoolplaces compiles
+    under SYSV4 without problems.  I have no idea why SYSV4
+    would need this, this was suggested (suggested by
+    Hermann Kneissel)
+
+  - Modified to work with System 5 as far as not having a
+    gethostname() function and having strchr()/strrchr()
+    instead of index()/rindex() (changes supplied by John Tillema)
+
+  - CodeCenterized
+
+From 1.3 (patchlevel 3) -> 1.3.1 (patchlevel 3.1):
+-------------------------------------------------
+
+  - Changed the adding of geometry options to be the first
+    options as opposed to adding them onto the end.  This is
+    especially needed for programs that have an option that
+    needs to go at the end (i.e. xterm's -e option).  (brought
+    to my attention by etj90)
+
+From 1.2 (patchlevel 2) -> 1.3 (patchlevel 3):
+---------------------------------------------
+
+  - Fixed compile bugs as reported by gcc.  Add gcc support in
+    Imakefile and Makefile.simple (they are commented out).
+    (compile bugs brought to my addention by Michael Salmon,
+    Chung Tin Kwok, Simon Leinen, Nelson Minar, Malcolm C.
+    Strickland)
+
+  - Fixed bug which caused xtoolplaces to core dump (when
+    epoch is around).  (brought to my attention by Ted
+    Rodriguez-Bell).
+
+From 1.2 Beta (patchlevel 1) -> 1.2 Final (patchlevel 2):
+--------------------------------------------------------
+  - Added support for emacs (source code supplied by Kresten).
+
+  - Added support for xconsole (suggested by Matthias Pfuetzner).
+
+  - The function strdup() was added for systems that don't have
+    it (brought to my attention by Renato).
+
+  - Put double quotes around options with whitespace in them
+    (brought to my attention by Larry W. Virden).
+
+From 1.1 Beta (patchlevel 1) -> 1.2 Beta (patchlevel 1):
+-------------------------------------------------------
+
+  - Added checking of a null WM_COMMAND (Filemgr's wastebasket
+    and Mailtool's Compose window) (problem found by Larry E.
+    Wagner).
+
+From 1.0 -> 1.1 Beta (patchlevel 1):
+-----------------------------------
+
+  - Added handling of resources as defined in Volume One,
+    Xlib Programming Manual, p. 346 (suggested by Larry W.
+    Virden).
+
+  - Fixed bug in fix_command(), didn't take into account that
+    X positions can have + and - signs in them.
+

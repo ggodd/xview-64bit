@@ -1,0 +1,55 @@
+#!/bin/sh
+# Start "OpenWindows", i.e. Xfree and ol[v]wm, by K.Osterberg, 1993
+
+export XAPPLRESDIR MANPATH HELPPATH OPENWINHOME WINDOWMANAGER X11HOME
+
+if [ -z "$OPENWINHOME" ]; then
+	if [ ! -d /usr/openwin ]; then
+		echo "openwin: /usr/openwin does not exist, cannot start"
+		exit 1
+	fi
+	OPENWINHOME=/usr/openwin
+fi
+
+if [ -z "$X11HOME" ]; then
+	if [ ! -d /usr/X11R6 ]; then
+		echo "openwin: /usr/X11R6 does not exist, cannot start"
+		exit 1
+	fi
+	X11HOME=/usr/X11R6
+fi
+
+if [ -z `echo "$PATH" | grep openwin` ]; then
+	PATH=$OPENWINHOME/bin:$PATH
+fi
+
+if [ -z "$MANPATH" ]; then
+	MANPATH=${X11HOME}/man:${OPENWINHOME}/man:/usr/local/man:/usr/man
+else
+	MANPATH=${MANPATH}:${OPENWINHOME}/man
+fi
+if [ -z "$HELPPATH" ]; then
+	HELPPATH=${OPENWINHOME}/lib/help
+else
+	HELPPATH=$HELPPATH:${OPENWINHOME}/lib/help
+fi
+
+if [ -z "$XAPPLRESDIR" ]; then
+	XAPPLRESDIR=${OPENWINHOME}/lib/app-defaults
+else
+	XAPPLRESDIR=$XAPPLRESDIR:${OPENWINHOME}/lib/app-defaults
+fi
+
+if [ -z "$WINDOWMANAGER" ]; then
+	WINDOWMANAGER=$OPENWINHOME/bin/olvwm
+fi
+if [ "$XDM" = "running" ]; then
+    # X is already running (e.g. this file was called from xdm)
+    # so just run openwin's Xinitrc
+    exec $OPENWINHOME/lib/Xinitrc
+else
+    if [ -x $X11HOME/bin/startx ]; then
+            exec $X11HOME/bin/startx $OPENWINHOME/lib/Xinitrc --
+    fi
+    exec startx $OPENWINHOME/lib/Xinitrc --
+fi

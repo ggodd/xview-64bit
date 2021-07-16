@@ -1,0 +1,30 @@
+.\" Copyright (C) 1999 by Martin Buck <mbuck@debian.org>
+.\" Licensed under the GNU General Public License
+
+.TH remove_brackets 1 "Version 3.2p1" XView
+
+.SH NAME
+remove_brackets \- remove delimiters from text
+
+.SH SYNOPSIS
+.B remove_brackets
+.I delimiter1 delimiter2
+
+.SH DESCRIPTION
+\fIremove_brackets\fP is a filter that removes the specified delimiters from
+the beginning/end of the text sent through it. It reads text from stdin and
+writes the result to stdout. The delimiters can be arbitrary characters, but
+things like \fB{ }\fP, \fB( )\fP, etc. are most common. The delimiters are
+removed only if both of them match.
+.PP
+Please note that \fIremove_brackets\fP is intended mainly to be run from XView's
+text menu. It is used in the default \fBtext_extras_menu\fP.
+
+.SH AUTHOR
+Martin Buck <mbuck@debian.org> for Debian GNU/Linux
+
+.SH "SEE ALSO"
+.BR xview (7),
+.BR capitalize (1),
+.BR insert_brackets (1),
+.BR shift_lines (1)

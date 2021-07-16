@@ -1,0 +1,27 @@
+#
+# @(#)openwin-menu-utilities	1.5 91/09/14 openwin-menu-utilities
+#
+#	OpenWindows default root menu file - Utilities submenu
+#
+
+"Refresh"	    	DEFAULT	REFRESH
+"Reset Input"			exec kbd_mode -u
+"Xclipboard" 			exec /usr/X11R6/bin/xclipboard
+"Function Keys"			exec vkbd
+"Window Controls" MENU
+	"Open/Close"	DEFAULT	OPEN_CLOSE_SELN
+	"Full/Restore Size"     FULL_RESTORE_SIZE_SELN
+	"Back"                  BACK_SELN
+	"Quit"                  QUIT_SELN
+"Window Controls" END PIN
+"Save Workspace"		SAVE_WORKSPACE
+#
+#  Uncomment the following if interested in colormap compaction
+#
+#"Save Colors" MENU
+#	"Save" 		DEFAULT	$OPENWINHOME/bin/cmap_compact save
+#	"Discard"		$OPENWINHOME/bin/cmap_compact discard
+#"Save Colors" END 
+#
+#"Lock Screen"			exec xlock
+#"Console..."			exec $OPENWINHOME/bin/cmdtool -C

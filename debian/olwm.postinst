@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+
+#DEBHELPER#
+
+if [ "$1" = configure ]; then
+  # Remove old alternative (if it's still there)
+  update-alternatives --remove x-window-manager /usr/bin/X11/olwm > /dev/null 2>&1 || true
+  # ...and install new one that now points to the wrapper
+  update-alternatives --install /usr/bin/x-window-manager x-window-manager /usr/bin/X11/olwm-x-window-manager 44 \
+     --slave /usr/share/man/man1/x-window-manager.1.gz x-window-manager.1.gz /usr/share/man/man1/olwm.1.gz
+fi

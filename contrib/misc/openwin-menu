@@ -1,0 +1,40 @@
+#
+# @(#)openwin-menu	23.15 91/09/14 openwin-menu 
+#
+#	OpenWindows default root menu file - top level menu
+#
+
+"Workspace" TITLE
+
+"Shells " MENU		$OPENWINHOME/lib/openwin-menu-s
+
+"Editors " MENU		$OPENWINHOME/lib/openwin-menu-e
+
+"Tools " MENU		$OPENWINHOME/lib/openwin-menu-t
+
+"Games " MENU		$OPENWINHOME/lib/openwin-menu-g
+
+"Utilities " MENU	$OPENWINHOME/lib/openwin-menu-u
+
+#"Slingshot Examples " MENU	$OPENWINHOME/lib/openwin-ss-ex
+
+#"UIT Examples " MENU	$OPENWINHOME/lib/openwin-uit
+
+"Properties "		PROPERTIES
+
+SEPARATOR
+
+"X11 Programs "		DIRMENU	/usr/X11R6/bin
+
+"XView Programs "	DIRMENU	$OPENWINHOME/bin
+"XV"			exec /usr/X11R6/bin/xv
+
+"Window Menu "	WINMENU
+
+SEPARATOR
+
+"Screensaver " MENU	$OPENWINHOME/lib/openwin-menu-screensave
+
+"Lock Screen " MENU	$OPENWINHOME/lib/openwin-menu-xlock
+
+"Exit"		EXIT

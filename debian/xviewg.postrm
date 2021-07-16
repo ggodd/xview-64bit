@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -e
+
+#DEBHELPER#
+
+case "$1" in
+  purge)
+    rmdir /etc/X11/xview || true
+    ;;
+  remove)
+    ldconfig
+    ;;
+esac

@@ -1,0 +1,28 @@
+#!/usr/bin/install-menu
+compat="menu-1"
+
+!include menu.h
+outputencoding="ISO-8859-1"
+
+# There's no way to escape " in a menu title, so replace it with '
+function esctitle()=replacewith(title(),"\"","'")
+
+supported 
+  x11 =   "   \"" esctitle() "\"    exec " $command "\n"
+  text=   "   \"" esctitle() "\"    exec " term() "\n"
+  olwmcmd="   \"" esctitle() "\"    " $command "\n"
+endsupported
+
+startmenu="\"" esctitle() "\"  TITLE\n"
+endmenu="\"" esctitle() "\"  END PIN\n"
+submenutitle="\n\"" esctitle() "\"  MENU\n"
+
+treewalk="(M)"
+
+mainmenutitle="Debian"
+
+genmenu="openwin-menu-debian"
+rootprefix="/etc/X11/olwm/"
+userprefix=".olwm"
+
+preoutput="# Automatically generated file. DO NOT EDIT (see /usr/share/doc/menu/README)\n\n"

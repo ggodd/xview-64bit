@@ -1,0 +1,36 @@
+/**/# $Id: Imakefile,v 1.4 1991/09/30 19:23:16 stolcke Exp stolcke $
+/**/#
+/**/# This file is in the public domain.
+/**/#
+
+#ifdef InstallLibManPages
+MANSUFFIX = $(LIBMANSUFFIX)
+MANDIR = $(LIBMANDIR)
+#endif
+
+TOP=/usr/src/local/X11R5/mit	/* top of MIT source tree */
+BUILDINCTOP=			/* leave this empty */
+
+HEADERS = vroot.h
+
+AllTarget()
+
+MakeDirectories(install,$(INCDIR))
+InstallMultipleFlags($(HEADERS),$(INCDIR),$(INSTDATFLAGS))
+InstallManPage(vroot,$(MANDIR))
+
+BuildIncludes($(HEADERS),.,$(CONTRIBSRC)/lib/vroot)
+
+DependTarget()
+
+FILES	= $(HEADERS) Imakefile Makefile README COPYRIGHT
+
+vroot.shar.Z:	$(FILES)
+	shar $(FILES) | $(COMPRESS) > $@
+
+clean::
+	rm -f vroot.shar.Z
+
+ftp:	vroot.shar.Z
+	{ echo "user anonymous $$USER@`hostname`"; echo 'cd contrib'; \
+	  echo 'put vroot.shar.Z'; } | ftp -n export.lcs.mit.edu

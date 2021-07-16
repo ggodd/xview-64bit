@@ -1,0 +1,44 @@
+#
+# example olvwm root menu
+#
+
+"Root Menu" TITLE
+
+"Shells" MENU
+	"Shells" TITLE
+	"bash"						exec x-terminal-emulator -title bash -e bash
+	"csh"						exec x-terminal-emulator -title csh -e csh
+	"tcsh"						exec x-terminal-emulator -title tcsh -e tcsh
+	"sh"						exec x-terminal-emulator -title sh -e sh
+"Shells" END PIN
+
+"Tools" MENU
+	"Tools" TITLE
+	"Manual Pages.."	    	exec xman
+	"Edit resources..."			exec editres
+	"View resources..."			exec viewres
+	"Font Selector..."	    	exec xfontsel
+	"Clipboard..."		    	exec xclipboard
+	"Magnifying glass..."	    exec xmag
+	"Calculator..."	            exec xcalc
+"Tools" END PIN
+
+"Debian"                        INCLUDE /etc/X11/olvwm/openwin-menu-debian
+
+"WM Utilities" MENU
+	"Refresh" DEFAULT			REFRESH
+	"Properties..."				PROPERTIES
+	"Window Controls" MENU
+		"Open/Close" DEFAULT	OPEN_CLOSE_SELN
+		"Full/Restore Size"     FULL_RESTORE_SIZE_SELN
+		"Back"                  BACK_SELN
+		"Quit"                  QUIT_SELN
+	"Window Controls" END PIN
+	"Window Menu..."			WINMENU
+	"Save Workspace"			SAVE_WORKSPACE
+	"Restart olvwm"				RESTART
+"WM Utilities" END PIN
+
+"X binaries..."					DIRMENU	/usr/bin/X11
+
+"Exit from X..."				EXIT

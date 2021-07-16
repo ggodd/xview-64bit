@@ -1,0 +1,410 @@
+xview (3.2p1.4-24) unstable; urgency=low
+
+  * Compile with -D_GNU_SOURCE for glibc 2.9 compatibility in regex.h.
+    Closes: #544252
+  * Added Recommends: xviewg-dev, xutils-dev to xview-examples since the
+    example sources need the header files from these packages for
+    compilation.
+  * Moved /etc/X11/xview/textswrc to /usr/share/doc/xviewg/examples/textswrc
+    since it's never read there by XView and servers only as an example
+    for copying into ~/.textswrc
+
+ -- Martin Buck <mbuck@debian.org>  Thu, 03 Sep 2009 22:30:13 +0200
+
+xview (3.2p1.4-23) unstable; urgency=low
+
+  * Use XAllocIDs() instead of XAllocID() similar to Ubuntu's
+    don_t_call_several_XAllocID_instances.diff to fix broken "window close"
+    button handling and for future libX11 compatibility. Closes: #492023
+  * Upgraded to Standards-Version 3.8.0.0:
+    - Made xviewg & xviewg-dev pre-depend on x11-common as required by
+      policy 11.8.7
+    - Support DEB_BUILD_OPTIONS
+
+ -- Martin Buck <mbuck@debian.org>  Thu, 24 Jul 2008 15:54:07 +0200
+
+xview (3.2p1.4-22) unstable; urgency=low
+
+  * Use FHS-compliant directories. Closes: #34868, #269782
+  * Don't ship empty directory /usr/lib/menu
+  * Removed obsolete compatibility symlinks
+  * Build depend on x.org version of libx11-dev. Closes: #368762
+  * Use bitmaps provided by xbitmaps package instead of our own.
+    Closes: #23495, #48912
+  * Removed obsolete x-dev dependency from xviewg-dev's Depends:
+  * Updated menu files to use the latest section names
+  * Fixed errors in manpages
+  * Don't link olvwm against libm, it's not required.
+
+ -- Martin Buck <mbuck@debian.org>  Mon, 23 Jun 2008 17:56:16 +0200
+
+xview (3.2p1.4-21.2) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Add armeb armel hurd-i386 kfreebsd-i386 lpia sh3 sh4 archs, closes: #408802
+  * use binary:Version to allow package to be binNMUed
+  * add shlib:Depends to xviewg-dev that ships with elf binaries...
+
+ -- Riku Voipio <riku.voipio@iki.fi>  Thu, 08 May 2008 12:05:00 +0300
+
+xview (3.2p1.4-21.1) unstable; urgency=low
+
+  * 0-day NMU
+  * stop installing into /usr/X11R6 (Closes: #364029, #365778)
+  * build-depend on xbitmaps
+
+ -- Blars Blarson <blarson@blars.org>  Tue, 16 May 2006 09:06:45 -0700
+
+xview (3.2p1.4-21) unstable; urgency=low
+
+  * Added libxt-dev and libxpm-dev to Build-Depends. Closes: #346866
+
+ -- Martin Buck <mbuck@debian.org>  Sun, 15 Jan 2006 01:57:16 +0100
+
+xview (3.2p1.4-20) unstable; urgency=low
+
+  * Updated Build-Depends
+    - Replaced obsolete xlibs-dev with libx11-dev, x-dev. Closes: #346866
+    - Added libncurses5-dev to avoid virtual-only dependency
+  * Replaced obsolete xlibs-dev with libx11-dev, x-dev in xviewg-dev's
+    dependencies. Closes: #347165
+  * Fixed bad ttysw_pty_output() return value declaration
+  * Switched from old-style BSD-ptys to UNIX98-ptys. Closes: #345545
+  * Switched to debhelper 5
+  * Minor tweaks to make lintian slightly less unhappy
+  * Merged changes from NMU (see below). Closes: #294844, #306713
+
+ -- Martin Buck <mbuck@debian.org>  Sat,  7 Jan 2006 22:36:43 +0100
+
+xview (3.2p1.4-19.1) unstable; urgency=low
+
+  * NMU for release-critical bug durring bug squishing party
+  * patch for gcc 4.0 from Andreas Jochens (closes: #294844)
+  * fix typo in man page (closes: #306713)
+  * change section of xviewg-dev to devel to match overrides
+
+ -- Blars Blarson <blarson@blars.org>  Fri,  2 Sep 2005 05:35:09 +0000
+
+xview (3.2p1.4-19) unstable; urgency=high
+
+  * Applied patch from security team to fix security hole:
+    Fixed buffer overflows [lib/libxview/base/xv_parse.c, CAN-2005-0076]
+  * Added note to copyright file stating that the Debian version of XView
+    effectively is the upstream version these days.
+
+ -- Martin Buck <mbuck@debian.org>  Sat, 22 Jan 2005 12:34:32 +0100
+
+xview (3.2p1.4-18) unstable; urgency=low
+
+  * Updated ol(v)wm's menu-methods according to Bill Allombert's suggestions.
+    Closes: #234702, #243731
+  * Fixed build script to not ignore errors of commands run in subshells.
+    Closes: #271055, #271204
+  * Fixed some prototypes to make gcc 3.4 happy
+  * Fixed memory corruption when handling mouse chording (off by default, so
+    nobody noticed...)
+  * Applied Jeff King's patch to ensure olvwm's hotkeys work right after
+    startup even if no window is focused initially. Closes: #245744
+  * Ensured that VirtualIconGeometry is always regarded, even if
+    FreeIconSlots is set. Closes: #236103
+
+ -- Martin Buck <mbuck@debian.org>  Wed, 28 Jul 2004 10:40:02 +0200
+
+xview (3.2p1.4-17) unstable; urgency=low
+
+  * Removed now nonexistent xtoolplaces from Suggests: line of xview-clients.
+    Closes: #190834
+  * Changed /**/ in Imakefiles to XCOMM for compatibility with some
+    cpp/imake versions
+  * Added missing semicolons in olvwmrc.y for compatibility with some
+    flex versions. Closes: #167054
+  * Don't try to build on ia64 since XView is completely broken there and it's
+    close to impossible to make it work. Closes: #125391
+  * Fixed spelling error in copyright
+  * Don't run ldconfig in 'postrm purge"
+
+ -- Martin Buck <mbuck@debian.org>  Thu,  6 Nov 2003 00:55:00 +0100
+
+xview (3.2p1.4-16) unstable; urgency=low
+
+  * Fixed bogus olvwm cursor font specification resulting in horizontally
+    strechted mouse pointers. This bug was introduced with the upstream
+    olvwm patches in -15. Closes: #137211
+
+ -- Martin Buck <mbuck@debian.org>  Fri,  8 Mar 2002 00:59:31 +0100
+
+xview (3.2p1.4-15) unstable; urgency=low
+
+  * Fixed spelling errors in package description. Closes: #125571
+  * Applied patch from LaMont Jones to fix warnings in header files when
+    compiling with gcc 3.0. Closes: #108263
+  * Documented props' inability to display the color selector on some display
+    classes.
+  * Removed workaround for #105934
+  * Added workaround for stupid new behaviour in Imake.tmpl that prevented
+    "debian/rules clean" from working. Closes: #123901
+  * Replaced nonexistent app "clipboard" with "xclipboard" in ol(v)wm menu.
+    Closes: #131702
+  * Applied a few upstram patches to olvwm that were missig up to now. olvwm
+    is now at version 4.4.
+
+ -- Martin Buck <mbuck@debian.org>  Mon, 11 Feb 2002 01:15:21 +0100
+
+xview (3.2p1.4-14) unstable; urgency=low
+
+  * Two gcc 3.0 compatibility fixes, temporary workaround for imake bug
+    on hppa (needed until #105934 is fixed). Closes: #105078
+  * Replaced xterm with x-terminal-emulator in ol(v)wm menus. Closes: #95334
+  * Fixed XView font handling to make sure Unicode fonts get accepted.
+    Closes: #107408
+
+ -- Martin Buck <mbuck@debian.org>  Mon,  6 Aug 2001 00:08:11 +0200
+
+xview (3.2p1.4-13) unstable; urgency=low
+
+  * Added xutils to Build-Depends. Closes: #90932
+
+ -- Martin Buck <mbuck@debian.org>  Sun, 25 Mar 2001 16:58:03 +0000
+
+xview (3.2p1.4-12) unstable; urgency=low
+
+  * Renamed priority "Optional" to "optional"
+  * Updated Build-Depends for unstable to use xlibs-dev instead of xpm4g-dev;
+    added ed, libncurses-dev. Closes: #89990
+  * Call dh_shlibdeps properly so it finds our libraries.
+  * Compress changelog in package xview-examples
+  * Also install the props manapge instead of only putting it into the diff. Sigh.
+  * Ignore errors during "make clean"
+
+ -- Martin Buck <mbuck@debian.org>  Mon, 19 Mar 2001 21:09:44 +0000
+
+xview (3.2p1.4-11) unstable; urgency=medium
+
+  * No longer build libc5 compatibility libraries
+  * Applied (slightly modified version of) patch from Paul Slootman to allow
+    build with glibc 2.2. Closes: #82524
+  * Don't try to call helpopen in help windows, because that was never
+    released by Sun. Closes: #85515
+
+ -- Martin Buck <mbuck@debian.org>  Sun, 11 Mar 2001 13:54:29 +0100
+
+xview (3.2p1.4-10) unstable; urgency=medium
+
+  * Recompiled with libs from potato. Closes: #67931
+  * Finally fixed olvwm icon bug on 16/24/32 bpp displays. Closes: #31104
+  * Added manpage for props. Finally closes: #6193
+  * Fixed varargs bug on PPC that caused XView to crash immediately on startup
+    (Patch from Michael Schmitz, closes: #72387)
+  * Don't let x-window-manager point directly to ol(v)wm, but to a wrapper
+    which then execs ol(v)wm with their real name. Closes: #72728
+  * Fixed notifier bug that sometimes caused notifier to forget some of its
+    clients (causing "Unknown client" warning messages)
+  * Added Build-Depends
+  * Set XvDestDir to /usr/X11R6 in XView.cf to prepare removal of /usr/openwin
+    compatibility link
+
+ -- Martin Buck <mbuck@debian.org>  Fri, 20 Oct 2000 23:31:59 +0200
+
+xview (3.2p1.4-9) frozen unstable; urgency=medium
+
+  * Applied patch from Ben Collins to fix Sparc compilation problems
+    (don't include vfork.h but unistd.h). closes: #60536
+
+ -- Martin Buck <mbuck@debian.org>  Sun, 19 Mar 2000 17:06:21 +0100
+
+xview (3.2p1.4-8) frozen unstable; urgency=medium
+
+  * Changed Architecture: any in control file for libc5-compat
+    packages to list only archs that really need libc5-compat.
+    closes: #57924
+  * No longer build libc5-compat for sparc. closes: #59460
+
+ -- Martin Buck <mbuck@debian.org>  Sun,  5 Mar 2000 19:34:50 +0100
+
+xview (3.2p1.4-7) frozen unstable; urgency=medium
+
+  * fixed debian/fixdeps script to avoid (re)compilation errors.
+    closes: #55099
+
+ -- Martin Buck <mbuck@debian.org>  Sat, 15 Jan 2000 18:38:12 +0100
+
+xview (3.2p1.4-6) unstable; urgency=low
+
+  * Added manpages for capitalize, insert_brackets, remove_brackets,
+    shift_lines. closes: #48386
+  * SIGCHLD-handling-fix for olvwm
+  * Completely rewrote debian/rules
+  * Moved examples to /usr/share/doc/xviewg/examples. closes: #38586
+  * Applied glibc2.1/sparc patches from Christian Meder/Harmut Koptein
+    closes: #30411, #32273
+  * Use register-window-manager. closes: #42476
+  * Switched from register-window-manager to new Provides: x-window-manager/
+    update-alternatives. closes: #53692
+  * Fixed bug in props that caused it to crash when $LANG set.
+    closes: #33572, #38807
+  * Recompiled with glibc2.1. closes: #47140
+  * Replaced __linux with __linux__. closes: #52033
+  * Upgraded to Debian Policy 3.0.1.1
+
+ -- Martin Buck <mbuck@debian.org>  Sun,  9 Jan 2000 22:44:09 +0100
+
+xview (3.2p1.4-5) frozen unstable; urgency=medium
+
+  * Removed cv2xview and cv2Xdefs scripts because they might be regarded as
+    security holes and they are no longer useful nowadays anyway
+    (fixes Bug#23598)
+  * Fixed a few other places in XView and textedit where /tmp was used in
+    an insecure manner
+  * Recompiled to use libncurses4 instead of ncurses3.4
+  * Changed Architecture: in debian/control to Any, because the packages seem
+    to compile at least on i386, sparc, m68k and alpha (don't know about the
+    others, though)
+  * Fixed calls to ldconfig in postinst/postrm
+
+ -- Martin Buck <mbuck@debian.org>  Sun, 15 Nov 1998 15:58:26 +0100
+
+xview (3.2p1.4-4) frozen unstable; urgency=medium
+
+  * Added programs capitalize, insert_brackets, remove_brackets,
+    shift_lines; added Suggests: indent (fixes Bug#20476)
+  * Changed Recommends: xtoolplaces to Suggests: xtoolplaces
+    (fixes Bug#20317)
+  * Fixed broken alpha-patches that made XView unusable even
+    on other architectures :-(
+  * Fixed glibc-bugfix that is no longer needed with glibc >= 2.0.6
+  * Finally fixed a nasty notifier bug
+
+ -- Martin Buck <mbuck@debian.org>  Sat, 30 May 1998 18:32:47 +0200
+
+xview (3.2p1.4-3) unstable; urgency=low
+
+  * Fixed some dependency problems (fixes Bug#16448)
+  * Applied alpha-patches done by
+    Christian Meder <meder@isr.uni-stuttgart.de> (fixes Bug#18423)
+
+ -- Martin Buck <mbuck@debian.org>  Wed, 25 Mar 1998 22:42:14 +0100
+
+xview (3.2p1.4-2) unstable; urgency=low
+
+  * Use pristine sources
+  * Don't use aboslute paths in ol(v)wm's menu-files (fixes Bug#15212)
+  * Switched to debhelper
+  * Copyright-files are no longer compressed (fixes Bug#14485, Bug#14501,
+    Bug#14507)
+  * Renamed xgettext, msgfmt to xview_xgettext, xview_msgfmt to avoid
+    confusion
+  * Removed recursive dependencies for xviewg, xviewg (fixes Bug#16726,
+    partially fixes Bug#16448)
+  * Removed bogus dependency on libc6 from xview by not building with
+    fakeroot (partially fixes Bug#16448).
+  * xviewg-dev now also depends on libc6-dev, xlib6g-dev.
+    xview-altdev now also depends on libc5-altdev, xlib6-altdev.
+
+ -- Martin Buck <mbuck@debian.org>  Thu,  8 Jan 1998 00:32:04 +0100
+
+xview (3.2p1.4-1) unstable; urgency=low
+
+  * New upstream version (fixes bugs #4506, #9248, #11201):
+    - Fixed bug in Notifier that caused cmdtool to dump core when running
+      fullscreen-programs like vi or emacs.
+    - ttysw/termsw (cmdtool) now correctly handles NOECHO mode
+    - NumLock no longer causes X protocol error
+    - Numeric keypad should work
+    - Caret now is (re)drawn correctly in PANEL_TEXT_ITEMs
+    - Fixed bug that caused menu items to become invisible when XView ran out
+      of colors
+    - Fixed BadMatch error when using colored icons
+    - Fixed bug that caused random SIGSEGVs when drawing lines with pixwin
+    - Fixed olgx bug that caused height miscalculation for PANEL_LABEL_IMAGEs
+    - olvwm no longer dumps core when no menu-file is found
+    - olvwm now displays accelerators in its menus
+    - props no longer complains about missing localization files
+    - $OPENWINHOME no longer required -- everything now uses /usr/openwin by
+      default, if $OPENWINHOME is unset
+    - All installation-rules in the Imake-config-files now use the $DESTDIR-
+      prefix for the installation-directories
+    - Using Ncurses, libtermcap is no longer required
+    - Removed /usr/openwin/bin/sunview (executables now in /usr/openwin/bin,
+      scripts in /usr/openwin/lib/xview)
+    - Fixed some compilation problems
+  * All config files moved to /etc/X11/{xview,olwm,olvwm}
+  * Static libraries now compiled without -fPIC
+  * olvwm now also compiled from xview source package
+  * Merged in changes from previous olvwm package (menu-files in
+    /etc/X11/olvwm, bugfix for missing fonts, olvwm linked statically against
+    libolgx)
+  * Fixed minor security bug in ol(v)wm-postrm
+  * olwm manpage contained in olvwm package now called olwm(1olvwm) (fixes
+    bug #8987)
+  * olwm now in a separate binary package
+  * New binary package xview-examples
+  * Added menu-support to olwm & xview-clients
+  * Recompiled for libc6, added libc5 compatibility packages (fixes #12899,
+    #13089, #12920)
+  * Fixed xview's postinst to call ldconfig (fixes #12472)
+  * New maintainer
+
+ -- Martin Buck <mbuck@debian.org>  Sat, 27 Sep 1997 02:29:37 +0200
+
+xview (3.2p1.3-2) frozen unstable; urgency=low
+
+  * lib/libxview/win/win_input.c: fixed handling of numerical keyboard
+
+ -- Sven Rudolph <sr1@inf.tu-dresden.de>  Wed, 9 Apr 1997 01:09:21 +0200
+
+xview (3.2p1.3-1) unstable; urgency=low
+
+  * new upstream version: 
+    Patchlevel 3 adds the TrueColor-patches for ol(v)wm, fixes the
+    buffer-overrun problem with cmdtool (that caused cmdtool's output to
+    be written to the terminal cmdtool was started from), fixes a
+    GC-problem when using 2D buttons (that showed up when attaching a menu
+    to a canvas using all 256 colors on a 8 bpp display, for example),
+    fixes a resource problem with olvwm, changes the default location for
+    the text-extras-menu from /usr/lib to /usr/openwin/lib and contains
+    some other minor enhancements. Also, olvwm now is included in the
+    source-package and the diffs only contain the patches for the
+    additional clients (instead of the whole clients-sourcecode).
+  * util/conversion/cv2xview: OPENWINHOME fallback changed
+  * debian/rules: install owplaces (#4570)
+  * config/XView.tmpl.in: don't set MKDIRHIER (#4507)
+
+ -- Sven Rudolph <sr1@inf.tu-dresden.de>  Wed, 9 Apr 1997 01:09:21 +0200
+
+xview (3.2p1.2-4) unstable; urgency=low
+
+  * debian/rules: strip shared libraries (Bug#5162)
+  * debian/rules: gzipped manual pages (Bug#6068, Bug#6078)
+
+ -- Sven Rudolph <sr1@inf.tu-dresden.de>  Tue, 29 Oct 1996 22:11:52 +0100
+
+xview (3.2p1.2-3) unstable; urgency=low
+
+  * corrected XVDestDir in XView.cf (Bug#4506)
+  * debian/rules: created additional shared lib links (Bug#4571)
+  * corrected shared library packaging (removed ldconfig calls,
+    add shlibs)
+  * converted to new source package format (Bug#4283)
+
+ -- Sven Rudolph <sr1@inf.tu-dresden.de>  Tue, 29 Oct 1996 19:12:37 +0100
+
+xview (3.2p1.2-2) unstable; urgency=low
+
+  * clients/olwm/openwin-menu-programs: replaced $OPENWINHOME
+    by /usr/openwin ($OPENWINHOME not set by default)
+  * {textsw,ttysw}/Imakefile: removed -ltermcap
+  * config/XView.cf.in: fixed i386-dependency (Bug#4283)
+  * debian.control-* : changed Priority: to Optional
+
+ -- Sven Rudolph <sr1@inf.tu-dresden.de>  Wed, 18 Sep 1996 22:51:50 +0200
+
+xview (3.2p1.2-1) unstable; urgency=low
+
+  * many hacks, read diff for details
+  * added Debian GNU/Linux package maintenance system files
+
+ -- Sven Rudolph <sr1@inf.tu-dresden.de>  Tue, 6 Aug 1996 12:58:43 +0200
+
+Local variables:
+mode: debian-changelog
+End:

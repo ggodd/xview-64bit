@@ -1,0 +1,19 @@
+Begin3
+Title:          Xtoolplaces
+Version:        1.7.1
+Entered-date:   November 09, 1998
+Description:    Xtoolplaces will collect state information from any windows
+		currently running on an X desktop.  This information can then
+		be used to start X to return to the current desktop state.
+Keywords:       save X11 workspace xtoolplaces toolplaces
+Author:         Adam Stein (adam@iset.scan.mc.xerox.com)
+Maintained-by:  Adam Stein (adam@iset.scan.mc.xerox.com)
+Primary-site:   sunsite.unc.edu /pub/Linux/X11/xutils
+			 36 kb xtoolplaces-1.7.tar.gz
+			  1 kb xtoolplaces.lsm
+Alternate-site: 
+Original-site:  http://www.csh.rit.edu/~adam/Progs/
+			 36 kb xtoolplaces-1.7.1.tar.gz
+Platform:       X11 & C, no special X11 libraries needed (uses only Xlib)
+Copying-policy: Freely Redistributable
+End

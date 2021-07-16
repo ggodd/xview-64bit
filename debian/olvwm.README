@@ -1,0 +1,25 @@
+olvwm for DEBIAN
+================
+
+ - Differences to other olvwm's:
+
+   There's only one little difference: This olvwm also looks in
+   /etc/X11/olvwm for its default menu file (openwin-menu), because
+   there's usually no /usr/openwin on Debian systems, and the Linux
+   filesystem standard requires configuration files to reside under
+   /etc.
+
+ - Interaction with XView packages:
+
+   Since olvwm itself doesn't need XView in any way to run, it'd be IMHO
+   nonsense to make it depend on the packages xview or even xview-clients
+   (containing olwm and some other OpenLook tools).  For this reason, it's
+   linked statically against libolgx. Because libolgx is rather small, this
+   shouldn't hurt. The manpage olwm.1x normally contained in the olvwm
+   package has been renamed to olwm.1olvwm, because it conflicts with the
+   manpage from the olwm package. Depending on whether you have installed
+   the olwm package, you get one of both pages, but this doesn't matter,
+   because both are identical.
+
+Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de>, Tue, 7 Jan 1997
+Martin Buck <mbuck@debian.org>

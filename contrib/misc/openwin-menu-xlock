@@ -1,0 +1,27 @@
+"Screensaver" TITLE PIN
+
+"Bat"                   exec xlock -nice 0 -mode bat
+"Blank"                 exec xlock -nice 0 -mode blank
+"Blot"                  exec xlock -nice 0 -mode blot
+"Bob"                   exec xlock -nice 0 -mode bob
+"Bounce"                exec xlock -nice 0 -mode bounce
+"Flame"                 exec xlock -nice 0 -mode flame
+"Galaxy"                exec xlock -nice 0 -mode galaxy
+"Grav"                  exec xlock -nice 0 -mode grav
+"Helix"                 exec xlock -nice 0 -mode helix
+"Hop"                   exec xlock -nice 0 -mode hop
+"Hyper"                 exec xlock -nice 0 -mode hyper
+"Kaleid"                exec xlock -nice 0 -mode kaleid
+"Life"                  exec xlock -nice 0 -mode life
+"Maze"                  exec xlock -nice 0 -mode maze
+"Pyro"                  exec xlock -nice 0 -mode pyro
+"Qix"                   exec xlock -nice 0 -mode qix
+"Random" DEFAULT        exec xlock -nice 0 -mode random
+"Rect"                  exec xlock -nice 0 -mode rect
+"Rock"                  exec xlock -nice 0 -mode rock
+"Rotor"                 exec xlock -nice 0 -mode rotor
+"Sphere"                exec xlock -nice 0 -mode sphere
+"Spline"                exec xlock -nice 0 -mode spline
+"Swarm"                 exec xlock -nice 0 -mode swarm
+"Worm"                  exec xlock -nice 0 -mode worm
+"World"                  exec xlock -nice 0 -mode world

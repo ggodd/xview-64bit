@@ -1,0 +1,15 @@
+"Games" TITLE PIN
+
+"Spider Card Game (Small Version)"     	exec /usr/X11R6/bin/spider
+"Spider Card Game (Large Version)"     	exec /usr/X11R6/bin/Spider
+# "Xothello"		 	exec /usr/X11R6/bin/xothello
+"Puzzle"                 	exec /usr/X11R6/bin/puzzle
+"GNU Chess (via Xboard)"    	exec xboard
+"Xtetris"		    	exec /usr/X11R6/bin/xtetris
+# "Xroach"		    	exec /usr/X11R6/bin/xroach
+"Xlander (Lunar Lander)"    	exec /usr/X11R6/bin/xlander
+"Xmahjongg (Tile Game)"	    	exec /usr/X11R6/bin/xmahjongg
+"Xvier (Connect 4)"		exec /usr/X11R6/bin/xvier
+"Xdoom"				exec /usr/games/xdoom
+SEPARATOR
+"Demos and Gadgets" MENU	$OPENWINHOME/lib/openwin-menu-d

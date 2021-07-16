@@ -1,0 +1,34 @@
+.\" Copyright (C) 1999 by Martin Buck <mbuck@debian.org>
+.\" Licensed under the GNU General Public License
+
+.TH shift_lines 1 "Version 3.2p1" XView
+
+.SH NAME
+shift_lines \- add or remove indentation to/from lines
+
+.SH SYNOPSIS
+.B capitalize
+.RI [ "-t num" ]
+
+.SH DESCRIPTION
+\fIshift_lines\fP is a filter that adds or removes indentation on the left side
+of the lines sent through it. It reads text from stdin and writes the result
+to stdout. When adding indentation, it will insert space characters; when
+removing, it removes any characters, not just space.
+.PP
+Please note that \fIshift_lines\fP is intended mainly to be run from XView's
+text menu. It is used in the default \fBtext_extras_menu\fP.
+
+.SH OPTIONS
+.IP "\fB-t num\fP"
+Specify number of characters to be added/removed on the left side of the lines.
+Default is 1, negative numbers will remove the given amount of indentation.
+
+.SH AUTHOR
+Martin Buck <mbuck@debian.org> for Debian GNU/Linux
+
+.SH "SEE ALSO"
+.BR xview (7),
+.BR capitalize (1),
+.BR insert_brackets (1),
+.BR remove_brackets (1)

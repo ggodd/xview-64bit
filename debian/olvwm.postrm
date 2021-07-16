@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -e
+
+#DEBHELPER#
+
+if [ "$1" = purge ]; then
+  rm -f /etc/X11/olvwm/openwin-menu-debian
+  rmdir /etc/X11/olvwm || true
+fi

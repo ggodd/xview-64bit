@@ -1,0 +1,25 @@
+#!/bin/bash
+
+set -e
+
+echo "imake-wrapper: running imake $* in directory `pwd`"
+for cmd in /usr/bin/X11/imake /usr/bin/imake
+do
+	if [ -x ${cmd} ]; then
+		IMAKE_CMD=${cmd}
+	fi
+done
+
+${IMAKE_CMD} "$@"
+if [ -f "$IMAKEAPPEND" ]; then
+  cat "$IMAKEAPPEND" >> Makefile
+fi
+
+# Fix Makefile to stop after errors in subdirs (but not for "clean" targets).
+# The first line is necessary for XFree86 3.x to make it stop after errors.
+# The 2nd line is necessary for XFree86 4.x to make it continue after "make clean" errors
+# (it sets SHELL=/bin/sh -e).
+perl -p -i -e 's/(\$\(MAKE\)[^;|]*(all|depend|populate|lintlib|includes|tags)[^;|]*);/$1 || exit 1;/;
+               s/(\$\(MAKE\)[^;|]*clean[^;|]*);/$1 || true;/;' Makefile
+
+exit 0

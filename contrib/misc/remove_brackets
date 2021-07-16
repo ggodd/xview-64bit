@@ -1,0 +1,18 @@
+#!/usr/bin/perl --
+# Free replacement for Sun's remove_brackets as required by Openwin's
+# text_extras_menu.
+#
+# Copyright (C) 1998 by Martin Buck <mbuck@debian.org>
+# Licensed under the GNU General Public License
+
+if ($#ARGV != 1) {
+  die "Usage: $0 <left> <right>\n";
+}
+
+undef $/;
+$_ = <STDIN>;
+
+if (substr($_, 0, 1) eq $ARGV[0] && substr($_, -1) eq $ARGV[1]) {
+  $_ = substr($_, 1, -1);
+}
+print $_;

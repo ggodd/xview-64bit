@@ -1,0 +1,185 @@
+#!/usr/bin/make -f
+
+instdir = debian/tmpinst
+export OPENWINHOME = /usr
+export X11DIR= /usr
+
+
+ifneq (,$(filter noopt,$(DEB_BUILD_OPTIONS)))
+  export EXTRA_CFLAGS = -O0
+else
+  export EXTRA_CFLAGS =
+endif
+
+
+define clean
+	-rm -f build-clean build-other build-stamp install-stamp
+	bash Build-LinuxXView.bash clean
+	dh_clean
+	-rm -fr $(instdir)
+	-rm -f debian/copyright
+endef
+
+
+build: build-stamp
+
+build-stamp: build-clean build-other
+	touch build-stamp
+
+build-clean:
+	$(clean)
+	touch build-clean
+
+build-other:
+	dh_testdir
+	bash Build-LinuxXView.bash libs
+	bash Build-LinuxXView.bash clients
+	bash Build-LinuxXView.bash contrib
+	bash Build-LinuxXView.bash olvwm
+	touch build-other
+
+clean:
+	dh_testdir
+	dh_testroot
+	$(clean)
+
+install: install-stamp
+
+install-stamp: install-clean install-other install-pkg-other
+	touch install-stamp
+
+install-clean:
+	dh_testdir
+	dh_testroot
+	dh_clean
+	-rm -fr $(instdir)
+
+# Install compiled files into one common hierarchy
+install-other: build-stamp
+	dh_testdir
+	dh_testroot
+	-rm -fr $(instdir)
+	DESTDIR="`pwd`/$(instdir)" bash Build-LinuxXView.bash instlibs
+	mv $(instdir)$(OPENWINHOME)/share/openwin/help/clock.info $(instdir)$(OPENWINHOME)/share/openwin/help/clock.info.keep
+	DESTDIR="`pwd`/$(instdir)" bash Build-LinuxXView.bash instclients
+	DESTDIR="`pwd`/$(instdir)" bash Build-LinuxXView.bash instcontrib
+	DESTDIR="`pwd`/$(instdir)" bash Build-LinuxXView.bash instolvwm
+	mv $(instdir)$(OPENWINHOME)/share/openwin/help/clock.info.keep $(instdir)$(OPENWINHOME)/share/openwin/help/clock.info
+	sh debian/fixinfo $(instdir)$(OPENWINHOME)/share/openwin/help/*.info
+
+# Shuffle files around from single install hierarchy into package subdirectories
+install-pkg-other: build-stamp
+	dh_testdir
+	dh_testroot
+	dh_clean
+	dh_installdirs
+# xviewg
+	set -e && for file in text_extras_menu ttyswrc; do \
+	  mv $(instdir)$(OPENWINHOME)/lib/.$$file debian/xviewg/etc/X11/xview/$$file; \
+	done
+	mv $(instdir)$(OPENWINHOME)/lib/lib*.so.*.*.* $(instdir)$(OPENWINHOME)/lib/lib*.so.? debian/xviewg$(OPENWINHOME)/lib
+	# We depend on xbitmaps, so only move the bitmaps not provided by it.
+	set -e && for file in txtdup txtdupmask txtdupmore txtdupok txtdupokmask txtdupokmore \
+	                      txtmv txtmvmask txtmvmore txtmvok txtmvokmask txtmvokmore wierd_size; do\
+	  mv $(instdir)$(OPENWINHOME)/include/bitmaps/$$file debian/xviewg$(OPENWINHOME)/include/X11/bitmaps; \
+	done
+	mv $(instdir)$(OPENWINHOME)/include/images/* debian/xviewg$(OPENWINHOME)/include/images
+	set -e && for prog in capitalize insert_brackets remove_brackets shift_lines; do \
+	  cp contrib/misc/$$prog debian/xviewg$(OPENWINHOME)/bin; \
+	  chmod +x debian/xviewg$(OPENWINHOME)/bin/$$prog; \
+	  cp contrib/misc/$$prog.1 debian/xviewg$(OPENWINHOME)/share/man/man1; \
+	done
+	set -e && for info in textsw ttysw xview; do \
+	  mv $(instdir)$(OPENWINHOME)/share/openwin/help/$$info.info debian/xviewg$(OPENWINHOME)/share/openwin/help; \
+	done
+	mv $(instdir)$(OPENWINHOME)/man/man1/xview.1x debian/xviewg$(OPENWINHOME)/share/man/man7/xview.7
+	mv $(instdir)$(OPENWINHOME)/share/doc/xview/whats_new.ps debian/xviewg/usr/share/doc/xviewg
+	cat debian/xview-info.head $(instdir)$(OPENWINHOME)/share/doc/xview/xview-info \
+	  > debian/xviewg/usr/share/doc/xviewg/xview-info
+# xviewg-dev
+	mv $(instdir)$(OPENWINHOME)/lib/lib*.a $(instdir)$(OPENWINHOME)/lib/lib*.so debian/xviewg-dev$(OPENWINHOME)/lib
+	set -e && for file in xgettext msgfmt; do \
+	  mv $(instdir)$(OPENWINHOME)/bin/$$file debian/xviewg-dev$(OPENWINHOME)/bin/xview_$$file; \
+	  mv $(instdir)$(OPENWINHOME)/man/man1/$$file.1 debian/xviewg-dev$(OPENWINHOME)/share/man/man1/xview_$$file.1; \
+	done
+	set -e && for dir in olgx pixrect xview_private olgx_private xview; do \
+	  mv $(instdir)$(OPENWINHOME)/include/$$dir/* debian/xviewg-dev$(OPENWINHOME)/include/$$dir; \
+	done
+	mv $(instdir)$(OPENWINHOME)/lib/X11/config/* debian/xviewg-dev$(OPENWINHOME)/lib/X11/config
+	mv $(instdir)$(OPENWINHOME)/share/doc/xview/*api* debian/xviewg-dev/usr/share/doc/xviewg
+# xview-clients
+	set -e && for file in clock cmdtool shelltool props textedit; do \
+	  mv $(instdir)$(OPENWINHOME)/bin/$$file debian/xview-clients$(OPENWINHOME)/bin; \
+	  mv $(instdir)$(OPENWINHOME)/man/man1/$$file.1x debian/xview-clients$(OPENWINHOME)/share/man/man1/$$file.1; \
+	done
+	cp contrib/misc/owplaces debian/xview-clients$(OPENWINHOME)/bin
+	set -e && for file in clock.info props.info textedit.info; do \
+	  mv $(instdir)$(OPENWINHOME)/share/openwin/help/$$file debian/xview-clients$(OPENWINHOME)/share/openwin/help/$$file; \
+	done
+	cp contrib/misc/props-locale.C debian/xview-clients$(OPENWINHOME)/share/locale/C/props/C
+	cp contrib/misc/props-locale.basic_setting debian/xview-clients$(OPENWINHOME)/share/locale/C/props/basic_setting
+# xview-examples
+	mv $(instdir)$(OPENWINHOME)/share/src/xview/examples/bin/* debian/xview-examples/usr/lib/xview/examples
+	rmdir $(instdir)$(OPENWINHOME)/share/src/xview/examples/bin
+	chmod +x debian/xview-examples/usr/lib/xview/examples/*
+	mv $(instdir)$(OPENWINHOME)/share/src/xview/examples/* debian/xview-examples/usr/share/doc/xviewg/examples
+	ln -s ../../../../lib/xview/examples debian/xview-examples/usr/share/doc/xviewg/examples/bin
+	mv $(instdir)$(OPENWINHOME)/lib/.textswrc debian/xview-examples/usr/share/doc/xviewg/examples/textswrc
+# olvwm
+	mv $(instdir)$(OPENWINHOME)/bin/olvwm debian/olvwm$(OPENWINHOME)/bin
+	mv $(instdir)$(OPENWINHOME)/man/man1/olvwm.1x debian/olvwm$(OPENWINHOME)/share/man/man1/olvwm.1
+	mv $(instdir)$(OPENWINHOME)/man/man1/olvwmrc.1x debian/olvwm$(OPENWINHOME)/share/man/man5/olvwmrc.5
+	sed -e 's/TH olwm 1/TH olwm 1olvwm/' < $(instdir)$(OPENWINHOME)/man/man1/olwm.1x > debian/olvwm$(OPENWINHOME)/share/man/man1/olwm.1olvwm
+	mv $(instdir)$(OPENWINHOME)/share/openwin/help/olvwm.info debian/olvwm$(OPENWINHOME)/share/openwin/help
+	cp debian/olvwm-x-window-manager debian/olvwm$(OPENWINHOME)/bin
+	chmod +x debian/olvwm$(OPENWINHOME)/bin/olvwm-x-window-manager
+	cp debian/olvwm.openwin-menu debian/olvwm/etc/X11/olvwm/openwin-menu
+	cp debian/olvwm.changelog.old debian/olvwm/usr/share/doc/olvwm/changelog.Debian-old
+	cp debian/olvwm.README debian/olvwm/usr/share/doc/olvwm/README.debian
+# olwm
+	mv $(instdir)$(OPENWINHOME)/bin/olwm* debian/olwm$(OPENWINHOME)/bin
+	set -e && for file in olwm olwmslave; do \
+	  mv $(instdir)$(OPENWINHOME)/man/man1/$$file.1x debian/olwm$(OPENWINHOME)/share/man/man1/$$file.1; \
+	done
+	set -e && for file in olwm.info workspace.info; do \
+	  mv $(instdir)$(OPENWINHOME)/share/openwin/help/$$file debian/olwm$(OPENWINHOME)/share/openwin/help/$$file; \
+	done
+	cp debian/olwm-x-window-manager debian/olwm$(OPENWINHOME)/bin
+	chmod +x debian/olwm$(OPENWINHOME)/bin/olwm-x-window-manager
+	cp debian/olwm.openwin-menu debian/olwm/etc/X11/olwm/openwin-menu
+	mv $(instdir)$(OPENWINHOME)/lib/openwin-menu debian/olwm/etc/X11/olwm/openwin-menu.orig
+	mv $(instdir)$(OPENWINHOME)/lib/openwin-menu-programs debian/olwm/etc/X11/olwm
+	cp debian/olwm.README debian/olwm/usr/share/doc/olwm/README.debian
+
+binary:	binary-indep binary-arch
+
+binary-indep: build
+	dh_testdir
+	dh_testroot
+
+binary-arch: binary-other
+
+binary-other: install
+	cat debian/copyright.head LEGAL_NOTICE > debian/copyright
+	dh_installdocs
+	dh_installchangelogs
+	dh_installmenu
+	dh_strip
+	dh_link
+# Don't compress source code/Makefiles in the examples directory, because having a
+# mixture of compressed/uncompressed files there is really stupid.
+	dh_compress -Xusr/share/doc/xviewg/examples/
+	dh_fixperms
+	dh_installdeb
+	install -m 644 debian/shlibs.local debian/xviewg/DEBIAN/shlibs
+	dh_shlibdeps -ldebian/xviewg$(OPENWINHOME)/lib
+# Prevent xviewg from depending on itself (this happens most likely because libxview
+# needs libolgx and nobody notices that it's in the same package)
+	sh debian/fixdeps xviewg debian/xviewg.substvars
+	dh_gencontrol -Nolvwm
+# Concatenate olvwm's and XView's version number to make both dpkg and our users happy. :-)
+	dh_gencontrol -polvwm -u-v"4.4.`dpkg-parsechangelog | grep '^Version: ' | cut -d' ' -f2`"
+	dh_md5sums
+	dh_builddeb
+
+.PHONY: build clean install binary binary-arch binary-indep

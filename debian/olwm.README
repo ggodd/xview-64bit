@@ -1,0 +1,13 @@
+olwm for DEBIAN
+===============
+
+ - Differences to other olwm's:
+
+   There's only one little difference: This olwm also looks in
+   /etc/X11/olwm for its default menu file (openwin-menu), because
+   there's usually no /usr/openwin on Debian systems, and the Linux
+   filesystem standard requires configuration files to reside under
+   /etc.
+
+Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de>, Tue, 7 Jan 1997
+Martin Buck <mbuck@debian.org>

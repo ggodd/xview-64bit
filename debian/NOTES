@@ -1,0 +1,76 @@
+Rationale for dependcies:
+
+Package: xviewg
+Depends: ${shlibs:Depends}
+Suggests: indent
+Conflicts: xview (<< 3.2p1.4-1)
+/*Replaces: xview*/
+
+Replaces old libc5 xview package.
+Suggests indent because /usr/openwin/lib/text_extras_menu may call it.
+
+
+Package: xviewg-dev
+Depends: xviewg (= ${Source-Version}), libc6-dev, xlib6g-dev
+Conflicts: xview-dev (<< 3.2p1.4-1)
+/*Replaces: xview-dev*/
+
+Replaces old libc5 xview-dev package. Make sure corresponding shared library
+package (xviewg), libc6-development and xlib-development packages are
+installed.
+
+
+Package: xview
+Depends: ${shlibs:Depends}, xviewg (= ${Source-Version})
+
+Contains only libc5-compatibility libraries, xviewg required for other
+support/config files.
+
+
+Package: xview-altdev
+Depends: xview (= ${Source-Version}), xviewg (= ${Source-Version}), xviewg-dev (= ${Source-Version}), libc5-altdev, xlib6-altdev (>= 3.3.5-2)
+
+Contains only libc5-compatibility libraries, xviewg-dev required for other
+support/header files. Make sure corresponding shared library package (xview)
+libc5-development and xlib-development packages are installed. xlib6-altdev
+must be 3.3.5-2 or above, because earlier versions containted
+/usr/*-linuxlibc1/include/X11/bitmaps as a directory, while it's a symlink in
+later versions (don't know when exactly the switch happened). If it's a
+symlink, we don't have to put our own bitmaps in there, because the link
+points to the directory where xviewg already installed them.
+
+
+Package: xview-clients
+Depends: ${shlibs:Depends}
+Suggests: xtoolplaces
+
+Suggests xtoolplaces because it contains a wrapper script called
+`owplaces' that calls xtoolplaces.
+
+
+Package: xview-examples
+Depends: ${shlibs:Depends}
+Suggests: xview-dev
+
+Suggests xview-dev because you probably only want the examples if you
+actually do XView development.
+
+
+Package: olwm
+Depends: ${shlibs:Depends}
+Suggests: menu (>= 1.3), xview-clients
+Conflicts: xview (<< 3.2p1.4-1), olvwm (<< 4.1.3.2p1.4-1)
+
+Suggests xview-clients because olwm can use owplaces to store the current
+desktop. Conflicts with old xview packages because olwm was contained in
+them back then. Conflicts with old olvwm because it contained a broken
+diversion that caused olvwm to overwrite olwm's manpage.
+
+
+Package: olvwm
+Depends: ${shlibs:Depends}
+Suggests: menu (>= 1.3), xview-clients, olwm
+
+Suggests xview-clients because olvwm can use owplaces to store the current
+desktop. Suggests olwm because it contains olwmslave which can be used by
+olvwm.

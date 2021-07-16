@@ -1,0 +1,67 @@
+Source: xview
+Section: x11
+Priority: optional
+Maintainer: Martin Buck <mbuck@debian.org>
+Standards-Version: 3.8.0.0
+Build-Depends: debhelper (>= 5), bison, flex, ed, libncurses5-dev | libncurses-dev, libx11-dev (>= 2:1.0.0), libxt-dev, libxext-dev, libxpm-dev, xutils-dev
+
+Package: xviewg
+Architecture: alpha arm armeb armel hppa i386 hurd-i386 kfreebsd-i386 lpia m68k mips mipsel powerpc s390 sh3 sh4 sparc
+Pre-Depends: x11-common (>= 1:7.0.0)
+Depends: ${shlibs:Depends}, xbitmaps
+Suggests: indent
+Conflicts: xview (<< 3.2p1.4-1)
+Description: XView shared libraries
+ This package contains the shared libraries for XView.
+ .
+ XView is a user interface toolkit following the look and feel of
+ Sun's pre-X11 SunView.
+ .
+ This package is required by XView-based programs.
+
+Package: xviewg-dev
+Section: devel
+Architecture: alpha arm armeb armel hppa i386 hurd-i386 kfreebsd-i386 lpia m68k mips mipsel powerpc s390 sh3 sh4 sparc
+Pre-Depends: x11-common (>= 1:7.0.0)
+Depends: xviewg (= ${binary:Version}), ${shlibs:Depends}, libx11-dev
+Conflicts: xview-dev (<< 3.2p1.4-1)
+Description: XView development tools
+ This package contains the files for compiling XView programs, including
+ the header files and the static libraries for XView.
+
+Package: xview-clients
+Architecture: alpha arm armeb armel hppa i386 hurd-i386 kfreebsd-i386 lpia m68k mips mipsel powerpc s390 sh3 sh4 sparc
+Depends: ${shlibs:Depends}
+Description: XView client programs
+ This package contains the client programs from the free XView
+ distribution, including cmdtool and textedit.
+
+Package: xview-examples
+Architecture: alpha arm armeb armel hppa i386 hurd-i386 kfreebsd-i386 lpia m68k mips mipsel powerpc s390 sh3 sh4 sparc
+Depends: ${shlibs:Depends}
+Recommends: xviewg-dev, xutils-dev
+Description: XView contrib programs
+ This package contains the contrib programs from the free XView
+ distribution, including their source code. They are intended mainly
+ as examples for writing your own XView-programs.
+
+Package: olwm
+Architecture: alpha arm armeb armel hppa i386 hurd-i386 kfreebsd-i386 lpia m68k mips mipsel powerpc s390 sh3 sh4 sparc
+Depends: ${shlibs:Depends}
+Suggests: menu (>= 2.1.9), xview-clients
+Conflicts: xview (<< 3.2p1.4-1), olvwm (<< 4.1.3.2p1.4-1), menu (<< 2.1.9)
+Provides: x-window-manager
+Description: Open Look Window Manager
+ This package contains the traditional Open Look Window Manager. For an
+ extended version that offers virtual desktops, have a look at the package
+ `olvwm'.
+
+Package: olvwm
+Architecture: alpha arm armeb armel hppa i386 hurd-i386 kfreebsd-i386 lpia m68k mips mipsel powerpc s390 sh3 sh4 sparc
+Depends: ${shlibs:Depends}
+Suggests: menu (>= 2.1.9), xview-clients, olwm
+Conflicts: menu (<< 2.1.9)
+Provides: x-window-manager
+Description: OpenLook virtual window manager
+ This package contains an extended version of olwm, the original
+ OpenLook window manager, enhanced for handling of virtual desktops.

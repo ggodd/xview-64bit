@@ -1,0 +1,4 @@
+?package(xview-clients):needs="X11" section="Applications/Editors" title="Textedit" command="/usr/bin/textedit"
+?package(xview-clients):needs="X11" section="Applications/Terminal Emulators" title="Command Tool" command="/usr/bin/cmdtool"
+?package(xview-clients):needs="X11" section="Applications/Terminal Emulators" title="Shell Tool" command="/usr/bin/shelltool"
+?package(xview-clients):needs="X11" section="Applications/System/Administration" title="Property Editor" command="/usr/bin/props"

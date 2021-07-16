@@ -1,0 +1,39 @@
+   File Name            Shar #   Description
+-----------------------------------------------------------
+CHANGES                    1      List of changes release to release
+COPYRIGHT.vroot		   1	  Copyright message for vroot
+Imakefile                  1      Imake Makefile
+MANIFEST                   1      This list of files
+Makefile.simple            1      Simple makefile
+README                     2      Details about program
+TODO			   2	  Todo list
+Xtoolplaces.ad             2      Default resource file
+adddisplay.c               2      Add '-display' for multiple screens
+addon.c                    2      Add on arguments routines
+addon.h                    2      Addon structure definition
+addon.sample               2      Sample addon file (used with '-a')
+combine.c                  2      Combine multiple args into 1 string
+copyright.c                2      Copyright notice for executable
+fix_command.c              2      Fix xview problem routine
+getargs.c                  3      Get resource databases
+getgeom.c                  3      Get geometry information
+getinfo.c                  4      Get window information routines
+ignore.sample		   4	  Ignore applications file (used with '-i')
+is.c                       4      Query routines
+make_list.c                4      Generate list of screens to save
+missing.sample             4      Sample missing file (used with '-m')
+patchlevel.h               4      Patchlevel info
+readfile.c		   4      Routines for dealing with lists of X apps
+strdup.c                   4      BSD strdup() function
+strstr.c                   4      System 5 strstr() function
+vroot/COPYRIGHT		   1      Copyright message for vroot
+vroot/Imakefile		   1      Imakefile for vroot
+vroot/README	           1      README for vroot
+vroot/vroot.h		   1      Virtual Root Window handling header file
+				  (modified slightly for CodeCenter)
+vroot/vroot.h.dist	   1      Original vroot.h file
+xtoolplaces.c              5      The xtoolplaces program
+xtoolplaces.h              5      Common definitions
+xtoolplaces.lsm		   1	  Package info (required by Linux archives)
+xtoolplaces.man            5      Xtoolplaces man page
+

@@ -1,0 +1,64 @@
+xtoolplaces (1.7.1-1) unstable; urgency=low
+
+  * New upstream release (actually from November 1998, but anyway).
+  * Package is orphaned (see #106989); set maintainer to Debian QA Group.
+  * Acknowledge NMUs (closes: #75381, #86335, #90001).
+  * Update to policy version 3.5.6.
+
+  * debian/rules: Largely rewritten with debhelper. While I'm at it, let's
+    install some documentation.
+  * debian/postinst, debian/prerm: Remove, handled by debhelper now.
+  * debian/control: Build-depend on debhelper.
+
+  * debian/copyright: "Debian/GNU Linux" -> "Debian GNU/Linux".
+  * debian/rules: Support DEB_BUILD_OPTIONS. Don't use -Wall - the code is
+    K&R-ish and produces lots of spurious warnings - but don't use
+    -traditional either as the glibc headers don't like it.
+  * Makefile.simple: Don't strip binaries; leave that to debian/rules.
+  * xtoolplaces.man: Remove .ll directive; it stops man-db resizing the man
+    page to fit the terminal size.
+  * getgeom.c (strip_arg2): Don't try to prototype strstr() here.
+
+ -- Colin Watson <cjwatson@debian.org>  Mon, 27 Aug 2001 17:19:11 +0100
+
+xtoolplaces (1.6-3.1) unstable; urgency=low
+
+  * Non-maintainer upload sponsored by Colin Watson <cjwatson@debian.org>.
+  * Changed APPSDIR to /etc/X11/app-defaults (Closes: #86335)
+  * Changed MANDIR to /usr/share/man/man1
+  * debian/rules: Added 'rm -f debian/files' to clean (Closes: #75381)
+  * Updated to standards-version 3.5.2
+
+ -- Martin Sjögren <md9ms@mdstud.chalmers.se>  Sat, 17 Mar 2001 13:42:10 +0100
+
+xtoolplaces (1.6-3) frozen unstable; urgency=low
+
+  * uploading again
+
+ -- Sven Rudolph <sr1@inf.tu-dresden.de>  Thu, 26 Mar 1998 14:25:33 +0100
+
+xtoolplaces (1.6-2) frozen unstable; urgency=low
+
+  * debian/rules: set APPSDIR to .../usr/X11R6/lib/X11/ (Fixes: #20234)
+
+ -- Sven Rudolph <sr1@inf.tu-dresden.de>  Thu, 26 Mar 1998 14:25:33 +0100
+
+xtoolplaces (1.6-1) unstable; urgency=low
+
+  * upstream upgrade (Fixes: 17993, 10886)
+  * debian/rules: corrected upstream changelog name (Fixes: 9684)
+  * debian/control: add Depends: ${shlibs:Depends} (Fixes: 16283)
+  * (Fixes: 17434)
+  * #17434 not fixed - still coredumps !
+
+ -- Sven Rudolph <sr1@inf.tu-dresden.de>  Mon, 23 Mar 1998 20:57:56 +0100
+
+xtoolplaces (1.5-1) unstable; urgency=low
+
+  *  new Debian package
+
+ -- Sven Rudolph <sr1@inf.tu-dresden.de>  Thu, 10 Apr 1997 14:56:36 +0200
+
+Local variables:
+mode: debian-changelog
+End:

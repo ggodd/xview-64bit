@@ -1,0 +1,25 @@
+#include <XView.tmpl>
+
+XCOMM #########################################################################
+XCOMM # @(#)Imakefile	1.3 10/4/91 SMI
+XCOMM # Imakefile for props
+
+#define HasInfoFiles YES
+
+DEFINES = -DSTANDALONE
+INCLUDES = -I/usr/openwin/include -I$(HEADER_DEST) -I$(TOP)
+SYS_LIBRARIES =
+DEPLIBS = XViewClientDepLibs
+LOCAL_LIBRARIES = XViewClientLibs
+
+HEADERS = props.h color.h image.h l10n_props.h
+INFOFILES = props.info
+MANPAGES = props.man
+SRCS = props.c color_props.c color.c l10n_props.c l10n_read.c
+OBJS = props.o color_props.o color.o l10n_props.o l10n_read.o
+
+ALLFILES = ${HEADERS} ${INFOFILES} ${MANPAGES} ${SRCS}
+
+ComplexProgramTarget(props)
+
+#include <XView.prog>

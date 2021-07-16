@@ -1,0 +1,120 @@
+This README describes Linux-patchlevel 4 of XView3.2p1-X11R6, Sun's
+OpenLook[tm] compliant graphical user-interface toolkit for Linux/ELF and
+the X Window System.
+
+If you have never heard about XView before, here's a short excerpt of Sun's
+README:
+XView (X Window-System-based Visual/Integrated Environment for Workstations)
+is a user-interface toolkit to support interactive, graphics-based
+applications running under the X Window System.  XView provides a set of
+pre-built, user-interface objects such as canvases, scrollbars, menus, and
+control panels.  The appearance and functionality of these objects follow
+the OPEN LOOK Graphical User Interface (GUI) specification.  XView features
+an object-oriented style Application Programmer's Interface (API) that is
+straightforward and easy to learn.
+
+
+This release is based on Oleg Kibirev's release of XView for Linux/ELF. It
+contains patches from Oleg Kibirev <oleg@gd.cs.CSUFresno.EDU> (his patches
+are based mostly on Kenneth Osterberg's <lmfken@lmf.ericsson.se> patches),
+Wolfram Gloger <Gloger@lrz.uni-muenchen.de>, E. Zimmermann <edz@bsn.com>,
+Rainer Wiesner <RainerRW@aol.com>, Sven Rudolph <sr1@os.inf.tu-dresden.de>,
+Sebastiano Suraci <suraci@uniud.it> and myself. If you have other patches
+for XView-bugs, please send them to me.
+
+Although I fixed some bugs in cmdtool, there are many more left. The code
+for cmdtool is a complete mess and I don't want to waste any more time
+fixing it. As such, bug-reports for cmdtool will be ignored unless you also
+include a patch. If you want to do yourself a favour, use xterm. :-)
+
+Changes from earlier versions:
+
+Patchlevel 4:
+o Fixed bug in Notifier that caused cmdtool to dump core when running
+  fullscreen-programs like vi or emacs.
+o ttysw/termsw (cmdtool) now correctly handles NOECHO mode
+o NumLock no longer causes X protocol error
+o Numeric keypad should work
+o Caret now is (re)drawn correctly in PANEL_TEXT_ITEMs
+o Fixed bug that caused menu items to become invisible when XView ran out
+  of colors
+o Fixed BadMatch error when using colored icons
+o Fixed bug that caused random SIGSEGVs when drawing lines with pixwin
+o Fixed olgx bug that caused height miscalculation for PANEL_LABEL_IMAGEs
+o olvwm no longer dumps core when no menu-file is found
+o olvwm now displays accelerators in its menus
+o props no longer complains about missing localization files
+o $OPENWINHOME no longer required -- everything now uses /usr/openwin by
+  default, if $OPENWINHOME is unset
+o All installation-rules in the Imake-config-files now use the $DESTDIR-
+  prefix for the installation-directories
+o Using Ncurses, libtermcap is no longer required
+o Removed /usr/openwin/bin/sunview (executables now in /usr/openwin/bin,
+  scripts in /usr/openwin/lib/xview)
+o Fixed some compilation problems
+
+Patchlevel 3 adds the TrueColor-patches for ol(v)wm, fixes the
+buffer-overrun problem with cmdtool (that caused cmdtool's output to be
+written to the terminal cmdtool was started from), fixes a GC-problem when
+using 2D buttons (that showed up when attaching a menu to a canvas using all
+256 colors on a 8 bpp display, for example), fixes a resource problem with
+olvwm, changes the default location for the text-extras-menu from /usr/lib
+to /usr/openwin/lib and contains some other minor enhancements. Also, olvwm
+now is included in the source-package and the diffs only contain the patches
+for the additional clients (instead of the whole clients-sourcecode).
+
+Patchlevel 2 finally fixes the nasty endianess-bug with icons and also
+contains some other minor enhancements. Also, I removed the seperate
+clients-package and added the sources to my diffs instead. I also merged
+Kenneth's diffs to the example-programs that were missing in Oleg's release.
+
+Patchlevel 1 fixes some bugs that existed in all XView-versions since X11R6
+(some might even be older). They could cause coredumps or other
+miscellaneous failures like ignoring the resoure-database and displaying
+PANEL_LISTS with wrong colors. It also includes some malloc-related bugfixes
+that should allow you to debug XView-apps with Electric Fence.
+
+
+You can find the following files on sunsite.unc.edu in
+/pub/Linux/libs/X/xview:
+
+xview-3.2p1.4.bin.tar.gz:
+  This is the binary release that contains everything that's required to
+  use the XView-library. It also contains binaries of the basic XView
+  clients (olwm, clock, cmdtool and shelltool) and additional clients (props,
+  textedit and olvwm). The binaries were compiled with libc-5.2.16,
+  libX11.so.6.0 and libncurses.so.3.0, but should work with later versions as
+  well.
+xview-3.2p1.4.src.tar.gz:
+  This is the sourcecode for the XView-library with my patches (see below)
+  applied and the additional clients included.
+xview-3.2p1.4.diff.gz:
+  These are my patches relative to the XView3.2p1-X11R6-release as found on
+  ftp.x.org. To apply the patches, you first have to install the additional
+  clients in the 'clients'-directory
+xview-3.2p1.4.README:
+  The file you're reading at the moment
+xview-3.2p1.4.lsm:
+  ...and the LSM-entry
+
+To install the binary version, do the following:
+If you have an old XView-release installed, you might want to move your old
+/usr/openwin tree to a save place first. Then cd to / and do a
+"tar xvpzf /some/path/xview-3.2p1.4.bin.tar.gz" (as root). After
+running "ldconfig /usr/openwin/lib" (and possibly adding /usr/openwin/lib to
+/etc/ld.so.config first), you should be able to use the new libraries.
+
+BTW, I chose version 3.2.4 for the shared libraries. This means that they're
+compatible with the old versions---you don't have to recompile your apps to
+use the new version (if they were liked against the shared libs, that is).
+
+To compile XView yourself, please have a look at the bash-script
+"Build-LinuxXView.bash" in my source-distribution. If your setup is not too
+different from mine, this should do most of the required steps for you.
+
+HINT TO DISTRIBUTION-MAINTAINERS:
+*PLEASE* replace your current XView-packages with this new one. You can save
+your users and all programmers of XView-apps a lot of trouble.
+
+
+Martin Buck <martin.buck@bigfoot.com>

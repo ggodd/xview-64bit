@@ -1,0 +1,5 @@
+"Clocks" TITLE PIN
+
+"Oclock (Invisible Frame)" DEFAULT	exec /usr/X11R6/bin/oclock
+"Clock (OpenLook)"             		exec $OPENWINHOME/bin/clock
+"Standard Xclock"			exec /usr/X11R6/bin/xclock

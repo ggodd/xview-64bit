@@ -1,0 +1,7 @@
+# Remove dependency $1 from shlibs:Depends-line in file $2
+
+grep "^shlibs:Depends=.*\<$1\>" "$2" > /dev/null 2>&1 || exit 0
+
+echo "/^shlibs:Depends=/s/,\? *\<$1\>[^,]*//g
+w
+q" | ed -s "$2"

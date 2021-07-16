@@ -1,0 +1,36 @@
+   Xtoolplaces.app - Resource file for xtoolplaces.  This file
+   defines most of the values for options.
+
+   Copyright (c) 1993-1997 Xerox Corporation.  All Rights Reserved.
+
+   Permission to use, copy, modify  and  distribute  without  charge
+   this  software,  documentation, images, etc. is granted, provided
+   that this copyright and the author's name is retained.
+
+   A fee may be charged for this program ONLY to recover  costs  for
+   distribution  (i.e.  media costs).  No profit can be made on this
+   program.
+
+   The author assumes no responsibility for  disasters  (natural  or
+   otherwise) as a consequence of use of this software.
+
+   Adam Stein (adam@iset.scan.mc.xerox.com)
+
+   NOTE:  The value doesn't matter for xtoolplaces.console since
+   the only thing being checked is it's presence.
+
+
+xtoolplaces.console:
+xtoolplaces.display:    :0
+xtoolplaces.remote:     rsh -n
+xtoolplaces.saveto:     .xtoolplaces
+xtoolplaces.screens:    all
+
+! uncomment this for making xtoolplaces prepend "xtoolwait" command
+!xtoolplaces.toolwait
+!xtoolplaces.toolwaitprog=xtoolwait
+
+! uncomment this to have xtoolplaces ignore all CDE dt* programs
+! (i.e. dtmail, dtpad, etc.)
+!xtoolplaces.ignoredt:
+

@@ -1,0 +1,4 @@
+# Comment out all lines that try to call "helpopen", because that's
+# not available on Linux
+
+perl -p -i -e 's/^(:[^:]+):.*\/bin\/helpopen .*$/#$&\n$1/;' "$@"

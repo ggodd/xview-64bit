@@ -1,0 +1,35 @@
+.\" Copyright (C) 1999 by Martin Buck <mbuck@debian.org>
+.\" Licensed under the GNU General Public License
+
+.TH capitalize 1 "Version 3.2p1" XView
+
+.SH NAME
+capitalize \- change case of text
+
+.SH SYNOPSIS
+.B capitalize
+.I -u|-l|-c
+
+.SH DESCRIPTION
+\fIcapitalize\fP is a filter that changes the case of text sent through it.
+It reads text from \fBstdin\fP and writes the result to \fBstdout\fP.
+.PP
+Please note that \fIcapitalize\fP is intended mainly to be run from XView's
+text menu. It is used in the default \fBtext_extras_menu\fP.
+
+.SH OPTIONS
+.IP "\fB-u\fP"
+Convert all characters to upper case.
+.IP "\fB-l\fP"
+Convert all characters to lower case.
+.IP "\fB-c\fP"
+Convert the first letter of words to upper case.
+
+.SH AUTHOR
+Martin Buck <mbuck@debian.org> for Debian GNU/Linux
+
+.SH "SEE ALSO"
+.BR xview (7),
+.BR insert_brackets (1),
+.BR remove_brackets (1),
+.BR shift_lines (1)

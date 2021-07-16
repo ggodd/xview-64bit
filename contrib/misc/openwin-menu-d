@@ -1,0 +1,10 @@
+"Demos" TITLE PIN
+
+"Ico (Bouncing Polygon)"         	    exec /usr/X11R6/bin/ico
+"Maze "		    exec /usr/X11R6/bin/maze
+"Puzzle..."                 exec /usr/X11R6/bin/puzzle
+"Xeyes (Follow Your Mouse)"		    exec /usr/X11R6/bin/xeyes
+"Xfontsel..."		    exec /usr/X11R6/bin/xfontsel
+"Xgas (Gas Particle Simulator)"		    exec /usr/X11R6/bin/xgas
+"Xlogo"		    exec /usr/X11R6/bin/xlogo
+"Xroach (Insect Infestation)"		    exec /usr/X11R6/bin/xroach

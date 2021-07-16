@@ -1,0 +1,60 @@
+#!/bin/sh
+# Xinitrc executed by openwin script to display startup logo
+# and restore desktop setup (saved using owplaces)
+# Hereby placed into public domain by Kenneth Osterberg 1993.
+
+# Display startup logo
+#if [ -x $OPENWINHOME/bin/xcenter -a -f $OPENWINHOME/etc/lxxview.xbm ]; then
+#    $OPENWINHOME/bin/xcenter -bitcenter $OPENWINHOME/etc/lxxview.xbm && sleep 2
+#fi
+#if [ -z "$NOPAINT" ]; then
+#echo olvwm.PaintWorkspace: False | xrdb -merge
+#xv -root -quit /home/snowcat/gif/oceanflr.bmp
+#else
+#unset NOPAINT
+#fi
+
+userresources=$HOME/.Xresources
+xviewresources=$HOME/.Xdefaults
+usermodmap=$HOME/.Xmodmap
+sysresources=$X11HOME/lib/X11/xinit/.Xresources
+sysmodmap=$X11HOME/lib/X11/xinit/.Xmodmap
+
+# merge in defaults and keymaps
+if [ -f $sysresources ]; then
+    xrdb -merge $sysresources
+fi
+if [ -f $sysmodmap ]; then
+    xmodmap $sysmodmap
+fi
+if [ -f $userresources ]; then
+    xrdb -merge $userresources
+fi
+if [ -f $xviewresources ]; then
+    xrdb -merge $xviewresources
+fi
+if [ -f $usermodmap ]; then
+    xmodmap $usermodmap
+fi
+
+# I *think* this might be the cause of the notorius backspace
+# problem.  I'm tossing it out...
+#
+# xmodmap -e "keysym BackSpace = Delete"
+
+# Restore saved desktop settings, if any
+if [ -f $HOME/.openwin-init ]; then
+	. $HOME/.openwin-init
+fi
+
+# Run .xinitrc of user if there is one
+if [ -x $HOME/.xinitrc ]; then
+	exec $HOME/.xinitrc
+fi
+
+# Startup the OpenLook window manager
+if [ ! -z "$WINDOWMANAGER" ]; then
+	exec $WINDOWMANAGER -f
+else
+	exec ${OPENWINHOME-/usr/openwin}/bin/olwm -f
+fi

@@ -1,0 +1,71 @@
+This is the old changelog for olvwm. It dates back to the time when olvwm
+was built from a separate source package.
+
+
+olvwm (4.1-7) unstable; urgency=low
+
+  * Remove xserver and xfntbase from dependency list; olvwm doesn't
+    require a local X server or fonts, those can be on a remote machine,
+    too. (Fixes #8780)
+  * Don't use files in /tmp in postinst anymore, cause they're a potential
+    security hole. (Fixes #11790)
+  * Changed menu entry to long format supported by menu-1.3. Also added
+    suggestion of menu.
+  * Replace -I/usr/include/bsd in MORECCFLAGS by -D__USE_BSD and
+    -D__USE_BSD_SIGNAL. /usr/include/bsd doesn't exist anymore in a libc6
+    environment. (But, BTW, olvwm is still libc5, libc6 X libs and xpm are
+    still missing...)
+  * olvwm crashed when it couldn't load a font... I now patched it so that
+    it tries to load "fixed" as a default and print a warning (resource.c,
+    function cvtFont, line 1139).
+
+ -- Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de>  Wed, 13 Aug 1997 16:50:26 +0200
+
+olvwm (4.1-6) unstable; urgency=low
+
+  * Search /etc/X11/olvwm before other system directories for
+    openwin-menu, so that xview's file doesn't get precedence over olvwm's
+    own one. (fixes Bug #... don't have the number at hand :-()
+
+ -- Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de>  Sun, 30 Mar 1997 14:22:28 +0200
+
+olvwm (4.1-5) unstable; urgency=low
+
+  * Added TrueColor patch (don't fall back to black&white mode) (Bug #6626)
+  * Changed optimization options to include -fomit-frame-pointer
+
+ -- Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de>  Tue, 11 Feb 1997 08:53:16 +0100
+
+olvwm (4.1-4) unstable; urgency=low
+
+  * Removed database: line in /etc/menu-methods/olvwm
+  * Priority changed to optional
+
+ -- Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de>  Mon, 13 Jan 1997 10:21:14 +0100
+
+olvwm (4.1-3) unstable; urgency=low
+
+  * Typo in /etc/menu-methods/olvwm fixed (create user menu files with
+    correct names)
+  * Remove obsolete diversion of /usr/X11R6/lib/openwin-menu, if present.
+
+ -- Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de>  Thu, 9 Jan 1997 19:12:39 +0100
+
+olvwm (4.1-2) unstable; urgency=low
+
+  * openwin-menu can be seen as config file, thus it has been moved to
+    /etc/X11/olvwm/openwin-menu. Also listed as conffile.
+  * Provide description and method for menu package (thanks Joost for
+    great support with this!).
+
+ -- Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de>  Wed, 8 Jan 1997 17:11:59 +0100
+
+olvwm (4.1-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de>  Sat, 21 Dec 1996 11:38:06 +0100
+
+Local variables:
+mode: debian-changelog
+End:

@@ -1,0 +1,9 @@
+usr/bin
+usr/include/olgx
+usr/include/olgx_private
+usr/include/xview
+usr/include/xview_private
+usr/include/pixrect
+usr/lib/X11/config
+usr/share/doc/xviewg
+usr/share/man/man1

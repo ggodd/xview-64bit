@@ -1,0 +1,67 @@
+# Copyright (c) 1993-1997 Xerox Corporation.  All Rights Reserved.
+#
+# Permission to use, copy, modify  and  distribute  without  charge
+# this  software,  documentation, images, etc. is granted, provided
+# that this copyright and the author's name is retained.
+#
+# A fee may be charged for this program ONLY to recover  costs  for
+# distribution  (i.e.  media costs).  No profit can be made on this
+# program.
+#
+# The author assumes no responsibility for  disasters  (natural  or
+# otherwise) as a consequence of use of this software.
+#
+# Adam Stein (adam@iset.scan.mc.xerox.com)
+
+# Name of program to build
+TARGET=xtoolplaces
+
+# Name of resource file
+RESOURCE=Xtoolplaces
+
+# Setup for using gcc
+CC=gcc
+GCCDEFS=-traditional -fpcc-struct-return -c -O
+
+# If your system does include a gethostname() function, uncomment
+# the second line.
+GETHOST = -DNO_GETHOST
+#GETHOST =
+
+# If you have ANSI (SYS5) string funtions instead of the BSD one,
+# (eg. strrchr instead of rindex) uncomment the second line
+ANSI_STR =
+#ANSI_STR = -DANSI_STR
+
+# If you need the strdup() function, uncomment the second line
+STRDUP=
+#STRDUP=-DNEED_STRDUP
+
+# If you need the strstr() function, uncomment the second line
+STRSTR=
+#STRSTR=-DNEED_STRSTR
+
+STD_INCLUDES=-I.
+STD_DEFINES =${GCCDEFS} ${ANSI_STR} ${GETHOST} ${STRDUP} ${STRSTR}
+
+#ifdef NCRArchitecture
+SYS_LIBRARIES = -L/usr/ucblib -lucb
+#endif
+
+INCS=addon.h patchlevel.h xtoolplaces.h
+SRCS=copyright.c adddisplay.c addon.c combine.c fix_command.c\
+     getargs.c getgeom.c getinfo.c is.c make_list.c readfile.c\
+     strdup.c strstr.c xtoolplaces.c
+OBJS=copyright.o adddisplay.o addon.o combine.o fix_command.o\
+     getargs.o getgeom.o getinfo.o is.o make_list.o readfile.o\
+     strdup.o strstr.o xtoolplaces.o
+
+LOCAL_LIBRARIES = ${XLIB}
+
+debug := CDEBUGFLAGS= -g -DDEBUG
+
+ComplexProgramTarget(${TARGET})
+debug:: ${TARGET}
+
+InstallAppDefaults(${RESOURCE})
+
