@@ -10,6 +10,12 @@ static char     sccsid[] = "@(#)p_slider.c 20.84 93/06/28 Copyr 1984 Sun Micro";
  *	file for terms of the license.
  */
 
+#include <xview_private/p_slider_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/pf_text_.h>
+#include <xview_private/p_utl_.h>
+#include <xview_private/scrn_get_.h>
+#include <xview_private/xv_.h>
 #include <X11/Xlib.h>
 #include <xview/sun.h>
 #include <xview_private/panel_impl.h>
@@ -31,51 +37,6 @@ static char     sccsid[] = "@(#)p_slider.c 20.84 93/06/28 Copyr 1984 Sun Micro";
 				 * warping pointer after incrementing or
 				 * decrementing slider */
 
-Xv_public struct pr_size xv_pf_textwidth();
-#ifdef OW_I18N
-Xv_public struct pr_size xv_pf_textwidth_wc();
-#endif /* OW_I18N */
-
-/* XView functions */
-Pkg_private int slider_init();
-Pkg_private Xv_opaque slider_set_avlist();
-Pkg_private Xv_opaque slider_get_attr();
-Pkg_private int slider_destroy();
-
-/* Panel Item Operations */
-static void     slider_begin_preview(), slider_update_preview(),
-		slider_cancel_preview(), slider_accept_preview(),
-		slider_accept_key(), slider_paint(), slider_remove(),
-		slider_layout(), slider_accept_kbd_focus(),
-		slider_yield_kbd_focus();
-
-/* Local functions */
-static void	adjust_slider();
-static void	check_endbox_entered();
-static Panel_setting get_value();
-static void     paint_slider();
-static void     update_rects();
-static int	etoi();
-static int	itoe();
-
-static Panel_ops ops = {
-    panel_default_handle_event,		/* handle_event() */
-    slider_begin_preview,		/* begin_preview() */
-    slider_update_preview,		/* update_preview() */
-    slider_cancel_preview,		/* cancel_preview() */
-    slider_accept_preview,		/* accept_preview() */
-    NULL,				/* accept_menu() */
-    slider_accept_key,			/* accept_key() */
-    panel_default_clear_item,		/* clear() */
-    slider_paint,			/* paint() */
-    NULL,				/* resize() */
-    slider_remove,			/* remove() */
-    NULL,				/* restore() */
-    slider_layout,			/* layout() */
-    slider_accept_kbd_focus,		/* accept_kbd_focus() */
-    slider_yield_kbd_focus,		/* yield_kbd_focus() */
-    NULL				/* extension: reserved for future use */
-};
 
 typedef enum {
     SLIDER_MIN,
@@ -135,6 +96,42 @@ typedef struct {	/* data for a slider */
     int             width;
 } Slider_info;
 
+static void slider_begin_preview(Panel_item item_public, Event *event);
+static void slider_update_preview(Panel_item item_public, Event *event);
+static void slider_cancel_preview(Panel_item item_public, Event *event);
+static void slider_accept_preview(Panel_item item_public, Event *event);
+static void slider_accept_key(Panel_item item_public, Event *event);
+static void slider_paint(Panel_item item_public);
+static void slider_remove(Panel_item item_public);
+static void slider_layout(Panel_item item_public, Rect *deltas);
+static void slider_accept_kbd_focus(Panel_item item_public);
+static void slider_yield_kbd_focus(Panel_item item_public);
+static void adjust_slider(Item_info *ip, Event *event, Slider_adjust adjustment);
+static void check_endbox_entered(Item_info *ip, Event *event);
+static int etoi(Slider_info *dp, int value);
+static Panel_setting get_value(Panel_item item_public, Event *event);
+static int itoe(Slider_info *dp, int value);
+static void paint_slider(Item_info *ip, int olgx_state);
+static void update_rects(Item_info *ip);
+
+static Panel_ops ops = {
+    panel_default_handle_event,		/* handle_event() */
+    slider_begin_preview,		/* begin_preview() */
+    slider_update_preview,		/* update_preview() */
+    slider_cancel_preview,		/* cancel_preview() */
+    slider_accept_preview,		/* accept_preview() */
+    NULL,				/* accept_menu() */
+    slider_accept_key,			/* accept_key() */
+    panel_default_clear_item,		/* clear() */
+    slider_paint,			/* paint() */
+    NULL,				/* resize() */
+    slider_remove,			/* remove() */
+    NULL,				/* restore() */
+    slider_layout,			/* layout() */
+    slider_accept_kbd_focus,		/* accept_kbd_focus() */
+    slider_yield_kbd_focus,		/* yield_kbd_focus() */
+    NULL				/* extension: reserved for future use */
+};
 
 /* flags */
 #define	SHOWRANGE	0x01	/* show high and low scale numbers */
@@ -148,13 +145,6 @@ typedef struct {	/* data for a slider */
 
 #define vertical(dp) ((dp)->flags & VERTICAL)
 
-#ifdef __STDC__
-static int etoi(Slider_info *dp, int value);
-static int itoe(Slider_info *dp, int value);
-#else
-static int etoi();
-static int itoe();
-#endif
 
 /* ========================================================================= */
 
@@ -249,7 +239,7 @@ slider_set_avlist(item_public, avlist)
 	    return result;
     }
 
-    while ((attr = (int)*avlist++) != (Attr_attribute)NULL) {
+    while ((attr = *avlist++) != (Attr_attribute)NULL) {
 	switch (attr) {
 	  case PANEL_ITEM_COLOR:
 	    if (dp->value_textitem)

@@ -15,8 +15,11 @@ static char     sccsid[] = "@(#)ntfy_list.c 20.17 93/06/28 Copyr 1985 Sun Micro"
  * structures use NTFY_NODEs and can share the same list management code.
  */
 
+#include <xview_private/ntfy_list_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/ntfy_debug_.h>
+#include <xview_private/ntfy_node_.h>
 #include <xview_private/i18n_impl.h>
-#include <xview_private/ntfy.h>
 #include <xview_private/ndis.h>
 #include <xview_private/ndet.h>
 

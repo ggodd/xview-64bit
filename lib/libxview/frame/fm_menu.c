@@ -13,8 +13,6 @@ static char     sccsid[] = "@(#)fm_menu.c 20.19 93/06/28";
 #include <xview_private/fm_impl.h>
 #include <xview/openmenu.h>
 
-static void     frame_menu_redisplay(),
-                frame_menu_quit(), frame_menu_props();
 
 /* ARGSUSED */
 static void

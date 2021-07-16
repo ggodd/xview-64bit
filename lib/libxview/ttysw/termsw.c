@@ -13,6 +13,20 @@ static char     sccsid[] = "@(#)termsw.c 1.59 93/06/28";
  */
 /*****************************************************************/
 
+#include <xview_private/termsw_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/csr_change_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/font_.h>
+#include <xview_private/pf_.h>
+#include <xview_private/term_ntfy_.h>
+#include <xview_private/tty_.h>
+#include <xview_private/tty_es_.h>
+#include <xview_private/tty_menu_.h>
+#include <xview_private/tty_ntfy_.h>
+#include <xview_private/txt_once_.h>
+#include <xview_private/txt_sel_.h>
+#include <xview_private/xv_.h>
 #include <xview_private/i18n_impl.h>
 #include <stdio.h>
 #include <fcntl.h>
@@ -27,7 +41,6 @@ static char     sccsid[] = "@(#)termsw.c 1.59 93/06/28";
 #include <xview/textsw.h>
 #include <xview/termsw.h>
 #include <xview/font.h>
-#include <xview/defaults.h>
 #include <xview_private/term_impl.h>
 #include <xview_private/portable.h>
 #include <xview/scrollbar.h>
@@ -43,23 +56,23 @@ static char     sccsid[] = "@(#)termsw.c 1.59 93/06/28";
 
 #define HELP_INFO(s) XV_HELP_DATA, s,
 
-extern caddr_t  textsw_checkpoint_undo();
-extern Xv_opaque xv_pf_open();
-Bool            defaults_get_boolean();
-extern Attr_avlist attr_find();
+#if defined(__alpha) || defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT) || defined(__amd64__)
+static int termsw_layout(Termsw termsw_public, Xv_Window termsw_view_public, Window_layout_op op, unsigned long d1, unsigned long d2, unsigned long d3, unsigned long d4, unsigned long d5);
+#else
+static int termsw_layout(Termsw termsw_public, Xv_Window termsw_view_public, Window_layout_op op, int d1, int d2, int d3, int d4, int d5);
+#endif
+static int termsw_view_init_internal(Xv_Window parent, Termsw_view termsw_view_public, Textsw_attribute avlist[]);
+static int termsw_folio_init_internal(Xv_Window parent, register Termsw_folio termsw_folio, Textsw_attribute avlist[]);
+static void termsw_register_view(Termsw termsw_public, Xv_Window termsw_view_public);
+static void termsw_unlink_view(register Termsw_folio folio, register Termsw_view_handle view);
+static void termsw_unregister_view(Termsw termsw_public, Xv_Window termsw_view_public);
 
 Pkg_private Xv_Window csr_pixwin;
-Pkg_private Notify_value ttysw_event();
-
-Pkg_private Menu ttysw_walkmenu();
 
 /*
  * Key data for notice hung off frame
  */
 int	tty_notice_key;
-
-static void     termsw_unregister_view();
-static void     termsw_register_view();
 
 
 /*
@@ -67,19 +80,6 @@ static void     termsw_register_view();
  * that it has a chance to "fixup" the public object before it gets into
  * ttysw/textsw set/get routines.
  */
-
-Pkg_private int termsw_destroy();
-
-
-Pkg_private int termsw_view_init();
-Pkg_private Xv_opaque termsw_view_set();
-Pkg_private Xv_opaque termsw_view_get();
-Pkg_private int termsw_view_destroy();
-Xv_private  char *xv_font_monospace();
-
-
-Pkg_private int tty_folio_init();
-Pkg_private int tty_view_init();
 
 typedef enum {
     IF_AUTO_SCROLL = 0,
@@ -123,13 +123,13 @@ static Defaults_pairs auto_indent_pairs[] = {
 
 
 
-static
+static int
 termsw_layout(termsw_public, termsw_view_public, op, d1, d2, d3, d4, d5)
     Termsw          termsw_public;
     Xv_Window       termsw_view_public;
     Window_layout_op op;
 /* Alpha compatibility, mbuck@debian.org */
-#if defined(__alpha) || defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT)
+#if defined(__alpha) || defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT) || defined(__amd64__)
     unsigned long   d1, d2, d3, d4, d5;
 #else
     int             d1, d2, d3, d4, d5;
@@ -182,7 +182,7 @@ termsw_view_init_internal(parent, termsw_view_public, avlist)
     termsw_folio_object->parent_data.private_data = termsw_folio_object->private_tty;
 
     /* Initialized to ttysw */
-    if (tty_view_init(parent, termsw_view_public, avlist) == XV_ERROR) {
+    if (tty_view_init(parent, termsw_view_public, (Tty_attribute *)avlist) == XV_ERROR) {
 	goto Error_Return;
     }
     /*
@@ -303,7 +303,7 @@ termsw_folio_init_internal(parent, termsw_folio, avlist)
     font_name = xv_font_monospace();
 
     if (font_name && (strlen(font_name) != 0)) {
-	font = xv_pf_open(font_name);
+	font = (Xv_opaque)xv_pf_open(font_name);
     } else
 	font = (Xv_opaque) 0;
 
@@ -375,7 +375,7 @@ termsw_folio_init_internal(parent, termsw_folio, avlist)
     termsw_folio->ttysw_resized = FALSE;
 
     /* Initialized to ttysw */
-    if (tty_folio_init(parent, termsw_public, avlist) == XV_ERROR) {
+    if (tty_folio_init(parent, termsw_public, (Tty_attribute*)avlist) == XV_ERROR) {
 	goto Error_Return;
     }
     termsw_folio->tty_menu = (Menu) xv_get(termsw_public, WIN_MENU);
@@ -834,7 +834,7 @@ termsw_view_init(parent, termsw_view_public, avlist)
     /* Might not want to call textsw_register_view() here */
     textsw_register_view(parent, termsw_view_public);
 
-    if (termsw_view_init_internal(parent, termsw_view_public, avlist) !=
+    if (termsw_view_init_internal(parent, termsw_view_public, (Textsw_attribute*)avlist) !=
 	XV_OK) {
 	free((char *) view);
 	return (XV_ERROR);

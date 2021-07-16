@@ -22,7 +22,8 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=	dragdrop.h 
-HDRSPRIVATE=	dndimpl.h site_impl.h
+HDRSPRIVATE=	dndimpl.h site_impl.h dnd_.h dnd_decode_.h dndutil_.h \
+        dnd_dsdm_.h dnd_pblc_.h site_.h site_pblc_.h
 
 DATA_OBJS =	dnd_data.o site_data.o
 

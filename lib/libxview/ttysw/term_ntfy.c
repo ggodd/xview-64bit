@@ -13,6 +13,16 @@ static char     sccsid[] = "@(#)term_ntfy.c 20.60 93/06/28";
 /*
  * Notifier related routines for the termsw.
  */
+#include <xview_private/term_ntfy_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/txt_dbx_.h>
+#include <xview_private/txt_sel_.h>
+#include <xview_private/ttyansi_.h>
+#include <xview_private/tty_main_.h>
+#include <xview_private/tty_mapkey_.h>
+#include <xview_private/tty_menu_.h>
+#include <xview_private/tty_ntfy_.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #include <sys/time.h>
@@ -39,23 +49,19 @@ static char     sccsid[] = "@(#)term_ntfy.c 20.60 93/06/28";
 #include <xview/ttysw.h>
 #include <xview/termsw.h>
 #include <xview/window.h>
-#include <xview_private/tty_impl.h>
-#include <xview_private/term_impl.h>
 #include <xview_private/txt_impl.h>
 #include <xview_private/ultrix_cpt.h>
 
 #define PTY_OFFSET	(int) &(((Ttysw_folio)0)->ttysw_pty)
 
-extern Textsw   textsw_first();
-extern Textsw   textsw_next();
-extern char    *textsw_checkpoint_undo();
-extern Textsw_index textsw_insert();
-extern Textsw_index textsw_erase_i18n();
-extern void     textsw_display();
+static Textsw_index find_and_remove_mark(Textsw textsw, Textsw_mark mark);
+static Notify_value ttysw_cr(Tty tty_public, int tty);
+static void ttysw_reset_column(Ttysw_folio ttysw);
+static void ttysw_post_error(Xv_opaque public_folio_or_view, char *msg1, char *msg2);
+static void ttysw_textsw_changed_handler(Textsw textsw, int insert_before, int length_before, int replaced_from, int replaced_to, int count_inserted);
 
 #ifdef DEBUG
 #define ERROR_RETURN(val)	abort();	/* val */
-Pkg_private void ttysw_print_debug_string();
 #else
 #define ERROR_RETURN(val)	return(val);
 #endif				/* DEBUG */
@@ -70,9 +76,6 @@ extern int      dtablesize_cache;
 #define GETDTABLESIZE() \
         (dtablesize_cache?dtablesize_cache:(dtablesize_cache=getdtablesize()))
 #endif
-
-Notify_value    ttysw_text_destroy();	/* Destroy func for termsw */
-Notify_value    ttysw_text_event();	/* Event func for termsw */
 
 /* shorthand - Duplicate of what's in ttysw_main.c */
 
@@ -187,7 +190,6 @@ ttysw_text_event(textsw, event, arg, type)
 	 * routine.
 	 */
 	if (textsw == TTY_VIEW_PUBLIC(ttysw_view)) {
-	    extern Notify_value ttysw_event();
 	    nv = ttysw_event(TTY_VIEW_PUBLIC(ttysw_view), event, arg, type);
 	} else {
 	    nv = notify_next_event_func((Notify_client) (textsw),
@@ -227,12 +229,12 @@ ttysw_text_event(textsw, event, arg, type)
 	&& termsw->cmd_started != 0
 	&& ((insert = (int) xv_get(textsw, TEXTSW_INSERTION_POINT_I18N))) >
 	(cmd_start = (int) textsw_find_mark_i18n(textsw, termsw->user_mark))) {
-	int             pattern_start = cmd_start;
-	int             pattern_end = cmd_start;
+	long             pattern_start = cmd_start;
+	long             pattern_end = cmd_start;
 	CHAR            newline = (CHAR)'\n';
 
-	if (textsw_find_i18n(textsw, (long *) &pattern_start,
-		(long *) &pattern_end, &newline, 1, 0) == -1
+	if (textsw_find_i18n(textsw, &pattern_start,
+		&pattern_end, &newline, 1, 0) == -1
 	 || (pattern_start <= cmd_start || pattern_start >= (insert - 1))) {
 	    (void) textsw_erase_i18n(textsw,
 			   (Textsw_index) cmd_start, (Textsw_index) insert);

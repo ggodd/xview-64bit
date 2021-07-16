@@ -10,6 +10,9 @@ static char     sccsid[] = "@(#)svr_x.c 20.57 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/svr_x_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/gettext_.h>
 #include <stdio.h>
 #include <xview/pkg.h>
 #include <fcntl.h>
@@ -21,16 +24,17 @@ static char     sccsid[] = "@(#)svr_x.c 20.57 93/06/28";
 #include <xview_private/i18n_impl.h>
 #include <xview/win_event.h>
 #include <X11/Xlib.h>
-#include <xview/defaults.h>
 #include <xview/sel_svc.h>
 #include <xview/server.h>
-#include <xview_private/svr_impl.h>
 #include <X11/keysym.h>
 #ifdef __linux__
 #include <unistd.h>			/* sleep() */
 #endif
 
-extern Display *XOpenDisplay();
+static int my_sync(Display *display);
+static int keycode_in_map(XModifierKeymap *map, KeyCode keycode);
+static int find_free_row(XModifierKeymap *map);
+
 #ifndef __linux__
 Xv_private_data Defaults_pairs xv_kbd_cmds_value_pairs[4];
 #else

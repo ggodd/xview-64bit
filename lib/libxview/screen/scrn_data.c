@@ -10,10 +10,8 @@ static char     sccsid[] = "@(#)scrn_data.c 1.19 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview_private/scrn_impl.h>
-
-Pkg_private int screen_init();
-Pkg_private int screen_destroy();
+#include <xview_private/screen_.h>
+#include <xview_private/scrn_get_.h>
 
 Xv_pkg          xv_screen_pkg = {
     "Screen", ATTR_PKG_SCREEN,

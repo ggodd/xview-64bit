@@ -14,6 +14,9 @@ static char     sccsid[] = "@(#)ntfy_debug.c 20.20 93/06/28 Copyr 1985 Sun Micro
  * Ntfy_debug.c - Debugging routines enabled by NTFY_DEBUG in ntfy.h
  */
 
+#include <xview_private/ntfy_debug_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/xv_.h>
 #include <stdio.h>
 #include <xview_private/i18n_impl.h>
 #include <xview/xv_error.h>

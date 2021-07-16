@@ -10,7 +10,7 @@ static char     sccsid[] = "@(#)item_get.c 20.52 93/06/28 Copyr 1984 Sun Micro";
  *	file for terms of the license.
  */
 
-#include <xview_private/panel_impl.h>
+#include <xview_private/item_get_.h>
 #include <xview/cms.h>
 
 Pkg_private     Xv_opaque

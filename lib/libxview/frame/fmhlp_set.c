@@ -10,6 +10,11 @@ static char     sccsid[] = "@(#)fmhlp_set.c 1.26 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/fmhlp_set_.h>
+#include <xview_private/fm_display_.h>
+#include <xview_private/fm_display_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/wmgr_decor_.h>
 #include <X11/Xlib.h>
 #include <xview_private/fm_impl.h>
 #include <xview_private/frame_help.h>
@@ -42,7 +47,7 @@ frame_help_set_avlist(frame_public, avlist)
     server_public = xv_server(info);
     add_decor = delete_decor = 0;
 
-    for (attrs = avlist; (int)*attrs; attrs = attr_next(attrs)) {
+    for (attrs = avlist; *attrs; attrs = attr_next(attrs)) {
 	switch ((int)attrs[0]) {
 
 	  case FRAME_SHOW_LABEL:	/* same as FRAME_SHOW_HEADER */

@@ -14,7 +14,9 @@ static char     sccsid[] = "@(#)ow_data.c 1.16 93/06/28";
  * Global Defines:
  */
 
-#include <xview_private/ow_impl.h>
+#include <xview_private/openwin_.h>
+#include <xview_private/ow_get_.h>
+#include <xview_private/ow_set_.h>
 
 Xv_pkg          xv_openwin_pkg = {
     "Open Window",		/* seal -> package name */

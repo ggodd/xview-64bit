@@ -298,8 +298,23 @@ ev_get_insert( /* views */ );
 	Ev_chain	 views;
 #							endif
 
+#include <xview/macros.h>
+
+#define ev_set(...) \
+    MACRO_DEF1(_ev_set, Ev_handle, __VA_ARGS__)
+
+#define ev_notify(...) \
+    MACRO_DEF1(_ev_notify, Ev_handle, __VA_ARGS__)
+
 /* VARARGS1 */
-EXTERN_FUNCTION( Ev_status ev_set, (Ev_handle view, DOTDOTDOT));
+EXTERN_FUNCTION( Ev_status _ev_set, (Ev_handle view, DOTDOTDOT));
+#							ifdef notdef
+	Ev_handle	   view;
+	va_dcl
+#							endif
+
+/* VARARGS1 */
+EXTERN_FUNCTION( void _ev_notify, (Ev_handle view, DOTDOTDOT));
 #							ifdef notdef
 	Ev_handle	   view;
 	va_dcl

@@ -32,6 +32,9 @@
 st_table	*wiHashTable;
 st_table	*vHashTable;
 
+static int wiCompare(register char *w1, register char *w2);
+static int wiHash(register char *w1, register int modulus);
+
 static int
 wiCompare( w1, w2 )
 register char	*w1, *w2;

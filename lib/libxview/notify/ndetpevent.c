@@ -14,12 +14,19 @@ static char     sccsid[] = "@(#)ndetpevent.c 20.14 93/06/28 Copyr 1985 Sun Micro
  * Ndet_p_event.c - Notify_post_event implementation.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndetpevent_.h>
+#include <xview_private/ndet_event_.h>
+#include <xview_private/ndisdispch_.h>
+#include <xview_private/nint_stack_.h>
+#include <xview_private/ntfy_debug_.h>
+#include <xview_private/ntfyclient_.h>
+#include <xview_private/ntfy_cond_.h>
+#include <xview_private/ntfyprotec_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/ndis.h>
 #include <xview_private/nint.h>
 
-static Notify_error ndet_p_event();
+static Notify_error ndet_p_event(Notify_client nclient, Notify_event event, NTFY_TYPE cond_type, Notify_arg arg, Notify_copy copy_func, Notify_release release_func, Notify_value *rc);
 
 /*
  * Need to let when_hint == SAFE events through immediately as much as

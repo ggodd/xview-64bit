@@ -10,11 +10,18 @@ static char     sccsid[] = "@(#)txt_view.c 1.32 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/txt_view_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/txt_attr_.h>
+#include <xview_private/txt_event_.h>
+#include <xview_private/txt_once_.h>
+#include <xview_private/windowutil_.h>
+#include <xview_private/win_geom_.h>
 #include <xview/pkg.h>
 #include <xview/attrol.h>
-#include <xview/defaults.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <xview/textsw.h>
 #include <xview/win_struct.h>
@@ -23,16 +30,6 @@ static char     sccsid[] = "@(#)txt_view.c 1.32 93/06/28";
 #include <xview/win.h>
 
 #define SET_NEW_START(_view, _char_pos) _view->e_view->line_table.seq[0]= (_char_pos == TEXTSW_INFINITY) ? 0 : _char_pos
-
-Pkg_private Textsw_view_handle textsw_view_init_internal();
-Pkg_private Notify_value textsw_event();
-
-Pkg_private int textsw_view_init();
-Pkg_private Xv_opaque textsw_view_set();
-Pkg_private Xv_opaque textsw_view_get();
-Pkg_private int textsw_view_destroy();
-
-Es_index ev_index_for_line();
 
 Pkg_private int
 textsw_view_init(parent, textsw_view_public, avlist)
@@ -50,7 +47,7 @@ textsw_view_init(parent, textsw_view_public, avlist)
 	text_notice_key = xv_unique_key();
     }
 
-    for (attrs = avlist; (int)*attrs; attrs = attr_next(attrs)) {
+    for (attrs = avlist; *attrs; attrs = attr_next(attrs)) {
 	switch ((int)*attrs) {
 	  case TEXTSW_STATUS:
 	    status = (Textsw_status *) attrs[1];
@@ -69,7 +66,7 @@ textsw_view_init(parent, textsw_view_public, avlist)
     view->public_self = textsw_view_public;
     view->magic = TEXTSW_VIEW_MAGIC;
 /* Alpha compatibility, mbuck@debian.org */
-#if defined(__alpha) || defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT)
+#if defined(__alpha) || defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT) || defined(__amd64__)
     view->window_fd = (Xv_Window) xv_get(textsw_view_public, WIN_FD);
 #else
     view->window_fd = (int) xv_get(textsw_view_public, WIN_FD);

@@ -30,8 +30,12 @@ OFILES.ttysw.4	= ${CFILES.ttysw.4:%.c=%.o}
 
 
 HDRSPUBLIC=     ttysw.h        tty.h         termsw.h
-HDRSPRIVATE=    charimage.h    charscreen.h  ttyansi.h       tty_impl.h   \
-                term_impl.h
+HDRSPRIVATE=    charimage.h charscreen.h ttyansi.h tty_impl.h term_impl.h \
+            cim_change_.h cim_size_.h csr_init_.h csr_change_.h term_ntfy_.h \
+            termsw_.h tty_.h ttyansi_.h tty_compat_.h tty_es_.h \
+            tty_gtty_.h tty_init_.h tty_mapkey_.h tty_modes_.h tty_stty_.h\
+            tty_main_.h tty_menu_.h \
+            tty_newtxt_.h tty_ntfy_.h ttyselect_.h ttytl_.h
 
 DATA_OBJS = tty_data.o term_data.o 
 

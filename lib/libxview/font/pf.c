@@ -16,14 +16,13 @@ static char     sccsid[] = "@(#)pf.c 20.17 93/06/28 SMI";
  * Variant version for XView: based on standard pixrect version from SunOS 4.0
  */
 
+#include <xview_private/pf_.h>
 #include <sys/types.h>
 #include <pixrect/pixrect.h>
 #include <pixrect/pixfont.h>
 #include <xview/server.h>
 
 /* public functions */
-
-extern Pixfont *xv_pf_open();
 
 Xv_public Pixfont        *
 xv_pf_default()

@@ -179,32 +179,4 @@ typedef struct {
 
 #define         SELN_FN_NUM     3
 
-Pkg_private Xv_opaque	server_init_x();
-
-/* server_get.c */
-Pkg_private int		server_init();
-Pkg_private int		server_destroy();
-
-/* server_get.c */
-Pkg_private Xv_opaque	server_get_attr();
-
-/* server_set.c */
-Pkg_private Xv_opaque	server_set_avlist();
-Pkg_private Server_xid_list *server_xidnode_from_xid ();
-Pkg_private Server_mask_list *server_masknode_from_xidid ();
-Pkg_private Server_proc_list *server_procnode_from_id ();
-
-/* svr_atom.c */
-#ifdef __STDC__
-Xv_private Atom server_intern_atom(Server_info *server, char *atomName);
-Xv_private char *server_get_atom_name(Server_info *server, Atom atom);
-Xv_private int server_set_atom_data(Server_info *server, Atom atom, Xv_opaque data);
-Xv_private Xv_opaque server_get_atom_data(Server_info *server, Atom atom, int *status);
-#else
-Xv_private Atom server_intern_atom();
-Xv_private char *server_get_atom_name();
-Xv_private int server_set_atom_data();
-Xv_private Xv_opaque server_get_atom_data();
-#endif
-
 #endif

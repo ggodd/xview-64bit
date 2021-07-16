@@ -5,6 +5,8 @@ static char     sccsid[] = "@(#)msgfmt.c 1.3 91/09/14";
 #endif
 
 #include "msgfmt.h"
+#include <stdlib.h>
+#include <string.h>
 
 /*
  * msgfmt - Generate binary tree for runtime gettext() using psffm:
@@ -13,17 +15,22 @@ static char     sccsid[] = "@(#)msgfmt.c 1.3 91/09/14";
  *	     c2psffm filter for c source files.
  */
 
-#define    ignore(a)    ((void) a)
+int read_psffm(char *filename);
+char *consume_whitespace(char *buf);
+char expand_meta(char **buf);
+off_t sortit(char *msgid, char *msgstr, int new);
+void printlist(void);
+int binary_compute(int i, int j, int more[], int less[]);
+#ifdef USE_MMAP
+void output_file(char *file);
+#else
+void output_file(char *file);
+#endif
+void freelist(void);
+char *savestr(register char *cp);
+int istail(register char *str, register char *of);
 
-char	*consume_whitespace();
-char	expand_meta();
-char    *calloc();
-off_t    tellpt;
-off_t    sortit();
-char    *mktemp();
-char    *savestr();
-char    *strcat();
-char    *strcpy();
+#define    ignore(a)    ((void) a)
 
 off_t    mesgpt;
 
@@ -43,6 +50,7 @@ int    readstd;
 
 struct list_struct list;
 
+void
 main(argc, argv)
     int argc;
     char *argv[];
@@ -109,14 +117,14 @@ main(argc, argv)
 
     exit(0);
 }
-
+
 
 /* 
  * read_psffm - read in "psffm" format file, check syntax, printing
  * 		error messages as needed, output binary tree to
  *		file <domain>
 */
-
+int
 read_psffm(filename)
     char *filename;
 {
@@ -335,7 +343,7 @@ load_buffer:
     }
     return(0);
 }
-
+
 
 char *
 consume_whitespace(buf)
@@ -390,7 +398,7 @@ expand_meta(buf)
     }
 }
 
-
+
 
 /*
  * sortit - insertion sort, place message identifier = str and
@@ -446,24 +454,25 @@ sortit(msgid, msgstr, new)
     return(hp->hpt);
 }
 
+void
 printlist()
 {
     struct list_struct *hp1;
 
     hp1 = &list;
-    fprintf(stderr, "dumping record at offset hpt = %d\n", hp1->hpt);
+    fprintf(stderr, "dumping record at offset hpt = %ld\n", hp1->hpt);
     fprintf(stderr, "message id is %s\n", hp1->msgid);
     fprintf(stderr, "message string is %s\n", hp1->msg);
 
     while (hp1->hnext) {
-	fprintf(stderr, "dumping record at offset hpt = %d\n", hp1->hpt);
+	fprintf(stderr, "dumping record at offset hpt = %ld\n", hp1->hpt);
         fprintf(stderr, "message id is %s\n", hp1->hnext->msgid);
 	fprintf(stderr, "message string is %s\n", hp1->hnext->msg);
         hp1 = hp1->hnext;
     }
 
 }
-
+
 
 /*
  * binary_compute is used for pre-computing a binary search. 
@@ -489,6 +498,7 @@ binary_compute(i, j, more, less)
  * Write out static_message File contains static structure of messages.
  */
 #ifdef USE_MMAP
+void
 output_file(file)
     char *file;
 {
@@ -572,8 +582,8 @@ output_file(file)
 }
 
 #else
-
 
+vpod
 output_file(file)
     char *file;
 {
@@ -630,7 +640,7 @@ output_file(file)
  * 		is written out to the binary tree file, called when
  *		changing domains and when exiting the program
 */
-
+void
 freelist()
 {
     register struct list_struct *hp, *hp0;
@@ -660,7 +670,7 @@ savestr(cp)
     return(strcpy(dp, cp));
 }
 
-
+int
 istail(str, of)
     register char *str, *of;
 {

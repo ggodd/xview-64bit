@@ -138,7 +138,7 @@ typedef struct ntfy_condition {
 					   NTFY_EXCEPTION */
 		int	signal;		/* NTFY_*_SIGNAL */
 /* Alpha compatibility, mbuck@debian.org */
-#if defined(__alpha) || defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT)
+#if defined(__alpha) || defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT) || defined(__amd64__)
 		unsigned long an_u_int;
 #else
 		u_int	an_u_int;	/* Generic unsigned int used for
@@ -221,7 +221,6 @@ extern	sigset_t ntfy_sigs_delayed;/* Bit mask of signals received while in
 #define	NTFY_BEGIN_CRITICAL	ntfy_sigs_blocked++
 #define	NTFY_IN_CRITICAL	(ntfy_sigs_blocked > 0)
 #define	NTFY_END_CRITICAL   	ntfy_end_critical()
-void	ntfy_end_critical();
 
 /*
  * Interrupt detection macros.  Set when processing at signal interrupt
@@ -286,41 +285,6 @@ typedef	caddr_t	NTFY_DATA;
 					   condition taking 2 nodes, one for
 					   detector and one for dispatcher) */
 
-/*
- * Node pool routines
- */
-extern	NTFY_NODE *ntfy_alloc_node();	/* () */
-extern	void ntfy_free_node();		/* (NTFY_NODE *node) */
-extern	void ntfy_replenish_nodes();	/* () */
-
-extern	char *ntfy_malloc();		/* (u_int size) */
-extern	void ntfy_free_malloc();	/* (char *ptr) */
-extern	void ntfy_flush_tb_freed();	/* () called from non-interrupt level */
-/*
- * Ntfy_list_* routines need to be executed while data protected
- */
-extern	void ntfy_append_node();	/* (NTFY_NODE **node_list, *new_node) */
-extern	void ntfy_remove_node();	/* (NTFY_NODE **node_list, *node_axe) */
-extern	void ntfy_free_list();		/* (NTFY_NODE **node_list) */
-
-/*
- * Ntfy_client routines
- */
-extern	NTFY_CLIENT *ntfy_find_nclient();/* (NTFY_CLIENT *client_list,
-					    Notify_client nclient,
-					    NTFY_CLIENT **client_latest) */
-extern	NTFY_CLIENT *ntfy_new_nclient();/* Creates and inits client if can't
-					   find (NTFY_CLIENT **client_list,
-					    Notify_client nclient,
-					    NTFY_CLIENT **client_latest) */
-extern	void ntfy_remove_client();	/* Removes client from client_list
-					   and makes sure that all conditions
-					   all removed first
-					   (NTFY_CLIENT **client_list,
-					    NTFY_CLIENT *client,
-					    NTFY_CLIENT **condition_latest,
-					    enum ntfy_who who) */
-
 
 #define	ntfy_alloc_client()		(NTFY_CLIENT *)ntfy_alloc_node()
 #define	ntfy_free_client(client)	ntfy_free_node((NTFY_NODE *)(client))
@@ -331,55 +295,9 @@ extern	void ntfy_remove_client();	/* Removes client from client_list
 #define	ntfy_free_client_list(client_list) \
 			node_free_list((NTFY_NODE **)(client_list))
 
-/*
- * Ntfy_condition_* routines
- */
-extern	NTFY_CONDITION *ntfy_find_condition();/* Finds the 1st condition of
-					   type.  If use_data then use data to
-					   refine the match by comparing with
-					   data.an_u_int.
-					   (NTFY_CONDITION *condition_list,
-					    NTFY_TYPE type,
-					    NTFY_CONDITION **condition_latest,
-					    NTFY_DATA data, int use_data) */
-extern	NTFY_CONDITION *ntfy_new_condition();/* Creates condition if can't find.
-					   Inits to data if use_data else 0.
-					   (NTFY_CONDITION **condition_list,
-					    NTFY_TYPE type,
-					    NTFY_CONDITION **condition_latest,
-					    NTFY_DATA data, int use_data) */
 #define	NTFY_USE_DATA		1	/* Use_data flag value */
 #define	NTFY_IGNORE_DATA	0	/* Use_data flag value */
 
-extern	void ntfy_unset_condition();	/* Removes condition from client if
-					   condition->function is null &
-					   client from client_list if no
-					   conditions in it.
-					   (NTFY_CLIENT **client_list,
-					    NTFY_CLIENT *client,
-					    NTFY_CONDITION *condition,
-					    NTFY_CLIENT **client_latest,
-					    NTFY_WHO who) */
-extern	void ntfy_remove_condition();	/* Removes condition from client
-					   (NTFY_CLIENT *client,
-					    NTFY_CONDITION *condition,
-					    NTFY_WHO who) */
-/*
- * Enumerates all conditions on client_list.  If enum_func returns
- * NTFY_ENUM_SKIP then go to next client (NTFY_CLIENT **client_list,
- * NTFY_ENUM_FUNC emum_func) Enum_func takes (NTFY_CLIENT *client,
- * NTFY_CONDITION *condition).  Normal return value is NTFY_ENUM_NEXT
- * but a NTFY_ENUM_TERM is possible if the enumeration terminated early.
- */
-extern	NTFY_ENUM ntfy_paranoid_enum_conditions(); /* May remove any client or
-					   condition during call.  But may not
-					   be call recursively. */
-extern	NTFY_ENUM ntfy_enum_conditions(); /* May remove condition during call.
-					   If remove client during call then
-					   don't return NTFY_ENUM_NEXT.
-					   Can't remove any arbitrary
-					   client or condition safely.
-					   May be called recursively. */
 
 typedef	enum ntfy_who {
         NTFY_NDET=0,
@@ -488,7 +406,6 @@ as well as asynchronous signal conditions).
  */
 #ifdef	NTFY_DEBUG
 #define	ntfy_set_errno(err)	ntfy_set_errno_debug((err))
-void	ntfy_set_errno_debug();
 #else	/* NTFY_DEBUG */
 #define	ntfy_set_errno(err)	notify_errno = err
 #endif	/* NTFY_DEBUG */
@@ -501,19 +418,15 @@ void	ntfy_set_errno_debug();
  */
 #ifdef	NTFY_DEBUG
 #define	ntfy_set_warning(err) ntfy_set_warning_debug((err))
-void	ntfy_set_warning_debug();
 #else	/* NTFY_DEBUG */
 #define	ntfy_set_warning(err) notify_errno = err
 #endif	/* NTFY_DEBUG */
 
 #ifdef	NTFY_DEBUG
 #define	ntfy_assert(bool, code)  if (!(bool)) ntfy_assert_debug(code)
-void	ntfy_assert_debug();
 #else	/* NTFY_DEBUG */
 #define	ntfy_assert(bool, code)	{}
 #endif	/* NTFY_DEBUG */
-
-void	ntfy_fatal_error();
 
 #define	pkg_private	extern
 #define	pkg_private_data

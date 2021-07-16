@@ -88,42 +88,6 @@ typedef struct {
                 v;
 }           HSV;
 
-/*
- * Private function declarations
- */
-
-int	           calc_add_ins();
-char             * olgx_malloc();
-void               olgx_update_horizontal_slider();
-void               olgx_update_vertical_slider();
-void               olgx_update_vertical_gauge();
-void               olgx_update_horiz_gauge();
-void               olgx_free();
-void               olgx_destroy_gcrec();
-void               olgx_total_gcs();
-void               olgx_initialise_gcrec();
-void               olgx_draw_elevator();
-void               olgx_error();
-void               olgx_draw_pixmap_label();
-void               olgx_draw_varheight_button();
-Pixmap             olgx_get_busy_stipple();
-Pixmap             olgx_get_grey_stipple();
-int                gc_matches();
-int                olgx_cmp_fonts();
-GC_rec           * olgx_get_gcrec();
-GC_rec           * olgx_gcrec_available();
-GC_rec           * olgx_set_color_smart();
-Graphics_info    * olgx_create_ginfo();
-per_disp_res_ptr   olgx_get_perdisplay_list();
-
-/* ol_color.c */
-void               hsv_to_rgb();
-void               rgb_to_hsv();
-void               rgb_to_xcolor();
-void               hsv_to_xcolor();
-void               xcolor_to_hsv();
-void               olgx_hsv_to_3D();
-
 #endif	/* !OL_PRIVATE_DEFINED */
 
 

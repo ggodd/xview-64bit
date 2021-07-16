@@ -15,18 +15,17 @@ static char     sccsid[] = "@(#)ndet_read.c 20.12 93/06/28 Copyr 1985 Sun Micro"
  * not already in the middle of it.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndet_read_.h>
+#include <xview_private/sys_read_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/ndis.h>	/* For ndis_client == NTFY_CLIENT_NULL check */
 #include <errno.h>
 
-extern          errno;
+static Notify_value ndet_read_in_func(Notify_client nclient, int fd);
+
 extern int      notify_exclude_fd;
 
-static Notify_value ndet_read_in_func();
-
 static int      ndet_read_done;
-
 static Notify_client ndet_read_nclient = (Notify_client) & ndet_read_done;
 
 extern int

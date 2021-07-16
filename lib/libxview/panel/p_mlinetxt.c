@@ -13,10 +13,16 @@ static char     sccsid[] = "@(#)p_mlinetxt.c 1.32 93/06/28";
 /*
  * Multi-line Text Field Panel Item
  */
+#include <xview_private/p_mlinetxt_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/p_select_.h>
+#include <xview_private/p_txt_.h>
+#include <xview_private/p_utl_.h>
+#include <xview_private/windowutil_.h>
+#include <xview_private/xv_.h>
 #include <string.h>
-#include <xview_private/panel_impl.h>
 #include <xview_private/draw_impl.h>
-#include <xview/defaults.h>
 #include <xview/scrollbar.h>
 #include <xview/textsw.h>
 #include <xview/win_notify.h>
@@ -28,54 +34,6 @@ static char     sccsid[] = "@(#)p_mlinetxt.c 1.32 93/06/28";
 #define MLTXT_PUBLIC(item)	XV_PUBLIC(item)
 
 #define	MLTXT_FROM_ITEM(ip)	MLTXT_PRIVATE(ITEM_PUBLIC(ip))
-
-/* Xview functions */
-Pkg_private int 	panel_mltxt_init();
-Pkg_private Xv_opaque 	panel_mltxt_set_avlist();
-Pkg_private Xv_opaque 	panel_mltxt_get_attr();
-Pkg_private int 	panel_mltxt_destroy();
-Xv_private void 	win_ungrab_quick_sel_keys();
-
-/* Panel Item Operations */
-static void mltxt_paint();
-static void mltxt_resize();
-static void mltxt_remove();
-static void mltxt_layout();
-static void mltxt_accept_kbd_focus();
-static void mltxt_yield_kbd_focus();
-
-/* Local functions */
-static void mltxt_advance_caret();
-static void mltxt_backup_caret();
-static Notify_value mltxt_notify_proc();
-static int notify_user();
-static void set_textsw_xy();
-
-static Panel_ops ops = {
-    panel_default_handle_event,		/* handle_event() */
-    NULL,				/* begin_preview() */
-    NULL,				/* update_preview() */
-    NULL,				/* cancel_preview() */
-    NULL,				/* accept_preview() */
-    NULL,				/* accept_menu() */
-    NULL,				/* accept_key() */
-    panel_default_clear_item,		/* clear() */
-    mltxt_paint,			/* paint() */
-    mltxt_resize,			/* resize() */
-    mltxt_remove,			/* remove() */
-    NULL,				/* restore() */
-    mltxt_layout,			/* layout() */
-    mltxt_accept_kbd_focus,		/* accept_kbd_focus() */
-    mltxt_yield_kbd_focus,		/* yield_kbd_focus() */
-    NULL				/* extension: reserved for future use */
-};
-
-static Defaults_pairs line_break_pairs[] = {
-    "Clip", (int) PANEL_WRAP_AT_CHAR,
-    "Wrap_char", (int) PANEL_WRAP_AT_CHAR,
-    "Wrap_word", (int) PANEL_WRAP_AT_WORD,
-    NULL, (int) PANEL_WRAP_AT_WORD
-};
 
 typedef struct {
     Panel_item	    public_self;   /* back pointer to object */
@@ -106,6 +64,42 @@ typedef struct {
 #endif /* OW_I18N */
 } Mltxt_info;
 
+static void mltxt_paint(Panel_item item_public);
+static void mltxt_resize(Panel_item item_public);
+static void mltxt_remove(Panel_item item_public);
+static void mltxt_layout(Panel_item item_public, Rect *deltas);
+static void mltxt_accept_kbd_focus(Panel_item item_public);
+static void mltxt_yield_kbd_focus(Panel_item item_public);
+static void mltxt_advance_caret(Item_info *ip);
+static void mltxt_backup_caret(Item_info *ip);
+static Notify_value mltxt_notify_proc(Xv_Window window, Event *event, Notify_arg arg, Notify_event_type type);
+static int notify_user(Mltxt_info *dp, Event *event);
+
+static Panel_ops ops = {
+    panel_default_handle_event,		/* handle_event() */
+    NULL,				/* begin_preview() */
+    NULL,				/* update_preview() */
+    NULL,				/* cancel_preview() */
+    NULL,				/* accept_preview() */
+    NULL,				/* accept_menu() */
+    NULL,				/* accept_key() */
+    panel_default_clear_item,		/* clear() */
+    mltxt_paint,			/* paint() */
+    mltxt_resize,			/* resize() */
+    mltxt_remove,			/* remove() */
+    NULL,				/* restore() */
+    mltxt_layout,			/* layout() */
+    mltxt_accept_kbd_focus,		/* accept_kbd_focus() */
+    mltxt_yield_kbd_focus,		/* yield_kbd_focus() */
+    NULL				/* extension: reserved for future use */
+};
+
+static Defaults_pairs line_break_pairs[] = {
+    "Clip", (int) PANEL_WRAP_AT_CHAR,
+    "Wrap_char", (int) PANEL_WRAP_AT_CHAR,
+    "Wrap_word", (int) PANEL_WRAP_AT_WORD,
+    NULL, (int) PANEL_WRAP_AT_WORD
+};
 
 
 /* ========================================================================= */
@@ -458,7 +452,7 @@ panel_mltxt_get_attr(item_public, status, which_attr, valist)
       case PANEL_ITEM_NTH_WINDOW:
 /* Alpha compatibility, mbuck@debian.org */
 #if 1
-	switch (va_arg(valist, int)) {
+	switch (va_arg(valist, Attr_attribute)) {
 #else
 	switch (*(int *) valist) {
 #endif
@@ -705,7 +699,7 @@ mltxt_yield_kbd_focus(item_public)
 	    xv_set(dp->focus_pw, WIN_SET_FOCUS, NULL);
 	    win_ungrab_quick_sel_keys( dp->view );
 	    win_grab_quick_sel_keys( dp->focus_pw );
-	    dp->focus_pw = NULL;
+	    dp->focus_pw = (Xv_Window)NULL;
 	}
 }
 

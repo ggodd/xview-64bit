@@ -12,8 +12,13 @@ static char     sccsid[] = "@(#)svrim_ops.c 20.44 93/06/28";
 
 #include <stdio.h>
 
+#include <xview_private/svrim_ops_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/mem_.h>
+#include <xview_private/pw_read_.h>
+#include <xview_private/xv_rop_.h>
+#include <xview_private/xv_stencil_.h>
 #include <xview_private/i18n_impl.h>
-#include <xview_private/svrim_impl.h>
 #include <pixrect/pixrect.h>
 #include <pixrect/pixfont.h>
 #include <pixrect/memvar.h>
@@ -38,7 +43,7 @@ server_image_rop(dest, dx, dy, dw, dh, op, src, sx, sy)
 	    Xv_Drawable_info *info;
 
 	    DRAWABLE_INFO_MACRO(src, info);
-	    xv_read_internal(dest, dx, dy, dw, dh, op, xv_display(info),
+	    xv_read_internal((Pixrect*)dest, dx, dy, dw, dh, op, xv_display(info),
 			     xv_xid(info), sx, sy);
 	} else {
 	    xv_error((Xv_object)NULL,
@@ -75,7 +80,7 @@ server_image_rop(dest, dx, dy, dw, dh, op, src, sx, sy)
 			     PIX_OPCOLOR(op) ? XV_USE_OP_FG : XV_USE_CMS_FG,
 			     XV_DEFAULT_FG_BG);
 		xv_rop_internal(display, xid, gc,
-				dx, dy, dw, dh, npr, 0, 0, info);
+				dx, dy, dw, dh, (Xv_opaque)npr, 0, 0, info);
 	    }
 	    break;
 	}
@@ -278,7 +283,7 @@ server_image_replrop(dest, dx, dy, dw, dh, op, src, sx, sy)
 			     PIX_OPCOLOR(op) ? XV_USE_OP_FG : XV_USE_CMS_FG,
 			     XV_DEFAULT_FG_BG);
 		xv_replrop_internal(display, info, xid,
-			     replrop_gc, dx, dy, dw, dy, src, sx, sy, info);
+			     replrop_gc, dx, dy, dw, dy, (Pixrect*)src, sx, sy, info);
 	    } else {
 		xv_error((Xv_object)NULL,
 			 ERROR_STRING,

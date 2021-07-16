@@ -71,6 +71,16 @@ ModDescriptor ModDescriptorTable[] = {
 };
 #define NMODBINDINGS (sizeof(ModDescriptorTable)/sizeof(ModDescriptor))
 
+static void establishModBindings(Display *dpy, XrmDatabase newDB);
+static MouseMatchState searchMouseBindings(XButtonEvent *pe, SemanticAction *action);
+static Bool checkChording(Display *dpy, struct timeval timeout, XButtonEvent *pr);
+static void keySuspend(Display *dpy, XKeyEvent *ke);
+static void keyResume(Display *dpy, XKeyEvent *ke);
+static void keyQuoteNext(Display *dpy, XKeyEvent *ke);
+static void addBinding(KeyCode kc, unsigned int mod, KeyDescriptor *desc);
+static void establishKeyBindings(Display *dpy, XrmDatabase rdb);
+static void grabRootKeys(Display *dpy, Window root, Bool grab);
+static void grabRootButtons(Display *dpy, Window root, Bool grab);
 
 /*
  * establishModBindings
@@ -553,6 +563,7 @@ typedef struct {
     unsigned int mod;
 } modsym;
 
+static int parseKeySpec(Display *dpy, char *specifier, modsym *syms);
 
 #define KEYBINDING_TABLE_SIZE 60
 #define KEYBINDING_TABLE_INCR 20
@@ -762,6 +773,7 @@ polyStringToModifier(dpy, str)
  */
 static int
 parseKeySpec(dpy, specifier, syms)
+    Display* dpy;
     char *specifier;
     modsym *syms;
 {

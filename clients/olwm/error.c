@@ -202,6 +202,8 @@ static ErrorEntry errorTable[] = {
 	{0,	BAll,	0}	/* 127, X_NoOperation */
 }; /* errorTable */
 
+static void printError(Display *dpy, XErrorEvent *err, char *tag);
+static void handleExtensionError(Display *dpy, XErrorEvent *event);
 
 /*
  * printError

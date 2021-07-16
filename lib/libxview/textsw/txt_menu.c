@@ -14,9 +14,25 @@ static char     sccsid[] = "@(#)txt_menu.c 20.91 93/06/29";
  * Text subwindow menu creation and support.
  */
 
+#include <xview_private/txt_menu_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/ev_once_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/txt_caret_.h>
+#include <xview_private/txt_e_menu_.h>
+#include <xview_private/txt_event_.h>
+#include <xview_private/txt_field_.h>
+#include <xview_private/txt_file_.h>
+#include <xview_private/txt_find_.h>
+#include <xview_private/txt_getkey_.h>
+#include <xview_private/txt_input_.h>
+#include <xview_private/txt_popup_.h>
+#include <xview_private/txt_putkey_.h>
+#include <xview_private/txt_sel_.h>
+#include <xview_private/txt_selsvc_.h>
 #include <xview_private/primal.h>
 #include <xview/textsw.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <errno.h>
 #include <pixrect/pr_util.h>
@@ -30,7 +46,6 @@ static char     sccsid[] = "@(#)txt_menu.c 20.91 93/06/29";
 #include <pixrect/memvar.h>
 
 #include <pixrect/pixfont.h>
-#include <xview/defaults.h>
 #include <xview/win_input.h>
 #include <xview/win_struct.h>
 #include <xview/fullscreen.h>
@@ -45,8 +60,11 @@ static char     sccsid[] = "@(#)txt_menu.c 20.91 93/06/29";
 
 #define HELP_INFO(s) XV_HELP_DATA, s,
 
-Pkg_private Es_index ev_index_for_line();
-static void textsw_done_menu();
+static void textsw_new_menu(Textsw_folio folio);
+static void textsw_done_menu(Menu menu, Xv_opaque result);
+static void textsw_edit_do_menu_action(Menu cmd_menu, Menu_item cmd_item);
+static void textsw_view_do_menu_action(Menu cmd_menu, Menu_item cmd_item);
+static void textsw_find_do_menu_action(Menu cmd_menu, Menu_item cmd_item);
 
 #define			MAX_SIZE_MENU_STRING	30
 
@@ -66,28 +84,6 @@ int TXT_MENU_REFCOUNT_KEY, TXT_MENU_KEY, TXT_SUB_MENU_KEY;
 int TXT_MENU_ITEMS_KEY, TXT_FILE_MENU_KEY, TXT_SET_DEF_KEY;
 static Menu    *textsw_file_menu;
 static short    set_def  = FALSE;
-
-pkg_private void textsw_get_extend_to_edge();
-pkg_private void textsw_set_extend_to_edge();
-Pkg_private Textsw_view_handle textsw_create_view();
-int             textsw_file_do_menu_action();
-
-Pkg_private Menu     textsw_menu_init();
-Pkg_private void     textsw_do_menu();
-Pkg_private Menu     textsw_get_unique_menu();
-Pkg_private Menu_item textsw_extras_gen_proc();
-Pkg_private void     textsw_do_save();
-
-/* VARARGS0 */
-#ifdef __STDC__
-static void textsw_find_do_menu_action(Menu cmd_menu, Menu_item cmd_item);
-static void textsw_edit_do_menu_action(Menu cmd_menu, Menu_item cmd_item);
-static void textsw_view_do_menu_action(Menu cmd_menu, Menu_item cmd_item);
-#else
-static void textsw_find_do_menu_action();
-static void textsw_edit_do_menu_action();
-static void textsw_view_do_menu_action();
-#endif
 
 int             STORE_FILE_POPUP_KEY;
 int             SAVE_FILE_POPUP_KEY;
@@ -150,8 +146,6 @@ textsw_new_menu(folio)
     Menu_item       break_mode_item, undo_cmds_item, find_sel_cmds_item,
                     select_field_cmds_item;
     int             index;
-    Pkg_private char *textsw_get_extras_filename();
-    Pkg_private int textsw_build_extras_menu_items();
     char           *filename;
     char           *def_str;
     int             line_break;
@@ -754,14 +748,14 @@ textsw_done_menu(menu, result)
     Textsw_view_handle view = VIEW_ABS_TO_REP(textsw_view);
 
     textsw_thaw_caret(FOLIO_FOR_VIEW(view));
-    textsw_stablize(FOLIO_FOR_VIEW(view));
+    textsw_stablize(FOLIO_FOR_VIEW(view), 1);
 }
 
 Pkg_private     Textsw_view
 textsw_from_menu(menu)
     Menu            menu;
 {
-    Textsw_view     textsw_view = NULL;
+    Textsw_view     textsw_view = (Textsw_view)NULL;
     Menu            temp_menu;
     Menu_item       temp_item;
 
@@ -785,7 +779,7 @@ textsw_from_menu(menu)
     return (textsw_view);
 }
 
-Pkg_private	int
+Pkg_private	void
 textsw_file_do_menu_action(cmd_menu, cmd_item)
     Menu            cmd_menu;
     Menu_item       cmd_item;
@@ -1058,7 +1052,7 @@ Press \"Continue\" to proceed."),
                         NOTICE_BUTTON_YES, XV_MSG("Continue"),
                         XV_SHOW, TRUE,
 			NOTICE_BUSY_FRAMES,
-				menu_pinned ? menu_cmd_frame : NULL,
+				menu_pinned ? menu_cmd_frame : (Frame)NULL,
 			NULL,
                         NULL);
 
@@ -1077,7 +1071,7 @@ Press \"Continue\" to proceed."),
                         NOTICE_BUTTON_YES, XV_MSG("Continue"),
                         XV_SHOW, TRUE, 
 			NOTICE_BUSY_FRAMES,
-				menu_pinned ? menu_cmd_frame : NULL,
+				menu_pinned ? menu_cmd_frame : (Frame)NULL,
 			NULL,
                         NULL);
                 }
@@ -1102,7 +1096,7 @@ Press \"Continue\" to proceed."),
                         NOTICE_BUTTON_YES, XV_MSG("Continue"),
                         XV_SHOW, TRUE,
 			NOTICE_BUSY_FRAMES,
-				menu_pinned ? menu_cmd_frame : NULL,
+				menu_pinned ? menu_cmd_frame : (Frame)NULL,
 			NULL,
 			NULL,
                         NULL);
@@ -1122,7 +1116,7 @@ Press \"Continue\" to proceed."),
                         NOTICE_BUTTON_YES, XV_MSG("Continue"),
                         XV_SHOW, TRUE, 
 			NOTICE_BUSY_FRAMES,
-				menu_pinned ? menu_cmd_frame : NULL,
+				menu_pinned ? menu_cmd_frame : (Frame)NULL,
 			NULL,
                         NULL);
                 }
@@ -1143,7 +1137,6 @@ textsw_view_do_menu_action(cmd_menu, cmd_item)
     Menu            cmd_menu;
     Menu_item       cmd_item;
 {
-    Pkg_private int      textsw_match_selection_and_normalize();
     Textsw          abstract;
     Textsw_view     textsw_view = textsw_from_menu(cmd_menu);
     register Textsw_view_handle view;
@@ -1300,7 +1293,6 @@ textsw_find_do_menu_action(cmd_menu, cmd_item)
     Menu            cmd_menu;
     Menu_item       cmd_item;
 {
-    Pkg_private void     textsw_find_selection_and_normalize();
     Textsw          abstract;
     Textsw_view     textsw_view = textsw_from_menu(cmd_menu);
     register Textsw_view_handle view;

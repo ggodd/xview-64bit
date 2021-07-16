@@ -9,12 +9,7 @@ static char     sccsid[] = "@(#)p_amb_data.c 1.5 93/06/28";
  *	pending in the U.S. and foreign countries. See LEGAL NOTICE 
  *	file for terms of the license.
  */
-#include <xview/xview.h>
-#include <xview/panel.h>
-
-Pkg_private int panel_ambtn_init();
-Pkg_private Xv_opaque panel_ambtn_set_avlist();
-Pkg_private int panel_ambtn_destroy();
+#include <xview_private/p_ambtn_.h>
 
 Xv_pkg          xv_panel_ambtn_pkg = {
     "Abbreviated Menu Button Item",

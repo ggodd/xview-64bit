@@ -86,17 +86,4 @@ typedef	struct	{
     void	 (*reset_proc)();
 } Frame_props_info;
 
-/* frame_props.c */
-Pkg_private Notify_value	frame_props_input();
-Pkg_private int		frame_props_init();
-
-/* frame_props_get.c */
-Pkg_private Xv_opaque	frame_props_get_attr();
-
-/* frame_props_set.c */
-Pkg_private Xv_opaque	frame_props_set_avlist();
-
-/* frame_props_destroy.c */
-Pkg_private int			frame_props_destroy();
-
 #endif

@@ -23,11 +23,8 @@ static char     sccsid[] = "@(#)sb_pos.c 1.48 93/06/28";
 /*
  * Include files:
  */
-#include <xview_private/sb_impl.h>
-
-Pkg_private void sb_minimum();
-Pkg_private void sb_abbreviated();
-Pkg_private void sb_full_size();
+#include <xview_private/sb_pos_.h>
+#include <xview_private/sb_paint_.h>
 
 
 Pkg_private void

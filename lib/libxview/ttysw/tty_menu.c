@@ -14,6 +14,14 @@ static char     sccsid[] = "@(#)tty_menu.c 20.68 93/06/28";
  * Ttysw menu initialization and call-back procedures
  */
 
+#include <xview_private/tty_menu_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/termsw_.h>
+#include <xview_private/tty_main_.h>
+#include <xview_private/ttyselect_.h>
+#include <xview_private/txt_file_.h>
+#include <xview_private/txt_menu_.h>
+#include <xview_private/win_cursor_.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/signal.h>
@@ -44,8 +52,6 @@ static char     sccsid[] = "@(#)tty_menu.c 20.68 93/06/28";
 
 #define HELP_INFO(s) XV_HELP_DATA, s,
 
-extern int      textsw_file_do_menu_action();
-
 #define EDITABLE		0
 #define READ_ONLY		1
 #define ENABLE_SCROLL		2
@@ -59,26 +65,14 @@ extern int      textsw_file_do_menu_action();
 
 /* ttysw walking menu definitions */
 
-static Menu_item ttysw_menu_page_state();
-Pkg_private void ttysw_show_walkmenu();
-
-static void     ttysw_enable_scrolling();
-static void     ttysw_disable_scrolling();
-static void     ttysw_menu_page();
-static void     ttysw_menu_copy();
-static void     ttysw_menu_paste();
-#ifdef __STDC__
-static void	panel_button_proc(Panel_item *item, Event *event);
-#else
-static void	panel_button_proc();
-#endif
-/* static */ int ttysw_enable_editor();
-/* static */ int ttysw_disable_editor();
-/* static */ int ttysw_mode_action();
-/* static */ void
-	fit_termsw_panel_and_textsw(); /* BUG ALERT: No XView prefix */
-
-
+static Menu_item ttysw_menu_page_state(Menu_item mi, Menu_generate op);
+static void ttysw_menu_page(Menu menu, Menu_item mi);
+static void ttysw_menu_copy(Menu menu, Menu_item mi);
+static void ttysw_menu_paste(Menu menu, Menu_item mi);
+static void panel_button_proc(Panel_item *item, Event *event);
+static void create_textedit_panel_item(Panel panel, Textsw textsw);
+static void ttysw_enable_scrolling(Menu menu, Menu_item mi);
+static void ttysw_disable_scrolling(Menu cmd_menu, Menu_item cmd_item);
 
 /* termsw walking menu definitions */
 
@@ -219,7 +213,7 @@ ttysw_menu_page_state(mi, op)
 	(void) menu_set(mi, MENU_STRING, XV_MSG("Continue"),
 			HELP_INFO("ttysw:mcont")
 			NULL);
-    else if (ttysw_getopt((caddr_t) ttysw, TTYOPT_PAGEMODE))
+    else if (ttysw_getopt((Ttysw_folio) ttysw, TTYOPT_PAGEMODE))
 	(void) menu_set(mi, MENU_STRING, 
 		XV_MSG("Disable Page Mode"),
 			HELP_INFO("ttysw:mdsbpage")
@@ -259,8 +253,8 @@ ttysw_menu_page(menu, mi)
     if (ttysw->ttysw_flags & TTYSW_FL_FROZEN)
 	(void) ttysw_freeze(ttysw->view, 0);
     else
-	(void) ttysw_setopt(TTY_VIEW_HANDLE_FROM_TTY_FOLIO(ttysw), TTYOPT_PAGEMODE,
-			    !ttysw_getopt((caddr_t) ttysw, TTYOPT_PAGEMODE));
+	(void) ttysw_setopt((Ttysw_folio)TTY_VIEW_HANDLE_FROM_TTY_FOLIO(ttysw), TTYOPT_PAGEMODE,
+			    !ttysw_getopt((Ttysw_folio) ttysw, TTYOPT_PAGEMODE));
 }
 
 /* ARGSUSED */
@@ -677,7 +671,7 @@ fit_termsw_panel_and_textsw(frame, termsw_folio)
     textsw_rect.r_top = panel_rect.r_top + panel_rect.r_height + 1;
     textsw_rect.r_width = panel_rect.r_width;
     if ((textsw_rect.r_height =
-                rect.r_height - (panel_rect.r_top + panel_rect.r_height)) <= NULL)
+                rect.r_height - (panel_rect.r_top + panel_rect.r_height)) <= 0)
         textsw_rect.r_height = 1;
 
 
@@ -689,7 +683,7 @@ fit_termsw_panel_and_textsw(frame, termsw_folio)
 }
 
 /*ARGSUSED*/
-/* static */ int
+/* static */ void
 ttysw_enable_editor(cmd_menu, cmd_item)
     Menu            cmd_menu;
     Menu_item       cmd_item;
@@ -799,7 +793,7 @@ Press \"Continue\" to proceed."),
 
 
 /* ARGSUSED */
-/* static */ int
+/* static */ void
 ttysw_disable_editor(cmd_menu, cmd_item)
     Menu            cmd_menu;
     Menu_item       cmd_item;
@@ -810,8 +804,6 @@ ttysw_disable_editor(cmd_menu, cmd_item)
     register        Termsw_folio
                     termsw_folio = TERMSW_FOLIO_FOR_VIEW(TERMSW_VIEW_PRIVATE_FROM_TEXTSW(textsw));
     Event           ie;
-    extern int      win_getmouseposition();
-    extern int      textsw_empty_document();
     Rect            rect;
     Xv_Notice	tty_notice;
 
@@ -931,7 +923,7 @@ ttysw_enable_scrolling(menu, mi)
 #ifdef OW_I18N
 	ttysw_implicit_commit(ttysw_folio, 0);
 #endif
-	ttysw_setopt(ttysw_view_handle, TTYOPT_TEXT, 1);
+	ttysw_setopt((Ttysw_folio)ttysw_view_handle, TTYOPT_TEXT, 1);
     } else {
 	Frame           frame = xv_get(textsw, WIN_FRAME);
 
@@ -986,7 +978,7 @@ ttysw_disable_scrolling(cmd_menu, cmd_item)
 #ifdef OW_I18N
 	textsw_implicit_commit(TEXTSW_PRIVATE(textsw));
 #endif
-	ttysw_setopt(ttysw_view, TTYOPT_TEXT, 0);
+	ttysw_setopt((Ttysw_folio)ttysw_view, TTYOPT_TEXT, 0);
     } else {
 	Frame           frame = xv_get(textsw, WIN_FRAME);
 

@@ -11,19 +11,22 @@ static char     sccsid[] = "@(#)hist_menu.c 1.9 93/06/28";
  */
 
 
+
+#include <xview_private/hist_menu_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/xv_.h>
 #include <stdio.h>
 #include <xview/xview.h>
 #include <xview/panel.h>
 #include <xview_private/i18n_impl.h>
 #include <xview_private/hist_impl.h>
 
+
+static void hist_menu_notify_proc(Menu menu, Menu_item mi);
+static void hist_menu_done_proc(Menu menu, Xv_opaque result);
+static Menu hist_menu_gen_proc(Menu menu, Menu_generate op);
+
 static Attr_attribute HIST_PRIVATE_KEY = 0;
-
-static void	hist_menu_notify_proc();
-static Menu	hist_menu_gen_proc();
-static void	hist_menu_done_proc();
-
-
 
 /*
  * xv_create() method
@@ -73,7 +76,7 @@ hist_menu_set( public, avlist )
     Attr_avlist attrs;
 
     for (attrs=avlist; *attrs; attrs=attr_next(attrs)) {
-	switch ( (int) attrs[0] ) {
+	switch ( attrs[0] ) {
 	case HISTORY_MENU_OBJECT:
 	    xv_error( public,
 		     ERROR_CANNOT_SET,	attrs[0],
@@ -131,7 +134,7 @@ hist_menu_get( public, status, attr, args )
 {
     History_menu_private *private = HIST_MENU_PRIVATE(public);
 
-    switch ( (int) attr ) {
+    switch ( attr ) {
     case HISTORY_MENU_OBJECT:
 	return (Xv_opaque) private->menu;
 
@@ -176,7 +179,7 @@ hist_menu_destroy( public, status )
      * doesn't call the MENU_DONE_PROC if it generated a menu to
      * get the default value, but never showed it.  Is this a bug?
      */
-    hist_menu_done_proc( private->menu, NULL );
+    hist_menu_done_proc( private->menu, (Xv_opaque)NULL );
 
 
     if ( private->list ) {
@@ -277,7 +280,7 @@ hist_menu_gen_proc( menu, op )
      * doesn't call the MENU_DONE_PROC if it generated a menu to
      * get the default value, but never showed it.  Is this a bug?
      */
-    hist_menu_done_proc( menu, NULL );
+    hist_menu_done_proc( menu, (Xv_opaque)NULL );
 
     /* tell History_list to put Menu_items into our Menu */
     if ( private->list )

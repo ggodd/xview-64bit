@@ -11,6 +11,10 @@ static char     sccsid[] = "@(#)path.c 1.18 93/06/29";
  */
 
 
+#include <xview_private/path_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/xv_.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/param.h>
@@ -19,9 +23,6 @@ static char     sccsid[] = "@(#)path.c 1.18 93/06/29";
 #include <xview_private/path_impl.h>
 #include <xview_private/i18n_impl.h>
 #include <xview_private/xv_path_util.h>
-
-Pkg_private Panel_setting	xv_path_name_notify_proc();
-
 
 
 /*
@@ -76,7 +77,7 @@ path_set_avlist ( public, avlist )
     Attr_avlist attrs;
 
     for (attrs=avlist; *attrs; attrs=attr_next(attrs)) {
-	switch ( (int) attrs[0] ) {
+	switch ( attrs[0] ) {
 	case PATH_IS_DIRECTORY:
 	    ATTR_CONSUME(attrs[0]);
 
@@ -85,7 +86,7 @@ path_set_avlist ( public, avlist )
 	     * valid path if it is set TRUE, so NULL it out.
 	     */
 	    if ( private->is_directory != (int) attrs[1]
-		&& (int) attrs[1] == TRUE
+		&& attrs[1] == TRUE
 		&& private->valid_path 
 		&& !xv_isdir(private->valid_path) ) {
 			xv_free_ref( private->valid_path );
@@ -170,7 +171,7 @@ path_get_attr ( public, status, attr, args )
 {
     Path_private *private = PATH_PRIVATE(public);
 
-    switch ( (int) attr ) {
+    switch ( attr ) {
     case PATH_IS_DIRECTORY:
 	return (Xv_opaque) private->is_directory;
 

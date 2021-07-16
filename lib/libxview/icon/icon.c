@@ -14,6 +14,9 @@ static char     sccsid[] = "@(#)icon.c 20.16 90/02/26";
  * icon.c - Display icon.
  */
 
+#include <xview_private/icon_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/xv_rop_.h>
 #include <stdio.h>
 /* #include <pixrect/pixrect_hs.h> */
 #include <xview_private/i18n_impl.h>
@@ -27,16 +30,15 @@ static char     sccsid[] = "@(#)icon.c 20.16 90/02/26";
 #include <xview_private/svrim_impl.h>
 
 
+static void icon_draw_label(register Xv_icon_info *icon, register Xv_Window pixwin, register Xv_Drawable_info *info, register int x, register int y, unsigned long wrk_space_pixel);
+static void FillRect(register Xv_Window win, unsigned long bkg_pixel, register int x, register int y, register int w, register int h);
+static void DrawTransparentIcon(register Xv_icon_info *icon, register Xv_Window pixwin, register int x, register int y, unsigned long bkg_color);
+static int DrawNonRectIcon(Display *display, XID xid, register Xv_icon_info *icon, register Xv_Drawable_info *info, register int x, register int y);
 #ifdef OW_I18N
-static void DrawWCString();
-#else
-static void DrawString();
+static void DrawWCString(register Xv_Window win, unsigned long frg_pixel, unsigned long bkg_pixel, register int x, register int y, XFontSet font_set, wchar_t *str);
+#else 
+static void DrawString(register Xv_Window win, unsigned long frg_pixel, unsigned long bkg_pixel, register int x, register int y, Xv_opaque pixfont, char *str);
 #endif
-static void FillRect();
-static int DrawNonRectIcon();
-static void DrawTransparentIcon();
-static void icon_draw_label();
-
 
 Xv_private void
 icon_display(icon_public, x, y)
@@ -164,7 +166,7 @@ unsigned long              wrk_space_pixel;
 		   left,top,font_set,icon->ic_text_wcs);
 #else
         DrawString(pixwin, xv_fg(info), wrk_space_pixel,
-		   left, top, font, icon->ic_text);
+		   left, top, (Xv_opaque)font, icon->ic_text);
 #endif
     else
 #ifdef OW_I18N
@@ -360,7 +362,7 @@ register int             x, y;
 		val.fill_style = FillTiled;
 		val_mask = GCFillStyle | GCTile;
     	} else {
-		xv_error(NULL,
+		xv_error(0,
 			ERROR_STRING,
 		 	XV_MSG("icon: can't handle drawables of different depth"),
 		 	0);
@@ -374,8 +376,8 @@ register int             x, y;
 	if ( xv_rop_internal( display, xid, gc, icon->ic_gfxrect.r_left + x,
 			     icon->ic_gfxrect.r_top + y,
 			     icon->ic_gfxrect.r_width, icon->ic_gfxrect.r_height,
-			     (Xv_opaque) icon->ic_mpr, 0, 0, info ) == XV_ERROR) {
-	    xv_error( NULL, ERROR_STRING, 
+			     (Xv_opaque)icon->ic_mpr, 0, 0, info ) == XV_ERROR) {
+	    xv_error( 0, ERROR_STRING, 
 		XV_MSG("xv_rop: xv_rop_internal failed"), 0 );
 	}
     }
@@ -383,7 +385,7 @@ register int             x, y;
 	if (xv_rop_mpr_internal( display, xid, gc, icon->ic_gfxrect.r_left + x,
 			     icon->ic_gfxrect.r_top + y,
 			     icon->ic_gfxrect.r_width, icon->ic_gfxrect.r_height,
-			     icon->ic_mpr, 0, 0, info, TRUE) == XV_ERROR)
+			     (Xv_opaque)icon->ic_mpr, 0, 0, info, TRUE) == XV_ERROR)
 	return(XV_ERROR);
     }
 

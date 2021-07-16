@@ -10,6 +10,7 @@ static char     sccsid[] = "@(#)dndutil.c 1.16 93/06/28";
  *      file for terms of the license.
  */
 
+#include <xview_private/dndutil_.h>
 #include <X11/Xproto.h>
 #include <xview/xview.h>
 #include <xview/cursor.h>
@@ -17,7 +18,8 @@ static char     sccsid[] = "@(#)dndutil.c 1.16 93/06/28";
 #include <xview/dragdrop.h>
 #include <xview_private/dndimpl.h>
 
-static Atom InternSelection();
+static Atom InternSelection(Xv_server server, int n, XID xid);
+static int sendEventErrorHandler(Display *dpy, XErrorEvent *error);
 
 /* 
  * Determine what cursor to use, create one if none defined.  Return the XID.
@@ -91,7 +93,7 @@ InternSelection(server, n, xid)
 }
 
 static int sendEventError;
-static (*old_handler)();
+static int (*old_handler)();
 
 static int
 sendEventErrorHandler(dpy, error)
@@ -102,6 +104,7 @@ sendEventErrorHandler(dpy, error)
         sendEventError = True;
     else
         (*old_handler)(dpy, error);
+    return 0;
 }
 
 Pkg_private int

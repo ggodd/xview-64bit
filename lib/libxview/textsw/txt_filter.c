@@ -14,6 +14,18 @@ static char     sccsid[] = "@(#)txt_filter.c 20.48 93/06/28";
  * Filter invocation routines for textsw package.
  */
 
+#include <xview_private/txt_filter_.h>
+#include <xview_private/ev_edit_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/file_strms_.h>
+#include <xview_private/getlogindr_.h>
+#include <xview_private/io_.h>
+#include <xview_private/othr_strms_.h>
+#include <xview_private/txt_again_.h>
+#include <xview_private/txt_edit_.h>
+#include <xview_private/txt_getkey_.h>
+#include <xview_private/txt_sel_.h>
+#include <xview_private/txt_selsvc_.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #include <unistd.h>				/* read() */
@@ -23,9 +35,9 @@ static char     sccsid[] = "@(#)txt_filter.c 20.48 93/06/28";
 #include <sys/dir.h>
 #endif /* SVR4 */
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <xview_private/txt_18impl.h>
+#include <xview_private/filter.h>
 #include <xview/notify.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -69,29 +81,22 @@ extern int      dtablesize_cache;
 (dtablesize_cache?dtablesize_cache:(dtablesize_cache=getdtablesize()))
 #endif /* SVR4 */
 
+static int interpret_filter_reply(Textsw_view_handle view, CHAR *buffer, int buffer_length, Es_index *delta);
+static Notify_value textsw_sigpipe_func(Textsw_folio textsw, int sig, Notify_signal_mode mode);
+static int textsw_filter_selection(register Textsw_folio folio, register Textsw_selection_handle fill_in);
+static int talk_to_filter(register Textsw_view_handle view, int filter_input, int filter_output, register Es_index first, register Es_index last_plus_one, int (*interpret_reply)());
+static int smarter_interpret_filter_reply(Textsw_view_handle view, register CHAR *buffer, int buffer_length, Es_index *delta);
+static int start_filter(char *filter_argv[], int *filter_input, int *filter_output);
+static short unsigned type_for_filter_rec(struct filter_rec *rec);
+static int event_code_for_filter_rec(struct filter_rec *rec);
 
 extern int      errno;
-
-Xv_public char    *xv_getlogindir();
-Pkg_private Es_index textsw_do_input();
-static short unsigned type_for_filter_rec();
-static int      event_code_for_filter_rec();
-#ifdef __STDC__
-static int start_filter(char *filter_argv[], int *filter_input, int *filter_output);
-static int talk_to_filter(Textsw_view_handle view, int filter_input, int filter_output, Es_index first, Es_index last_plus_one, int (*interpret_reply) ());
-#else
-static int	talk_to_filter();
-static int	start_filter();
-#endif
 
 /*
  * WARNING: this is a hack to force the variable to be in memory. this var
  * gets changed somehow when it is in register in the context of a vfork();
  */
 static int      execvp_failed;
-
-Pkg_private Ev_mark_object textsw_add_mark_internal();
-Xv_public Notify_value notify_default_wait3();
 
 static int
 interpret_filter_reply(view, buffer, buffer_length, delta)
@@ -822,7 +827,6 @@ NormalReturn:
 	if AN_ERROR
 	    (saved_lpo == ES_INFINITY) {
 	} else {
-	    Bool defaults_get_boolean();
 	    /* delete replaces clipboard only if resource
 	       text.DeleteReplacesClipboard is True.  Default is False. */
 	    if (folio->state & TXTSW_DELETE_REPLACES_CLIPBOARD) {
@@ -944,9 +948,6 @@ start_filter(filter_argv, filter_input, filter_output)
 #include <xview_private/filter.h>
 #undef FOREVER
 #include <xview_private/io_stream.h>
-
-extern STREAM  *xv_file_input_stream();
-extern STREAM  *xv_filter_comments_stream();
 
 Pkg_private int
 textsw_parse_rc(textsw)

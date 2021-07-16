@@ -10,12 +10,7 @@ static char     sccsid[] = "@(#)p_ntx_data.c 20.6 90/06/21";
  *	file for terms of the license.
  */
 
-#include <xview_private/panel_impl.h>
-
-Pkg_private int         panel_mltxt_init();
-Pkg_private Xv_opaque   panel_mltxt_set_avlist();
-Pkg_private Xv_opaque   panel_mltxt_get_attr();
-Pkg_private int         panel_mltxt_destroy();
+#include <xview_private/p_mlinetxt_.h>
 
 Xv_pkg xv_panel_multiline_text_pkg = {
     "Multiline Text Item", ATTR_PKG_PANEL,

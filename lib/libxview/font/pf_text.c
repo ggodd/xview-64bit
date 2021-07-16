@@ -14,6 +14,9 @@ static char     sccsid[] = "@(#)pf_text.c 20.34 93/06/28 SMI";
  * Rasterop up a text string in a specified Pixfont.
  */
 
+#include <xview_private/pf_text_.h>
+#include <xview_private/svrim_ops_.h>
+#include <xview_private/pw_read_.h>
 #include <sys/types.h>
 #include <pixrect/pixrect.h>
 #include <pixrect/pixfont.h>
@@ -25,8 +28,6 @@ static char     sccsid[] = "@(#)pf_text.c 20.34 93/06/28 SMI";
 #include <xview_private/portable.h>
 #include <xview/xview_xvin.h>
 #include <X11/Xlib.h>
-
-struct pr_size  xv_pf_textbatch();
 
 extern Display *xv_default_display;
 extern struct pixrectops mem_ops;

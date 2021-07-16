@@ -30,6 +30,7 @@
 #include "mem.h"
 #include "i18n.h"
 #include "error.h"
+#include "fontset.h"
 
 
 #define	FS_DEF		"definition"
@@ -43,7 +44,6 @@
 
 XrmDatabase	FontSetDB = NULL;
 
-extern char	*getenv();
 
 typedef struct _fs_cache {
 	char			*locale;
@@ -57,16 +57,16 @@ static fs_cache	*fsc_root;
 
 static char	*last_font_locale = NULL;
 
-static fs_cache	*fsc_lookup_by_name();
-static fs_cache	*fsc_lookup_by_fs();
-static void	fsc_enter();
-static void	fsc_remove();
-static char	*get_font_set_list();
-static void	parseFontSetDefaults();
-static void	remove_white_space();
-static char	*skip_space();
-static char	*skip_space_back();
-
+static void parseFontSetDefaults(char *locale);
+static char *parse_font_list(XrmDatabase db, register char *list, int count);
+static char *get_font_set_list(XrmDatabase db, char *key);
+static void remove_white_space(char *ss);
+static char *skip_space(register char *p);
+static char *skip_space_back(register char *p);
+static fs_cache *fsc_lookup_by_name(char *locale, char *name);
+static fs_cache *fsc_lookup_by_fs(XFontSet fs);
+static void fsc_enter(char *locale, char *name, XFontSet fs);
+static void fsc_remove(Display *dpy, register fs_cache *afsc);
 
 XFontSet
 loadQueryFontSet(dpy, font, locale)
@@ -150,7 +150,7 @@ char	*locale;
 	return fs;
 }
 
-
+void
 freeFontSet(dpy, fs)
 Display		*dpy;
 XFontSet	fs;

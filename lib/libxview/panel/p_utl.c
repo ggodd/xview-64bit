@@ -10,12 +10,18 @@ static char     sccsid[] = "@(#)p_utl.c 20.100 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/p_utl_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/pf_text_.h>
+#include <xview_private/pw_line_.h>
+#include <xview_private/scrn_get_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_rop_.h>
 #include <X11/X.h>
 #include <xview_private/i18n_impl.h>
-#include <xview_private/panel_impl.h>
 #include <xview/cms.h>
 #include <xview/cursor.h>
-#include <xview/defaults.h>
 #include <xview/font.h>
 #include <xview/openmenu.h>
 #include <xview/pixwin.h>
@@ -28,13 +34,9 @@ static char     sccsid[] = "@(#)p_utl.c 20.100 93/06/28";
 #include <xview_private/pw_impl.h>
 #include <string.h>
 
-extern struct pr_size 	 xv_pf_textwidth();
-Xv_private Xv_xrectlist *screen_get_clip_rects();
-extern void 		 screen_adjust_gc_color();
-Xv_private GC		 xv_find_proper_gc();
-Xv_private void		 xv_set_gc_op();
+static void panel_set_cursor(Panel_info *panel, Xv_Window window, Attr_attribute attr);
+
 #ifdef OW_I18N
-extern struct pr_size    xv_pf_textwidth_wc();
 extern wchar_t          _xv_null_string_wc[];
 #endif /* OW_I18N */
 
@@ -325,7 +327,7 @@ panel_unlink(ip, destroy)
 
     /* if it's default panel item, clear the default value */
     if (panel->default_item == ITEM_PUBLIC(ip))
-	panel->default_item = NULL;
+	panel->default_item = (Panel_item)NULL;
 
     /* unlinked item is no longer current */
     if (panel->current == ip)
@@ -1299,7 +1301,7 @@ panel_user_error(object, event)
 		panel->status.pointer_grabbed = TRUE;
 	}
     } else {
-	panel_set_cursor(panel, event_window(event), NULL);
+	panel_set_cursor(panel, event_window(event), (Attr_attribute)NULL);
 	if (panel->status.pointer_grabbed) {
 	    XUngrabPointer(xv_display(grab_info), CurrentTime);
 	    panel->status.pointer_grabbed = FALSE;

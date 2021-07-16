@@ -13,7 +13,7 @@ static char     sccsid[] = "@(#)ndisd_wait.c 20.13 93/06/28 Copyr 1985 Sun Micro
 /*
  * Ndis_d_wait.c - Default wait3 function that is a nop.
  */
-#include <xview_private/ntfy.h>
+#include <xview_private/ndisd_wait_.h>
 #include <xview_private/ndis.h>
 #include <signal.h>
 
@@ -22,7 +22,7 @@ extern          Notify_value
 notify_default_wait3(client, pid, status, rusage)
     Notify_client   client;
     int             pid;
-#ifndef SVR4
+#if !defined(SVR4) && !defined(linux)
     union wait     *status;
 #else /* SVR4 */
     int *status;

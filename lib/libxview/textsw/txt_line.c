@@ -14,8 +14,12 @@ static char     sccsid[] = "@(#)txt_line.c 1.26 93/06/28";
  * Text line selection popup frame creation and support.
  */
 
+#include <xview_private/txt_line_.h>
+#include <xview_private/ev_once_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/txt_popup_.h>
+#include <xview_private/txt_sel_.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <sys/time.h>
 #include <signal.h>
@@ -36,6 +40,10 @@ static char     sccsid[] = "@(#)txt_line.c 1.26 93/06/28";
 
 #define HELP_INFO(s) XV_HELP_DATA, s,
 
+static int do_sel_line_proc(Textsw_folio folio, Event *ie);
+static void sel_line_cmd_proc(Panel_item item, Event *event);
+static void create_sel_line_items(Panel panel, Textsw_view_handle view);
+
 /* for select line number */
 typedef enum {
     SEL_LINE_ITEM = 0,
@@ -43,15 +51,6 @@ typedef enum {
 }               Sel_line_panel_item_enum;
 
 Pkg_private Panel_item sel_line_panel_items[];
-
-Pkg_private Textsw_view_handle text_view_frm_p_itm();
-Pkg_private Xv_Window frame_from_panel_item();
-
-#ifdef __STDC__
-static void sel_line_cmd_proc(Panel_item item, Event *event);
-#else
-static void sel_line_cmd_proc();
-#endif
 
 /*ARGSUSED*/
 static int

@@ -160,8 +160,8 @@ typedef struct ttysubwindow {
     struct ttyselection	ttysw_shelf;
     caddr_t             ttysw_seln_client;
     /* replaceable ops (return TTY_OK or TTY_DONE) */
-    int                 (*ttysw_escapeop) ();	/* handle escape sequences */
-    int                 (*ttysw_stringop) ();	/* handle accumulated string */
+    int                 (*ttysw_escapeop) (Tty_view ttysw_view_public, register CHAR c, register int ac, register int *av);	/* handle escape sequences */
+    int                 (*ttysw_stringop) (caddr_t data, char type, char c);	/* handle accumulated string */
     int                 (*ttysw_eventop) ();	/* handle input event */
     /* kbd translation */
     struct keymaptab    ttysw_kmt[3 * 16 + 2];	/* Key map list */
@@ -290,15 +290,8 @@ typedef struct sgttyb	tty_mode_t;
 #define	ttysw_handleescape(_ttysw_view, c, ac, av) \
 	(*(ttysw)->ttysw_escapeop)(TTY_VIEW_PUBLIC(_ttysw_view), (c), (ac), (av))
 #define	ttysw_handlestring(ttysw, strtype, c) \
-	(*(ttysw)->ttysw_stringop)(TTY_PUBLIC(ttysw), (strtype), (c))
+	(*(ttysw)->ttysw_stringop)((caddr_t)TTY_PUBLIC(ttysw), (strtype), (c))
 
-
-/*** XView private routines ***/
-Xv_private void
-	tty_background(),
-	tty_copyarea(),
-	tty_newtext(),
-	tty_clear_clip_rectangles();
 
 #define MAX_LINES 128
 typedef struct {
@@ -307,163 +300,7 @@ typedef struct {
 	int	leftmost;
 	char	line_exposed[MAX_LINES];
 } Tty_exposed_lines;
-Xv_private Tty_exposed_lines *tty_calc_exposed_lines();
+
 Xv_private int ttysw_view_obscured;
-
-
-
-/*** Package private routines ***/
-
-Pkg_private void
-	csr_resize(),		/* BUG ALERT: No XView prefix */
-	delete_lines(),		/* BUG ALERT: No XView prefix */
-	termsw_caret_cleared(),
-	termsw_menu_set(),
-	termsw_menu_clr(),
-	ttynullselection(),	/* BUG ALERT: No XView prefix */
-	ttysetselection(),	/* BUG ALERT: No XView prefix */
-	ttysel_acquire(),
-	ttysel_adjust(),
-	ttysel_deselect(),
-	ttysel_destroy(),
-	ttysel_getselection(),
-	ttysel_init_client(),
-	ttysel_make(),
-	ttysel_nullselection(),
-	ttysel_setselection(),
-	ttysw_ansiinit(),
-	ttysw_blinkscreen(),
-	ttysw_bold_mode(),
-	ttysw_cim_clear(),
-	ttysw_cim_scroll(),
-	ttysw_clear(),
-	ttysw_clear_mode(),
-	ttysw_consume_output(),
-	ttysw_deleteChar(),
-	ttysw_display(),
-	ttysw_display_capslock(),
-	ttysw_doing_pty_insert(),
-	ttysw_drawCursor(),
-	ttysw_flush_input(),
-	ttysw_getp(),
-	ttysw_handle_itimer(),
-	ttysw_imagerepair(),
-	ttysw_implicit_commit(),
-	ttysw_insertChar(),
-	ttysw_insert_lines(),
-	ttysw_interpose(),
-	ttysw_interpose_on_textsw(),
-	ttysw_inverse_mode(),
-	ttysw_lighten_cursor(),
-	ttysw_move_mark(),
-	ttysw_pclearline(),
-	ttysw_pclearscreen(),
-	ttysw_pcopyline(),
-	ttysw_pcopyscreen(),
-	ttysw_pdisplayscreen(),
-	ttysw_pos(),
-	ttysw_prepair(),
-	ttysw_pselectionhilite(),
-	ttysw_pstring(),
-	ttysw_pty_input(),
-	ttysw_readrc(),
-	ttysw_removeCursor(),
-	ttysw_reset_conditions(),
-	ttysw_resize(),
-	ttysw_restore_cursor(),
-	ttysw_restoreCursor(),	/* BUG ALERT: unnecessary routine */
-	ttysw_saveCursor(),	/* BUG ALERT: unnecessary routine */
-	ttysw_screencomp(),	/* BUG ALERT: unnecessary routine */
-	ttysw_sendsig(),
-	ttysw_set_inverse_mode(),
-	ttysw_set_menu(),
-	ttysw_set_underline_mode(),
-	ttysw_setleftmargin(),
-	ttysw_setopt(),
-	ttysw_show_walkmenu(),
-	ttysw_sigwinch(),
-	ttysw_textsw_changed(),
-	ttysw_underscore_mode(),
-	ttysw_vpos(),
-	ttysw_writePartialLine(),
-	we_setptyparms(),	/* BUG ALERT: No XView prefix */
-	xv_new_tty_chr_font(),
-	xv_tty_free_image_and_mode(),
-	xv_tty_imagealloc(),
-	xv_tty_new_size(),
-	ttysw_pty_output();	/* mbuck@debian.org: Moved here from int-returning functions */
-
-#ifdef OW_I18N
-Pkg_private void
-	tty_column_wchar_type();
-#endif
-
-Pkg_private int
-	tty_folio_init(),
-	tty_getmode(),
-	tty_view_init(),
-	ttysw_ansi_escape(),
-	ttysw_ansi_string(),
-	ttysw_be_termsw(),
-	ttysw_be_ttysw(),
-	ttysw_cooked_echo_mode(),
-	ttysw_destroy(),
-	ttysw_do_copy(),
-	ttysw_do_paste(),
-	ttysw_domap(),
-	ttysw_fork_it(),
-	ttysw_freeze(),
-	ttysw_getboldstyle(),
-	ttysw_getopt(),
-	ttysw_input_it(),
-	ttysw_lookup_boldstyle(),
-	ttysw_mapsetim(),
-	ttysw_output_it(),
-	ttysw_print_bold_options(),
-/*	ttysw_pty_output(),	mbuck@debian.org: moved to void-returning functions */
-	ttysw_pty_output_ok(),
-	ttysw_restoreparms(),
-	ttysw_saveparms(),
-	ttysw_scan_for_completed_commands(),
-	ttysw_setboldstyle(),
-	ttytlsw_escape(),	/* BUG ALERT: No XView prefix */
-	ttytlsw_string(),	/* BUG ALERT: No XView prefix */
-	wininit(),		/* BUG ALERT: No XView prefix */
-	xv_tty_imageinit();
-
-#ifdef OW_I18N
-Pkg_private int
-	tty_character_size(),
-	tty_get_nchars(),
-	ttysw_input_it_wcs();
-#endif
-
-Pkg_private Notify_value
-	ttysw_itimer_expired(),
-	ttysw_pty_input_pending(),
-	ttysw_text_event();
-
-Pkg_private Xv_opaque
-	ts_create(),		/* BUG ALERT: No XView prefix */
-	ttysw_init_folio_internal(),
-	ttysw_init_view_internal(),
-	ttysw_walkmenu();
-
-
-#if defined(cplus) || defined(__STDC__) || defined (__cplusplus)
-/*
- * C Library routines specifically related to private ttysw subwindow
- * functions.  ttysw_output and ttysw_input return the number of characters
- * accepted/processed (usually equal to len). 
- */
-int 
-ttysw_output(Tty ttysw_public, char *addr, int len);
-
-/* Interpret string in terminal emulator. */
-int 
-ttysw_input(Tty ttysw_public, char *addr, int len);
-
-/* Add string to the input queue. */
-#endif
 
 #endif /* _xview_private_ttysw_impl_h_already_included */

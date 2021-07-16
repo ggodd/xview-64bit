@@ -14,7 +14,8 @@ static char     sccsid[] = "@(#)nint_n_out.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * Nint_n_out.c - Implement the notify_next_output_func interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/nint_n_out_.h>
+#include <xview_private/nint_n_fd_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/nint.h>
 

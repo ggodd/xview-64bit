@@ -14,7 +14,9 @@ static char     sccsid[] = "@(#)ndetg_wait.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * Ndet_g_wait.c - Implement the notify_get_wait3_func interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndetg_wait_.h>
+#include <xview_private/ndetgetfnc_.h>
+#include <xview_private/ndet_wait_.h>
 #include <xview_private/ndet.h>
 
 extern          Notify_func
@@ -26,5 +28,5 @@ notify_get_wait3_func(nclient, pid)
     if (ndet_check_pid(pid))
 	return (NOTIFY_FUNC_NULL);
     return (ndet_get_func(nclient, NTFY_WAIT3,
-			  (NTFY_DATA) pid, NTFY_USE_DATA));
+			  (NTFY_DATA)(long)pid, NTFY_USE_DATA));
 }

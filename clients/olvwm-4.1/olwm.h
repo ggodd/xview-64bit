@@ -83,48 +83,15 @@ extern	Pixmap	pixIcon;
 extern	Pixmap	pixmapGray;
 extern	Pixmap	pixGray;
 
-/* miscellaneous functions */
-extern int ExitOLWM();
-#ifdef __STDC__
-extern void CheckOlvwmRC(Display *dpy);
-extern void *GetWindowProperty(Display *dpy, Window w, Atom property, long long_offset, long long_length, Atom req_type, int req_fmt, unsigned long *nitems, unsigned long *bytes_after);
-extern void InitOlvwmRC(Display *ldpy, char *path);
-extern void ReInitOlvwmRC(Display *ldpy, char *path);
-#else
-extern void CheckOlvwmRC();
-extern void *GetWindowProperty();
-extern void InitOlvwmRC();
-extern void ReInitOlvwmRC();
-#endif
-#ifdef OW_I18N_L4
-extern void parseApplicationLocaleDefaults();
-#endif
-extern void SearchProgString();
-
-/* state functions */
-extern struct _client *StateNew();
-extern void ReparentTree();
-extern void StateNormIcon();
-extern void StateIconNorm();
-extern void StateWithdrawn();
-
-/* root window functions */
-extern struct _winroot *MakeRoot();
 
 /* no-focus window information and functions */
 extern Window NoFocusWin;
 extern struct _wingeneric *NoFocusWinInfo;
 
-extern struct _wingeneric *MakeNoFocus();
-extern void NoFocusTakeFocus();
-extern void NoFocusInit();
-extern int NoFocusEventBeep();
 
 /* client information and functions */
 extern struct _List *ActiveClientList;
 
-extern struct _client *ClientCreate();
-extern Window ClientPane();
 typedef struct _clientinboxclose {
 	Display *dpy;
 	int 	screen;
@@ -132,105 +99,10 @@ typedef struct _clientinboxclose {
 	short 	bx, by, bw, bh;
 	Time 	timestamp;
 } ClientInBoxClosure;
-extern void *ClientInBox();
-extern void ClientInhibitFocus();
-extern void ClientSetFocus();
-extern void ClientSetCurrent();
-extern struct _client *ClientGetLastCurrent();
-extern void ClientActivate();
-extern void ClientFocusTopmost();
 
-/* frame functions */
-extern struct _winpaneframe *MakeFrame();
-extern void FrameSetPosFromPane();
-extern void FrameFullSize();
-extern void FrameNormSize();
-extern void FrameNewFooter();
-extern void FrameNewHeader();
-extern void FrameSetBusy();
-extern void FrameWarpPointer();
-extern void FrameUnwarpPointer();
-
-/* generic frame functions */
-extern int GFrameFocus();
-extern int GFrameSelect();
-extern int GFrameSetConfigFunc();
-extern void GFrameSetStack();
-extern void GFrameSetConfig();
-extern int GFrameEventButtonPress();
-extern int GFrameEventMotionNotify();
-extern int GFrameEventButtonRelease();
-extern int GFrameEventFocus();
-extern int GFrameEventEnterNotify();
-
-/* icon functions */
-extern void IconInit();
-extern struct _winiconframe *MakeIcon();
-extern void IconChangeName();
-extern void DrawIconToWindowLines();
-extern void IconShow();
-extern void IconHide();
-extern void IconSetPos();
-extern void IconUnparent();
-
-/* icon pane functions */
-extern struct _winiconpane *MakeIconPane();
-
-/* pane functions */
-extern struct _winpane *MakePane();
-
-/* pinned menu functions */
-extern struct _winmenu *MakeMenu();
-
-/* colormap functions */
-extern struct _wingeneric *MakeColormap();
-extern void TrackSubwindows();
-extern void UnTrackSubwindows();
-extern void ColormapInhibit();
-extern void InstallColormap();
-extern void InstallPointerColormap();
-extern void UnlockColormap();
-extern void ColorWindowCrossing();
-extern struct _wingeneric *ColormapUnhook();
-extern void ColormapTransmogrify();
-
-/* selection functions */
-extern Bool IsSelected();
-extern struct _client *EnumSelections();
-extern Time TimeFresh();
-extern Bool RemoveSelection();
-extern Bool ToggleSelection();
-extern void ClearSelections();
-extern void SelectionResponse();
-
-/* decoration window functions */
-extern struct _winpushpin *MakePushPin();
-extern struct _winbutton *MakeButton();
-extern struct _winresize *MakeResize();
-
-/* general window functions */
-extern void WinCallFocus();
-extern void WinRedrawAllWindows();
-extern Bool WinShowHelp();
-
-/* general window event functions */
-extern int WinEventExpose();
-extern int WinNewPosFunc();
-extern int WinNewConfigFunc();
-extern int WinSetConfigFunc();
-
-/* rubber-banding functions */
-extern void UserMoveWindows();
-extern void UserResizeWin();
-extern void TraceRootBox();
-
-/* busy windows */
-extern struct _winbusy *MakeBusy();
-
-#ifdef __STDC__
-int CheckForKeyProg(Display *dpy, XEvent *ev);
-#else
-int CheckForKeyProg();
-#endif
+void Exit(Display *dpy);
+int RestartOLWM(void);
+int ExitOLWM(void);
+void ReapChildren(void);
 
 #endif /* _OLWM_OLWM_H */

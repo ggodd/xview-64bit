@@ -14,25 +14,22 @@ static char     sccsid[] = "@(#)txt_putkey.c 20.19 93/06/28";
  * PUT key processing.
  */
 
+#include <xview_private/txt_putkey_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/ev_edit_.h>
+#include <xview_private/ev_op_bdry_.h>
+#include <xview_private/txt_edit_.h>
+#include <xview_private/txt_getkey_.h>
+#include <xview_private/txt_input_.h>
+#include <xview_private/txt_sel_.h>
+#include <xview_private/txt_selsvc_.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <errno.h>
 
+static int textsw_do_put(register Textsw_view_handle view, int local_operands);
+
 extern int      errno;
-
-Pkg_private Ev_finger_handle ev_add_finger();
-Pkg_private int      ev_get_selection();
-Pkg_private Es_handle textsw_esh_for_span();
-Pkg_private Seln_rank textsw_acquire_seln();
-Pkg_private caddr_t  textsw_checkpoint_undo();
-static int textsw_do_put(Textsw_view_handle view, int local_operands);
-
-#ifdef __STDC__
-static int textsw_do_put(Textsw_view_handle view, int local_operands);
-#else
-static int textsw_do_put();
-#endif
 
 Pkg_private void
 textsw_begin_put(view, inform_svc)

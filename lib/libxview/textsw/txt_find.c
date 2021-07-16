@@ -14,6 +14,15 @@ static char     sccsid[] = "@(#)txt_find.c 20.27 93/06/28";
  * Procedures to do searching for patterns in text subwindows.
  */
 
+#include <xview_private/txt_find_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/ev_once_.h>
+#include <xview_private/txt_again_.h>
+#include <xview_private/txt_event_.h>
+#include <xview_private/txt_input_.h>
+#include <xview_private/txt_popup_.h>
+#include <xview_private/txt_sel_.h>
+#include <xview_private/txt_selsvc_.h>
 #include <xview_private/primal.h>
 #include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
@@ -35,7 +44,6 @@ textsw_end_find(view, event_code, x, y)
     unsigned        event_code;
     int             x, y;
 {
-    Pkg_private void     textsw_find_selection_and_normalize();
     register Textsw_folio folio = FOLIO_FOR_VIEW(view);
     Textsw          abstract = VIEW_REP_TO_ABS(view);
 

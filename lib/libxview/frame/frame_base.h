@@ -66,16 +66,4 @@ typedef	struct	{
     } status_bits;
 } Frame_base_info;
 
-/* frame_base.c */
-Pkg_private int		frame_base_init();
-
-/* fmbs_get.c */
-Pkg_private Xv_opaque	frame_base_get_attr();
-
-/* fmbs_set.c */
-Pkg_private Xv_opaque	frame_base_set_avlist();
-
-/* fmbs_destroy.c */
-Pkg_private int		frame_base_destroy();
-
 #endif

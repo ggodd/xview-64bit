@@ -40,30 +40,6 @@ struct st_table {
 
 enum st_retval {ST_CONTINUE, ST_STOP, ST_DELETE};
 
-#ifdef __STDC__
-int st_delete(st_table *table, char **key, char **value);
-int st_find_or_add(st_table *table, char *key, char ***slot);
-st_table *st_init_table(int (*compare)(), int (*hash)());
-st_table *st_init_table_with_params(int (*compare)(), int (*hash)(), int size, int density, double grow_factor, int reorder_flag);
-void st_free_table(st_table *table);
-int st_insert(st_table *table, char *key, char *value);
-int st_lookup(st_table *table, char *key, char **value);
-void st_add_direct(st_table *table, char *key, char *value);
-void st_foreach(st_table *table, enum st_retval (*func)(), char *arg);
-int st_strhash(char *string, int modulus);
-#else
-int st_delete();
-int st_find_or_add();
-st_table *st_init_table();
-st_table *st_init_table_with_params();
-void st_free_table();
-int st_insert();
-int st_lookup();
-void st_add_direct();
-void st_foreach();
-int st_strhash();
-#endif
-
 #ifdef NOT
 #define ST_NUMCMP	((int (*)()) 0)
 #define ST_NUMHASH	((int (*)()) -2)
@@ -81,5 +57,17 @@ int st_strhash();
 #define ST_DEFAULT_INIT_TABLE_SIZE 11
 #define ST_DEFAULT_GROW_FACTOR 2.0
 #define ST_DEFAULT_REORDER_FLAG 0
+
+st_table *st_init_table_with_params(int (*compare)(), int (*hash)(), int size, int density, double grow_factor, int reorder_flag);
+st_table *st_init_table(int (*compare)(), int (*hash)());
+void st_free_table(st_table *table);
+int st_lookup(st_table *table, register char *key, char **value);
+int st_insert(register st_table *table, register char *key, char *value);
+void st_add_direct(st_table *table, char *key, char *value);
+int st_find_or_add(st_table *table, char *key, char ***slot);
+st_table *st_copy(st_table *old_table);
+int st_delete(register st_table *table, register char **key, char **value);
+void st_foreach(st_table *table, enum st_retval (*func)(), char *arg);
+int st_strhash(register char *string, int modulus);
 
 #endif /* ST_INCLUDED */

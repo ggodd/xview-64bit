@@ -134,5 +134,14 @@ struct deleted_piece {
 #define	SCRATCH_HAS_WRAPPED(_private)					\
 	((_private)->scratch_length > (_private)->scratch_max_len)
 
+/* <<fgao7@hotmail.com */
+#include <xview/macros.h>
+
+#define ps_get(...) \
+    MACRO_DEF2(_ps_get, Es_handle, Es_attribute, __VA_ARGS__)
+/* fgao7@hotmail.com>> */
+
+EXTERN_FUNCTION( caddr_t _ps_get, (Es_handle esh, Es_attribute attribute, DOTDOTDOT ));
+
 #endif
 

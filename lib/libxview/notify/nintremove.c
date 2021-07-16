@@ -14,7 +14,12 @@ static char     sccsid[] = "@(#)nintremove.c 20.13 93/06/28 Copyr 1985 Sun Micro
  * Nint_remove.c - Implement the nint_remove_func private interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/nintremove_.h>
+#include <xview_private/ntfyclient_.h>
+#include <xview_private/ntfy_cond_.h>
+#include <xview_private/ntfy_debug_.h>
+#include <xview_private/ntfy_node_.h>
+#include <xview_private/ntfyprotec_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/nint.h>
 

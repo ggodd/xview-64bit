@@ -10,8 +10,8 @@ static char     sccsid[] = "@(#)sel_compat.c 1.23 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/sel_compat_.h>
 #include <xview/server.h>
-#include <xview_private/seln_impl.h>
 #include <xview/sel_svc.h>
 #include <xview/win_input.h>
 

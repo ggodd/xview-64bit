@@ -10,6 +10,9 @@ static char     sccsid[] = "@(#)curs_pri.c 20.39 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/curs_pri_.h>
+#include <xview_private/xv_rop_.h>
+#include <xview_private/gettext_.h>
 #include <stdio.h>
 #include <X11/Xlib.h>
 #include <xview/font.h>

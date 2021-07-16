@@ -14,6 +14,7 @@
 #include <sys/wait.h>
 #include <sys/resource.h>
 #include <sys/ioctl.h>
+#include <xview/pkg.h>
 #include <xview/notify.h>
 #ifdef SVR4
 #include <sys/filio.h>
@@ -62,7 +63,7 @@ char *argv[];
             dup2(pipe_io[0][0], 0);
             dup2(pipe_io[1][1], 1);
             dup2(pipe_io[1][1], 2);
-#ifdef SVR4
+#if defined(SVR4) || defined(__linux__)
 	{    
             struct rlimit rlim;
             getrlimit(RLIMIT_NOFILE, &rlim);
@@ -161,7 +162,7 @@ Notify_value
 sigchldcatcher(client, pid, status, rusage)
 Notify_client client; /* the client noted in main() */
 int pid; /* the pid that died */
-#ifdef SVR4
+#if defined(SVR4) || defined(__linux__)
 int *status;
 #else
 union wait *status; /* the status of the process (unused here) */
@@ -169,7 +170,7 @@ union wait *status; /* the status of the process (unused here) */
 struct rusage *rusage; /* resources used by this process (unused) */
 {
     if (WIFEXITED(*status)) {
-#ifdef SVR4
+#if defined(SVR4) || defined(__linux__)
         printf("Process termined with status %d\n", *status);
 #else
         printf("Process termined with status %d\n", status->w_retcode);

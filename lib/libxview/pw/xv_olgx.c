@@ -10,12 +10,13 @@ static char     sccsid[] = "@(#)xv_olgx.c 1.34 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/xv_olgx_.h>
+#include <xview_private/defaults_.h>
 #include <X11/X.h>
 #ifdef OW_I18N
 #include <xview/xv_i18n.h>
 #endif /* OW_I18N */
 #include <olgx/olgx.h>
-#include <xview/defaults.h>
 #include <xview/font.h>
 #include <xview/screen.h>
 #include <xview/window.h>
@@ -46,7 +47,7 @@ xv_set_control_cms(window_public, info, cms_status)
     int			cms_status;
 {
     Cms			    cms;
-    char		    cms_name[25];
+    char		    cms_name[64];
     Xv_singlecolor	   *cms_colors;
     Xv_singlecolor	    color; 
     Visual		   *visual;

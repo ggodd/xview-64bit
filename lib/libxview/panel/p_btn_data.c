@@ -9,10 +9,7 @@ static char     sccsid[] = "@(#)p_btn_data.c 1.17 93/06/28";
  *	pending in the U.S. and foreign countries. See LEGAL NOTICE 
  *	file for terms of the license.
  */
-#include <xview_private/panel_impl.h>
-
-Pkg_private int panel_button_init();
-Pkg_private int panel_button_destroy();
+#include <xview_private/p_btn_.h>
 
 Xv_pkg          xv_panel_button_pkg = {
     "Button Item", ATTR_PKG_PANEL,

@@ -12,8 +12,8 @@
 #ifndef _OLWM_DEFAULTS_H
 #define _OLWM_DEFAULTS_H
 
-extern void GetDefaults();
-extern XrmDatabase GetUserDefaults();
-extern XrmDatabase GetAppDefaults();
+XrmDatabase GetUserDefaults(Display *dpy);
+XrmDatabase GetAppDefaults(void);
+void GetDefaults(Display *dpy, XrmDatabase commandlineDB);
 
 #endif /* _OLWM_DEFAULTS_H */

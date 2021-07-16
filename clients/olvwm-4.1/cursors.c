@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <memory.h>
 #include <X11/Xos.h>
 #include <X11/Xlib.h>
@@ -19,6 +20,8 @@
 #include "screen.h"
 #include "cursors.h"
 #include "st.h"
+#include "error.h"
+#include "resources.h"
 
 #ifdef IDENT
 #ident "@(#)cursors.c	1.5 olvwm version 01/13/98"
@@ -128,6 +131,14 @@ static struct _cursor_data cursor_names[] = {
     { NULL, -1 }
 };
 
+static int cursorHash(register char *a, register int modulus);
+static Font resLoadFont(Display *dpy, char *file);
+static Bool findNextColor(Display *dpy, char **ptr, XColor *xcolor, Colormap cmap);
+static void createCursor(Display *dpy, Colormap cmap, Cursor *pointer, int cursor_id, char *font_file, Bool no_colors, char *colors_p);
+static void initPointer(Display *dpy, Colormap cmap, char *data, Cursor *pointer);
+static void initOtherPointers(Display *dpy, Colormap cmap);
+static Bool initResizePointers(Display *dpy, Colormap cmap);
+
 static int
 cursorHash(a, modulus)
     register char	*a;
@@ -153,7 +164,7 @@ resLoadFont(dpy, file)
     if (!fontTable)
 	fontTable = st_init_table(strcmp, cursorHash);
     
-    if (!st_lookup(fontTable, file, &fid)) {
+    if (!st_lookup(fontTable, file, (char**)&fid)) {
 	if ((p = XLoadQueryFont(dpy, file)) == NULL) {
 	    ErrorWarning(gettext("An invalid font file was named for a cursor font"));
 	    fid = (Font) 0;
@@ -242,7 +253,7 @@ createCursor(dpy, cmap, pointer, cursor_id, font_file, no_colors, colors_p)
 	use_default = True;
     else {
 	if ((*pointer = XCreateGlyphCursor(dpy, fid, fid, cursor_id,
-	  				   cursor_id+1, &fg, &bg )) == NULL)
+	  				   cursor_id+1, &fg, &bg )) == (Cursor)NULL)
 	    use_default = True;
     }
 
@@ -262,6 +273,7 @@ initPointer(dpy, cmap, data, pointer)
     char *our_copy, *ptr;
     Bool end = False;
     int cursor_id;
+    long cursor_id_tmp;
     char *font_file = NULL;
     char *cursor_id_p;
 
@@ -274,7 +286,8 @@ initPointer(dpy, cmap, data, pointer)
 	    end = True;
 	else *ptr = '\0';
 	    
-	if (st_lookup(cursorTable, our_copy, &cursor_id)) {
+	if (st_lookup(cursorTable, our_copy, (char**)&cursor_id_tmp)) {
+	    cursor_id = (int)cursor_id_tmp;
 	    if (our_copy[0] == 'X')
 		font_file = "cursor";
 	    else if (our_copy[0] == 'O')
@@ -423,7 +436,7 @@ struct _cursor_data	*p;
     cursorTable = st_init_table(strcmp, cursorHash);
 
     for (p = cursor_names; p->name; p++)
-	st_insert(cursorTable, (int) p->name, (char *) p->num);
+	st_insert(cursorTable, p->name, (char *)(long)p->num);
 
     if (!initResizePointers(dpy, cmap))
 	GRV.SpecialResizePointers = False;

@@ -22,7 +22,8 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=     scrollbar.h
-HDRSPRIVATE=    sb_impl.h
+HDRSPRIVATE=    sb_impl.h sb_.h sb_compat_.h sb_destroy_.h sb_event_.h \
+                sb_get_.h sb_paint_.h sb_pos_.h sb_scroll_.h sb_set_.h
 
 DATA_OBJS = sb_data.o
 

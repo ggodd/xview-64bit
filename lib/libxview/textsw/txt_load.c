@@ -14,8 +14,12 @@ static char     sccsid[] = "@(#)txt_load.c 1.37 93/06/28";
  * Text load popup frame creation and support.
  */
 
+#include <xview_private/txt_load_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/txt_file_.h>
+#include <xview_private/txt_popup_.h>
+#include <xview_private/txt_sel_.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <sys/time.h>
 #include <signal.h>
@@ -40,6 +44,11 @@ static char     sccsid[] = "@(#)txt_load.c 1.37 93/06/28";
 
 #define HELP_INFO(s) XV_HELP_DATA, s,
 
+static int do_load_proc(Textsw_folio folio, Event *ie);
+static Panel_setting load_cmd_proc(Panel_item item, Event *event);
+static Panel_setting load_cmd_proc_accel(Panel_item item, Event *event);
+static void create_load_items(Panel panel, Textsw_view_handle view);
+
 typedef enum {
     FILE_CMD_ITEM = 0,
     DIR_STRING_ITEM = 1,
@@ -47,16 +56,6 @@ typedef enum {
 }               File_panel_item_enum;
 
 Pkg_private Panel_item load_panel_items[];
-
-Pkg_private Textsw_view_handle text_view_frm_p_itm();
-Pkg_private Xv_Window frame_from_panel_item();
-#ifdef __STDC__
-static Panel_setting load_cmd_proc(Panel_item item, Event *event);
-static Panel_setting load_cmd_proc_accel(Panel_item item, Event *event);
-#else
-static Panel_setting load_cmd_proc();
-static Panel_setting load_cmd_proc_accel();
-#endif
 
 static int
 do_load_proc(folio, ie)
@@ -70,7 +69,7 @@ do_load_proc(folio, ie)
     Frame           popup_frame;
     Frame           frame;
     Xv_Notice	    text_notice;
-    char            curr_dir[MAX_STR_LENGTH];
+    char            curr_dir[MAX_STR_LENGTH], *dir;
 #ifdef OW_I18N
     CHAR            curr_dir_ws[MAX_STR_LENGTH];
 #endif
@@ -159,7 +158,7 @@ Load File will discard these edits. Please confirm."),
 #endif
 
     /* if "cd" is not disabled */
-    (void) getcwd(curr_dir, MAX_STR_LENGTH);
+    dir = getcwd(curr_dir, MAX_STR_LENGTH);
 #ifdef OW_I18N
     (void) mbstowcs(curr_dir_ws, curr_dir, MAX_STR_LENGTH);
     if (STRCMP(curr_dir_ws, dir_str) != 0) {	/* } for match */
@@ -212,7 +211,7 @@ Change Directory Has Been Disabled."),
 	}
     }
     if ((int)STRLEN(file_str) > 0) {
-	result = textsw_load_file(textsw, file_str, TRUE, NULL, NULL);
+	result = textsw_load_file(textsw, file_str, TRUE, 0, 0);
 	if (result == 0) {
 	    (void) textsw_set_insert(folio, 0L);
 	    popup_frame =
@@ -277,7 +276,7 @@ open_cmd_proc(fc, path,file,client_data)
     register int    locx, locy;
     Frame           frame;
     Xv_Notice       text_notice;
-    char            curr_dir[MAX_STR_LENGTH];
+    char            curr_dir[MAX_STR_LENGTH], *dir;
 #ifdef OW_I18N
     CHAR            curr_dir_ws[MAX_STR_LENGTH];
 #endif
@@ -346,7 +345,7 @@ Load File will discard these edits. Please confirm."),
 #endif 
  
     /* if "cd" is not disabled */
-    (void) getcwd(curr_dir, MAX_STR_LENGTH);
+    dir = getcwd(curr_dir, MAX_STR_LENGTH);
 #ifdef OW_I18N
     (void) mbstowcs(curr_dir_ws, curr_dir, MAX_STR_LENGTH);
     if (STRCMP(curr_dir_ws, dir_str) != 0) {    /* } for match */
@@ -521,12 +520,12 @@ create_load_items(panel, view)
 {
 
     CHAR            load_string[MAX_STR_LENGTH];
-    char            current_dir_load_string[MAX_STR_LENGTH];
+    char            current_dir_load_string[MAX_STR_LENGTH], *dir;
     Es_index        dummy;
 
-    load_string[0] = (CHAR)NULL;
+    load_string[0] = '\0';
     (void) textsw_get_selection(view, &dummy, &dummy, load_string, MAX_STR_LENGTH);
- (void) getcwd(current_dir_load_string, MAX_STR_LENGTH); 
+    dir = getcwd(current_dir_load_string, MAX_STR_LENGTH); 
     load_panel_items[(int) DIR_STRING_ITEM] = panel_create_item(panel, PANEL_TEXT,
 						 PANEL_LABEL_X, ATTR_COL(0),
 						 PANEL_LABEL_Y, ATTR_ROW(0),

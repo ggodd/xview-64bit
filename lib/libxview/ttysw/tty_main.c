@@ -15,6 +15,17 @@ static char     sccsid[] = "@(#)tty_main.c 20.93 93/06/28";
  * Very active terminal emulator subwindow pty code.
  */
 
+#include <xview_private/tty_main_.h>
+#include <xview_private/csr_change_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/tty_menu_.h>
+#include <xview_private/term_ntfy_.h>
+#include <xview_private/ttyansi_.h>
+#include <xview_private/tty_mapkey_.h>
+#include <xview_private/tty_gtty_.h>
+#include <xview_private/tty_modes_.h>
+#include <xview_private/tty_ntfy_.h>
+#include <xview_private/ttyselect_.h>
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
@@ -81,22 +92,10 @@ static char     sccsid[] = "@(#)tty_main.c 20.93 93/06/28";
 int     committed_left = 0;
 #endif
 
-extern Textsw_index textsw_insert();
-#ifdef OW_I18N
-extern Textsw_index textsw_insert_wcs();
-#endif
-
-#ifdef __STDC__
-static int ttysw_process_point(Ttysw_folio ttysw, struct inputevent *ie);
-static int ttysw_process_adjust(Ttysw_folio ttysw, struct inputevent *ie);
-static int ttysw_process_motion(Ttysw_folio ttysw, struct inputevent *ie);
+static int ttysw_process_point(register Ttysw_folio ttysw, register struct inputevent *ie);
+static int ttysw_process_adjust(register Ttysw_folio ttysw, register struct inputevent *ie);
+static int ttysw_process_motion(register Ttysw_folio ttysw, register struct inputevent *ie);
 static int ttysw_process_keyboard(Ttysw_folio ttysw, struct inputevent *ie);
-#else
-static int ttysw_process_point();
-static int ttysw_process_adjust();
-static int ttysw_process_motion();
-static int ttysw_process_keyboard();
-#endif
 
 /*
  * jcb	-- remove continual cursor repaint in shelltool windows also known to
@@ -116,11 +115,6 @@ extern int	tty_has_new_bufmod;
 #define	orbp	ttysw->ttysw_obuf.cb_rbp
 #define	oebp	ttysw->ttysw_obuf.cb_ebp
 #define	obuf	ttysw->ttysw_obuf.cb_buf
-
-static int ttysw_process_point(Ttysw_folio ttysw, struct inputevent *ie);
-static int ttysw_process_adjust(Ttysw_folio ttysw, struct inputevent *ie);
-static int ttysw_process_motion(Ttysw_folio ttysw, struct inputevent *ie);
-static int ttysw_process_keyboard(Ttysw_folio ttysw, struct inputevent *ie);
 
 /* #ifdef TERMSW */
 /*
@@ -980,7 +974,7 @@ ttysw_consume_output(ttysw_view)
     int             cc;
 
     /* cache the cursor removal and re-render once in this set -- jcb */
-    if (is_not_text = !ttysw_getopt((caddr_t) ttysw, TTYOPT_TEXT)) {
+    if (is_not_text = !ttysw_getopt((Ttysw_folio) ttysw, TTYOPT_TEXT)) {
 	(void) ttysw_removeCursor();
 	do_cursor_draw = FALSE;
     }
@@ -1177,7 +1171,7 @@ ttysw_input_it(ttysw, addr, len)
 
     free(save_char);
 #endif /* OW_I18N */
-    if (ttysw_getopt((caddr_t) ttysw, TTYOPT_TEXT)) {
+    if (ttysw_getopt((Ttysw_folio) ttysw, TTYOPT_TEXT)) {
 	Textsw	textsw  = TEXTSW_FROM_TTY(ttysw);
 
 #ifdef OW_I18N

@@ -14,6 +14,7 @@ static char     sccsid[] = "@(#)sys_read.c 20.13 93/06/28 Copyr 1985 Sun Micro";
  * Sys_read.c - Real system call to read.
  */
 
+#include <xview_private/sys_read_.h>
 #ifndef SVR4
 #ifndef __linux__
 #include <syscall.h>
@@ -24,6 +25,8 @@ static char     sccsid[] = "@(#)sys_read.c 20.13 93/06/28 Copyr 1985 Sun Micro";
 #include <sys/syscall.h>
 #endif /* SVR4 */
 #include <xview_private/ntfy.h>
+
+extern ssize_t __read(int fd, void *buf, size_t count);
 
 pkg_private int
 notify_read(fd, buf, nbytes)

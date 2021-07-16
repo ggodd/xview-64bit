@@ -15,9 +15,10 @@ static char     sccsid[] = "@(#)ndet_fd.c 20.14 93/06/28 Copyr 1985 Sun Micro";
  * NTFY_INPUT, NTFY_OUTPUT and NTFY_EXCEPTION.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndet_fd_.h>
+#include <xview_private/ntfy_debug_.h>
 #include <xview_private/ndet.h>
-#ifdef SVR4
+#if defined(SVR4) || defined(__linux__)
 #include <unistd.h>
 #endif /* SVR4 */
 

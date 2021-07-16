@@ -10,6 +10,13 @@ static char     sccsid[] = "@(#)dnd.c 1.30 93/06/28";
  *      file for terms of the license.
  */
 
+#include <xview_private/dnd_.h>
+#include <xview_private/dndutil_.h>
+#include <xview_private/dnd_dsdm_.h>
+#include <xview_private/win_cntral_.h>
+#include <xview_private/win_input_.h>
+#include <xview_private/win_treeop_.h>
+#include <xview_private/xv_.h>
 #include <stdio.h>
 #include <errno.h>
 #include <sys/time.h>
@@ -19,44 +26,16 @@ static char     sccsid[] = "@(#)dnd.c 1.30 93/06/28";
 #include <xview_private/dndimpl.h>
 #include <xview_private/windowimpl.h>
 
-static int  SendDndEvent(),
-	    Verification(),
-	    ConstructSiteList(),
-	    FindDropSite(),
-	    WaitForAck(),
-	    SendTrigger();
-
-/* DND_HACK begin */
-/* The code highlighted by the words DND_HACK is here to support dropping
- * on V2 clients.  The V3 drop protocol is not compatibile with the V2.
- * If we detect a V2 application, by a property on the its frame, we try
- * to send an V2 style drop event.   This code can be removed once we decide
- * not to support running V2 apps with the latest release.
- */
-static Window FindLeafWindow();
-static int IsV2App();
-static int SendOldDndEvent();
-/* DND_HACK end */
-
-static void UpdateGrabCursor();
-extern int  DndContactDSDM();
-extern int  DndFindSite();
-extern XID  DndGetCursor();
-
-static int SendTrigger(
-    Dnd_info		*dnd,
-    Xv_Drawable_info	*info,
-    XButtonEvent 	*buttonEvent,
-    int			 local);
+static int SendTrigger(Dnd_info *dnd, Xv_Drawable_info *info, XButtonEvent *buttonEvent, int local);
 static int SendOldDndEvent(Dnd_info *dnd, XButtonEvent *buttonEvent);
 static void UpdateGrabCursor(Dnd_info *dnd, int type);
-static void UpdateGrabCursor(Dnd_info *dnd, int type);
 static int WaitForAck(Dnd_info *dnd, Xv_Drawable_info *info);
+static int SendDndEvent(Dnd_info *dnd, DndMsgType type, long subtype, XButtonEvent *ev);
+static int Verification(XButtonEvent *ev, Dnd_info *dnd);
 static int IsV2App(Display *dpy, Window window, Dnd_info *dnd, XButtonEvent *ev);
-
-
-Xv_object xview_x_input_readevent();
-Xv_object win_data();
+static Window FindLeafWindow(XButtonEvent *ev);
+static int ConstructSiteList(Display *dpy, Window dest_window, long *prop, Dnd_site_desc **dsite, unsigned int *nsites);
+static int FindDropSite(Dnd_info *dnd, Dnd_site_desc *dsl, unsigned int nsites, Dnd_site_desc *site);
 
 Xv_public int
 dnd_send_drop(dnd_public)
@@ -153,7 +132,7 @@ dnd_send_drop(dnd_public)
 	  case ACTION_STOP:
 	      /* Send LeaveNotify if necessary */
 	      if (dsdm_present) 
-		  (void)DndSendPreviewEvent(dnd, DND_NO_SITE, ev);
+		  (void)DndSendPreviewEvent(dnd, DND_NO_SITE, (XButtonEvent*)ev);
 	      stop = True;
 	      break;
 	  default:
@@ -176,9 +155,9 @@ dnd_send_drop(dnd_public)
 	goto BreakOut;
     }
 
-    if ((status = Verification(ev, dnd)) == DND_SUCCEEDED) {
+    if ((status = Verification((XButtonEvent*)ev, dnd)) == DND_SUCCEEDED) {
 	                    /* If drop site is within same process, optimize! */
-	status = SendTrigger(dnd, info, ev, win_data(dpy,dnd->dropSite.window));
+	status = SendTrigger(dnd, info, (XButtonEvent*)ev, win_data(dpy,dnd->dropSite.window));
     }
 
 BreakOut:
@@ -424,13 +403,13 @@ WaitForAck(dnd, info)
     selNotifyEvent.time = event.xselectionrequest.time;
 
     /* SUPPRESS 68 */
-    if (DndSendEvent(dpy, &selNotifyEvent) != DND_SUCCEEDED) {
+    if (DndSendEvent(dpy, (XAnyEvent*)&selNotifyEvent) != DND_SUCCEEDED) {
         status = DND_ERROR;
         goto BailOut;
     }
 
     status = DndWaitForEvent(dpy, property,
-			     PropertyNotify, NULL, &dnd->timeout, &event,
+			     PropertyNotify, (Atom)NULL, &dnd->timeout, &event,
 			     DndMatchProp);
 
 	/* XXX: This will kill any events someone else has selected for. */
@@ -663,7 +642,7 @@ SendDndEvent(dnd, type, subtype, ev)
 	  return(DND_ERROR);
     }
     /* SUPPRESS 68 */
-    return(DndSendEvent(ev->display, &cM));
+    return(DndSendEvent(ev->display, (XAnyEvent*)&cM));
 }
 
 /*
@@ -782,7 +761,7 @@ Verification(ev, dnd)
 				 * property, construct the rects and determine
 				 * if the drop happened within a drop region.
 				 */
-	(void)ConstructSiteList(dpy, NULL, interest_prop, &drop_site,
+	(void)ConstructSiteList(dpy, (Window)NULL, interest_prop, &drop_site,
 				&nsites);
 	XFree((char *)interest_prop);
 	if (!FindDropSite(dnd, drop_site, nsites, &dnd->dropSite)) { 

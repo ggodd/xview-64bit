@@ -45,11 +45,10 @@
 #include "dsdm.h"
 #include "client.h"
 #include "services.h"
+#include "virtual.h"
+#include "usermenu.h"
+#include "selection.h"
 
-extern	char		*getenv();
-extern	unsigned int	FindModifierMask();
-extern	void		ReInitUserMenu();
-extern	void		*ClientKill();
 
 /*
  * Externals
@@ -59,7 +58,6 @@ extern Atom AtomSaveYourself;
 
 extern Window	NoFocusWin;
 
-extern Bool 	UpdInputFocusStyle();
 
 extern Time	LastEventTime;
 
@@ -236,13 +234,14 @@ PshFunc(dpy, winInfo, menuInfo, idx)
 	}
 	else if ( pid == 0 )
 	{
+	    int dummy;
 		/* child reads from pipe and writes to stdout/err */
 		close( 0 );		/* close stdin */
-		dup( pshPipe[0] );	/* make stdin the read end */
+		dummy = dup( pshPipe[0] );	/* make stdin the read end */
 		close( pshPipe[0] ); 	/* don't need orig pipe fds */
 		close( pshPipe[1] );
 		close( 1 );		/* close stdout */
-		dup( 2 );		/* make olwm stderr = psh stdout */
+		dummy = dup( 2 );		/* make olwm stderr = psh stdout */
 #if defined(SYSV) || defined(__linux__)
 		setpgrp();
 #else
@@ -253,9 +252,10 @@ PshFunc(dpy, winInfo, menuInfo, idx)
 	}
 	else
 	{
+	    int dummy;
 		/* parent writes user menu postscript code down pipe */
 		close( pshPipe[0] );	/* don't need to read pipe */
-		write( pshPipe[1], 
+		dummy = write( pshPipe[1], 
 		       menuInfo->menu->buttons[idx]->action.command, 
 		       strlen(menuInfo->menu->buttons[idx]->action.command));
 		close( pshPipe[1] );
@@ -293,7 +293,6 @@ FlipFocusFunc(dpy, winInfo, menuInfo, idx)
 	MenuInfo    	*menuInfo;
 	int     	idx;
 {
-	extern void	UpdFocusStyle();
 	Bool		temp = !GRV.FocusFollowsMouse;
 
 	UpdFocusStyle(dpy, NULL, &GRV.FocusFollowsMouse, &temp);

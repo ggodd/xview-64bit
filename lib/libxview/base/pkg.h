@@ -82,6 +82,11 @@ typedef struct _xview_pkg {
     Xv_object            (*find)();
 } Xv_pkg;
 
+#include <xview/macros.h>
+
+#define xv_add_custom_attrs(...) \
+    MACRO_DEF1(_xv_add_custom_attrs, Xv_pkg*, __VA_ARGS__)
+
 /*
  ***********************************************************************
  *				Globals
@@ -102,7 +107,7 @@ EXTERN_FUNCTION (Xv_opaque xv_get_varargs, (Xv_opaque passed_object, Attr_attrib
 /*
  * PUBLIC - this should go in attr.h, but it will result in a cyclic dependency, alas:
  */
-EXTERN_FUNCTION (int xv_add_custom_attrs, (Xv_pkg *pkg, DOTDOTDOT));
+EXTERN_FUNCTION (int _xv_add_custom_attrs, (Xv_pkg *pkg, DOTDOTDOT));
 
 
 #endif /* ~xview_pkg_DEFINED */

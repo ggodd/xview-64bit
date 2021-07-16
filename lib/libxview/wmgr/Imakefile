@@ -22,7 +22,7 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=     wmgr.h
-HDRSPRIVATE=    wmgr_decor.h
+HDRSPRIVATE=    wmgr_decor.h wmgr_decor_.h wmgr_menu_.h wmgr_rect_.h wmgr_state_.h
 
 DATA_OBJS=
 

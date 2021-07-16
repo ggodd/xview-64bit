@@ -10,6 +10,7 @@
 #include <sys/param.h>
 #include <dirent.h>
 #ifdef __linux__
+#define __USE_GNU
 #include <regex.h>
 #endif
 #include <xview_private/xv_path_util.h>

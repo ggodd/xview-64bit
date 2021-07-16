@@ -18,11 +18,11 @@ XCOMM # @(#)Imakefile	1.7 28 Apr 1993 SMI
 #define SubdirHasPublicHeaders NO
 #endif
 #ifndef SubdirHasPrivateHeaders 
-#define SubdirHasPrivateHeaders NO
+#define SubdirHasPrivateHeaders YES
 #endif
 
 HDRSPUBLIC=	
-HDRSPRIVATE=
+HDRSPRIVATE= stat_imcb_.h
 
 DATA_OJS =
 

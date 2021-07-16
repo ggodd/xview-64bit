@@ -17,7 +17,7 @@ static char     sccsid[] = "@(#)ndet_dodis.c 20.13 93/06/28 Copyr 1985 Sun Micro
  * notify_start.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndet_dodis_.h>
 #include <xview_private/ndet.h>
 
 /* If this is set to a valid fd, exclude that fd from implicit dispatching */

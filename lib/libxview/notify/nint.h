@@ -78,54 +78,6 @@ notify_remove_event_func
 extern	NTFY_CONDITION *nint_stack;	/* Condition stack */
 extern	int nint_stack_size;		/* Length of condition stack */
 extern	int nint_stack_next;		/* Next empty slot in condition stack */
-extern	Notify_error nint_alloc_stack();/* (Pre)allocate enough stack space */
-
-extern	Notify_func nint_set_func();	/* (NTFY_CONDITION *cond,
-					    Notify_func new_func)
-					   Call while in critical section. */
-extern	Notify_func nint_get_func();	/* (NTFY_CONDITION *cond)
-					   Call while in critical section. */
-
-extern	Notify_error nint_interpose_func();	/* (Notify_client nclient,
-						    Notify_func func,
-						    NTFY_TYPE type,
-						    caddr_t data,
-						    int use_data) */
-extern	Notify_error nint_remove_func();	/* (Notify_client nclient,
-						    Notify_func func,
-						    NTFY_TYPE type,
-						    caddr_t data,
-						    int use_data) */
-
-extern	Notify_error nint_interpose_fd_func();	/* (Notify_client nclient,
-						    Notify_func func,
-						    NTFY_TYPE type,
-						    int fd) */
-extern	Notify_value nint_next_fd_func();	/* (Notify_client nclient,
-						    NTFY_TYPE type,
-						    int fd) */
-extern	Notify_error nint_remove_fd_func();	/* (Notify_client nclient,
-						    Notify_func func,
-						    NTFY_TYPE type,
-						    int fd) */
-
-extern	Notify_error nint_copy_callout();	/* (NTFY_CONDITION *new_cond,
-						    NTFY_CONDITION *old_cond)
-						   Overwrites new_cond->callout
-						   with newly allocated node
-						   filled with old_cond stuff */
-
-extern	Notify_func nint_push_callout();	/* (NTFY_CLIENT *client,
-						    NTFY_CONDITION *cond)
-						   Assumes being called while
-						   critical area protected. */
-extern	Notify_func nint_next_callout();	/* (Notify_client nclient,
-						    NTFY_TYPE type) */
-extern	void nint_pop_callout();		/* () Enters critical section
-						   to do work. */
-extern	void nint_unprotected_pop_callout();	/* () Like
-						   nint_pop_callout exceptdoes
-						   assumes in critical section*/
 
 #endif	/* NINT_DEFINED */
 

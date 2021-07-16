@@ -15,6 +15,10 @@ static char     sccsid[] = "@(#)rectlist.c 20.19 93/06/28";
  * rectlist which is a list of rectangles.
  */
 
+#include <xview_private/rectlist_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/rect_.h>
+#include <xview_private/xv_.h>
 #include <stdio.h>
 #include <xview_private/i18n_impl.h>
 #include <xview/base.h>
@@ -40,33 +44,18 @@ extern struct rectlist rl_null;
 
 #define	rnptr_null	(struct	rectnode *)0
 
-#ifdef __STDC__
-static void _rl_appendrect(struct rect *r, struct rectlist *rl);
+static void _rl_appendrect(register struct rect *r, register struct rectlist *rl);
 static void _rl_append(struct rectlist *rlBase, struct rectlist *rlAdd);
-static struct rectnode *_rl_getrectnode(struct rect *r);
-static void _rl_appendrectnode(struct rectlist *rl, struct rectnode *rn);
+static struct rectnode *_rl_getrectnode(register struct rect *r);
+static void _rl_appendrectnode(register struct rectlist *rl, register struct rectnode *rn);
 static void _rl_makebound(struct rectlist *rl);
-static void _rl_difrects(struct rect *r1, struct rect *r2, struct rectlist *rl);
-static int _rl_equal(struct rectlist *rl1, struct rectlist *rl2);
-static void _rl_freerectnode(struct rectnode *rn);
-static void _rl_removerect(struct rect *r, struct rectlist *rl);
-static void _rl_union(struct rectlist *rlBase, struct rectlist *rlAdd);
+static void _rl_difrects(register struct rect *r1, register struct rect *r2, register struct rectlist *rl);
+static int _rl_equal(register struct rectlist *rl1, register struct rectlist *rl2);
+static void _rl_freerectnode(register struct rectnode *rn);
+static void _rl_removerect(register struct rect *r, register struct rectlist *rl);
+static void _rl_union(register struct rectlist *rlBase, register struct rectlist *rlAdd);
 static struct rectnode **_rl_removerectnode(struct rectlist *rl, struct rectnode **rnPtr);
-static void _rl_replacernbyrl(struct rectlist *rlBase, struct rectnode *rnAxe, struct rectlist *rlAdd);
-#else
-static void _rl_appendrect();
-static void _rl_append();
-static struct rectnode *_rl_getrectnode();
-static void _rl_appendrectnode();
-static void _rl_makebound();
-static void _rl_difrects();
-static int _rl_equal();
-static void _rl_freerectnode();
-static void _rl_removerect();
-static void _rl_union();
-static struct rectnode **_rl_removerectnode();
-static void _rl_replacernbyrl();
-#endif
+static void _rl_replacernbyrl(register struct rectlist *rlBase, register struct rectnode *rnAxe, register struct rectlist *rlAdd);
 
 /*
  * rectlist geometry functions

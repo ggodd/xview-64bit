@@ -165,8 +165,14 @@ typedef enum {
 	(*(eih)->ops->process)(eih, op, esbuf, x, y, rop, pw, rect, tab_origin)
 #define ei_expand(eih, esbuf, rect, x, obuf, obuf_len, tab_origin)	\
 	(*(eih)->ops->expand)(eih, esbuf, rect, x, obuf, obuf_len, tab_origin)
+
+#include <xview/macros.h>
+
+#define ei_set(...) \
+    MACRO_DEF1(_ei_set, Ei_handle, __VA_ARGS__)
+
 /* VARARGS */
-EXTERN_FUNCTION( int ei_set, (Ei_handle eih, DOTDOTDOT));
+EXTERN_FUNCTION( int _ei_set, (Ei_handle eih, DOTDOTDOT));
 #define ei_span_of_group(eih, esbuf, group_spec, index)			\
 	(*(eih)->ops->span_of_group)(eih, esbuf, group_spec, index)
 

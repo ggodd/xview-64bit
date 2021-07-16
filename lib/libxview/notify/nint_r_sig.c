@@ -14,7 +14,9 @@ static char     sccsid[] = "@(#)nint_r_sig.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * Nint_r_sig.c - Implement the notify_remove_signal_func interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/nint_r_sig_.h>
+#include <xview_private/ndet_sig_.h>
+#include <xview_private/nintremove_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/nint.h>
 
@@ -32,6 +34,6 @@ notify_remove_signal_func(nclient, func, signal, mode)
 	return (notify_errno);
     if (ndet_check_sig(signal))
 	return (notify_errno);
-    return (nint_remove_func(nclient, func, type, (NTFY_DATA) signal,
+    return (nint_remove_func(nclient, func, type, (NTFY_DATA)(long)signal,
 			     NTFY_USE_DATA));
 }

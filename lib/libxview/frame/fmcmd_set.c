@@ -10,6 +10,13 @@ static char     sccsid[] = "@(#)fmcmd_set.c 1.46 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/fmcmd_set_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/wmgr_decor_.h>
+#include <xview_private/win_treeop_.h>
+#include <xview_private/fm_destroy_.h>
+#include <xview_private/fm_display_.h>
+#include <xview_private/fm_rescale_.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <xview_private/draw_impl.h>
@@ -18,13 +25,8 @@ static char     sccsid[] = "@(#)fmcmd_set.c 1.46 93/06/28";
 #include <xview/panel.h>
 #include <xview/server.h>
 
-static int update_default_pin_state();
 
-#ifdef __STDC__
 static int update_default_pin_state(Frame_cmd_info *frame, Xv_opaque server_public);
-#else
-static int update_default_pin_state();
-#endif
 
 Pkg_private     Xv_opaque
 frame_cmd_set_avlist(frame_public, avlist)
@@ -247,7 +249,7 @@ frame_cmd_set_avlist(frame_public, avlist)
 
 		        win_change_property(frame_public, 
 		                            SERVER_WM_DEFAULT_BUTTON,
-		                                      XA_INTEGER, 32,  data, 6);
+		                                      XA_INTEGER, 32,  (unsigned char*)data, 6);
 #ifdef OW_I18N
                         }
 #endif

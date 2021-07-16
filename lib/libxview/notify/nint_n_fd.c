@@ -14,7 +14,9 @@ static char     sccsid[] = "@(#)nint_n_fd.c 20.12 93/06/28 Copyr 1985 Sun Micro"
  * Nint_n_fd.c - Implement the nint_next_fd_func interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/nint_n_fd_.h>
+#include <xview_private/ndet_fd_.h>
+#include <xview_private/nint_next_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/nint.h>
 

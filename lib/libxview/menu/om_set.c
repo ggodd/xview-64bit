@@ -11,6 +11,17 @@ static char     sccsid[] = "@(#)om_set.c 20.96 93/06/28";
  */
 
 /* --------------------------------------------------------------------- */
+#include <xview_private/om_set_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/om_public_.h>
+#include <xview_private/om_render_.h>
+#include <xview_private/screen_.h>
+#include <xview_private/svr_parse_.h>
+#include <xview_private/windowutil_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_casecmp_.h>
 #include <sys/types.h>
 #ifdef __linux__
 #include <ctype.h>			/* isascii() */
@@ -38,44 +49,14 @@ static char     sccsid[] = "@(#)om_set.c 20.96 93/06/28";
 
 extern int panel_item_destroy_flag;
 
-/*
- * XView Private
- */
-Xv_private void screen_set_cached_window_busy();
-Xv_private void menu_set_acc_on_frame();
-Xv_private void menu_set_key_qual();
-Xv_private void menu_accelerator_notify_proc();
-Xv_private int  server_parse_keystr();
-char *defaults_get_string();
-#ifdef OW_I18N
-Xv_private int	xv_wsncasecmp();
-#else
-Xv_private int	xv_strncasecmp();
-#endif /* OW_I18N */
-
-/*
- * Package private
- */
-Pkg_private Xv_opaque menu_sets();
-Pkg_private Xv_opaque menu_item_sets();
-Pkg_private void menu_create_pin_panel_items();
-Pkg_private void menu_destroys();
-Pkg_private void menu_item_destroys();
-Pkg_private void menu_set_pin_window();
-Pkg_private Notify_value menu_pin_window_event_proc();
-Pkg_private void menu_return_no_value();
-
-/*
- * Private
- */
-static int      extend_item_list();
-static void     insert_item();
-static int      lookup();
-static void	menu_add_pin();
-static void 	menu_create_title();
-static void     remove_item();
-static void     replace_item();
-static void	destroy_panel_item_handles();
+static void menu_add_pin(Xv_menu_info *m);
+static int extend_item_list(register Xv_menu_info *m);
+static void remove_item(Xv_menu_info *m, int pos);
+static void replace_item(Xv_menu_item_info *il[], int len, int pos, Xv_menu_item_info *mi);
+static void insert_item(Xv_menu_info *m, int pos, Xv_menu_item_info *mi);
+static int lookup(register Xv_menu_item_info *il[], int len, Xv_menu_item_info *mi);
+static void menu_create_title(register Xv_menu_info *m, int type, Xv_opaque arg1);
+static void destroy_panel_item_handles(register Xv_menu_info *m);
 
 /*
  * Private defs
@@ -98,7 +79,7 @@ menu_sets(menu_public, attrs)
     struct image        *std_image;
     int                 status;
 
-    for (; (int)*attrs; attrs = attr_next(attrs)) {
+    for (; *attrs; attrs = attr_next(attrs)) {
 	bad_attr = FALSE;
 	switch ((int)attrs[0]) {
 
@@ -1174,7 +1155,7 @@ menu_item_sets(menu_item_public, attrs)
 	    mi->value = (Xv_opaque) attrs[1];
 	    if (mi->value)
 		MENU_PRIVATE(mi->value)->parent = mi;
-	    mi->pullright = mi->value != NULL;
+	    mi->pullright = mi->value != 0;
 	    if (mi->parent && mi->parent->pin_window && mi->panel_item_handle) {
 		xv_set(mi->panel_item_handle,
 		       PANEL_ITEM_MENU, mi->value,
@@ -1189,7 +1170,7 @@ menu_item_sets(menu_item_public, attrs)
             mi->image.svr_im = (Server_image) attrs[1];
             mi->image.width = mi->image.height = 0;
 	    mi->value = (Xv_opaque) attrs[2];
-	    mi->pullright = mi->value != NULL;
+	    mi->pullright = mi->value != 0;
 	    if (mi->parent && mi->parent->pin_window && mi->panel_item_handle) {
 		xv_set(mi->panel_item_handle,
 		       PANEL_LABEL_IMAGE, mi->image.svr_im,
@@ -1228,7 +1209,7 @@ menu_item_sets(menu_item_public, attrs)
             mi->image.string = (char *) attrs[1];
             mi->image.width = mi->image.height = 0;
 	    mi->value = (Xv_opaque) attrs[2];
-	    mi->pullright = mi->value != NULL;
+	    mi->pullright = mi->value != 0;
 	    if (mi->parent && mi->parent->pin_window && mi->panel_item_handle) {
 		xv_set(mi->panel_item_handle,
 		       PANEL_LABEL_STRING, mi->image.string,
@@ -1470,9 +1451,9 @@ menu_set_pin_window(m, pin_window)
 	xv_set(m->pin_window, XV_KEY_DATA, (Attr_attribute)MENU_MENU, m, NULL);
         /* fix to make xv_window_loop work for menus */
         if (WIN_IS_IN_LOOP)
-            window_set_tree_flag(m->pin_window, NULL, FALSE, TRUE);
+            window_set_tree_flag(m->pin_window, 0, FALSE, TRUE);
         else
-            window_set_tree_flag(m->pin_window, NULL, FALSE, FALSE);
+            window_set_tree_flag(m->pin_window, 0, FALSE, FALSE);
 	notify_interpose_event_func(m->pin_window,
 	    menu_pin_window_event_proc, 
             WIN_IS_IN_LOOP ? NOTIFY_IMMEDIATE : NOTIFY_SAFE);
@@ -1566,6 +1547,7 @@ insert_item(m, pos, mi)
 static int
 lookup(il, len, mi)
     register Xv_menu_item_info *il[];
+    int len;
     Xv_menu_item_info *mi;
 {
     int             i;
@@ -1627,7 +1609,7 @@ destroy_panel_item_handles(m)
 		xv_destroy(m->item_list[i]->panel_item_handle);
 		panel_item_destroyed = TRUE;
 	    }
-	    m->item_list[i]->panel_item_handle = NULL;
+	    m->item_list[i]->panel_item_handle = 0;
 	    }
     }
 }
@@ -1646,7 +1628,8 @@ menu_set_acc_on_frame(frame,menu,item, set)
 	extern char		*xv_instance_app_name;
 
         KeySym      keysym;
-        short       code;
+        /*fgao short       code*/;
+        KeyCode code;
         unsigned int        meta_modmask;
         unsigned int        modifiers = 0;
         int         	result, parse_result;
@@ -1721,7 +1704,7 @@ menu_set_acc_on_frame(frame,menu,item, set)
 	     * Set the key and qualifier strings to NULL
 	     */
             menu_set_key_qual(menu, item, FALSE, (KeySym)NULL, 
-					(unsigned int)NULL, (unsigned int)NULL, 
+					0, 0, 
 					(char *)NULL);
 	    return;
 	}
@@ -1862,7 +1845,7 @@ menu_set_acc_on_frame(frame,menu,item, set)
 		 * Unset diamond mark flag
 		 */
                 menu_set_key_qual(menu, item, FALSE, (KeySym)NULL, 
-					(unsigned int)NULL, (unsigned int)NULL, 
+					0, 0, 
 					(char *)NULL);
 	    }
 	}
@@ -1879,8 +1862,8 @@ menu_set_acc_on_frame(frame,menu,item, set)
 	     * Set key/qualifier label to NULL
 	     * Unset diamond mark flag
 	     */
-            menu_set_key_qual(menu, item, FALSE, (KeySym)NULL, (unsigned int)NULL, 
-					(unsigned int)NULL, (char *)NULL);
+            menu_set_key_qual(menu, item, FALSE, (KeySym)NULL, 0, 
+					0, (char *)NULL);
 	}
 }
 /* ACC_XVIEW */

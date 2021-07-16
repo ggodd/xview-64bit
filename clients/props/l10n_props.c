@@ -32,6 +32,7 @@ static char *sccsid = "@(#)l10n_props.c 1.6 91/09/14";
 static wchar_t	*l10n_time_convert();
 #endif
 
+
 /*
  * Wide char constant table (this trick necessary until we can get the
  * ANSI/C compiler.
@@ -79,29 +80,34 @@ l10n_config_list_t	l10n_config_initial_specific_setting[] = {
 #define	CLASS_NAME_LEN	20
 l10n_config_list_t	l10n_config_basic_setting[] = {
 #define	BASIC_SETTING		0
-{"basic_setting",	"basicLocale",	D_string, NULL},
+{"basic_setting",	"basicLocale",	D_string, 0, 0, 0, NULL},
 
 {0},
 };
 
 l10n_config_list_t	l10n_config_initial_specific_setting[] = {
 #define	INPUT_LANGUAGE		0
-{"input_language",	"inputLang", 	D_string, NULL},
+{"input_language",	"inputLang", 	D_string, 0, 0, 0},
 
 #define	DISPLAY_LANGUAGE	1
-{"display_language", "displayLang",	D_string, NULL},
+{"display_language", "displayLang",	D_string, 0, 0, 0},
 
 #define	TIME_FORMAT		2
-{"time_format",	"timeFormat",	D_string, NULL},
+{"time_format",	"timeFormat",	D_string, 0, 0, 0},
 
 
 #define	NUMERIC_FORMAT		3
-{"numeric_format",	"numeric",	D_string, NULL},
+{"numeric_format",	"numeric",	D_string, 0, 0, 0},
 
 #define	SS_CATEGORY		4
 {0}
 };
 #endif /* OW_I18N */
+
+extern int l10n_config_read(char *locale, char *file_name, l10n_config_list_t *a_list);
+
+void l10n_set_client_data(Panel_item p_item, l10n_config_list_t *l10n_list, Panel_item msg_item, Description *client_data);
+
 
 l10n_config_sss_t		*l10n_config_sss = NULL;
 static l10n_config_sss_t	*l10n_config_sss_cur = NULL;
@@ -110,9 +116,9 @@ l10n_config_sss_t		*sss, *sss_past;
 static char			lc_messages[LOCALE_NAME_LEN];
 
 
-static l10n_config_list_item_t	*l10n_config_slot2ptr();
-static int			l10n_ss_setup();
-static				l10n_set_choice();
+static l10n_config_list_item_t	*l10n_config_slot2ptr(l10n_config_list_t *list, register int slotno);
+static int l10n_ss_setup(char *locale);
+static void l10n_set_choice(Panel_item pi, l10n_config_list_t *list, int xrdb_default);
 
 Panel_item	l10n_bs, l10n_ss, l10n_ss_display_language,
 		l10n_ss_input_language, l10n_ss_time_format,
@@ -172,7 +178,7 @@ display:
 	return(1);
 }
 
-static
+static void
 l10n_set_choice(pi, list, xrdb_default)
 	Panel_item		pi;
 	l10n_config_list_t	*list;
@@ -231,6 +237,7 @@ l10n_set_choice(pi, list, xrdb_default)
 		
 }
 
+void
 reset_localization()
 {
 
@@ -369,7 +376,7 @@ l10n_ss_il_supplement_notify(item, event)
 
 }
 
-
+void
 l10n_set_client_data(p_item, l10n_list, msg_item, client_data)
    	Panel_item		p_item;
    	l10n_config_list_t	*l10n_list;

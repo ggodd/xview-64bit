@@ -22,7 +22,10 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=     pixwin.h
-HDRSPRIVATE=    pw_impl.h xv_color.h
+HDRSPRIVATE=    pw_impl.h xv_color.h pw_btchrop_.h pw_cms_.h xv_rop_.h mem_.h \
+                pw_get_.h pw_line_.h pw_plygon2_.h pw_plyline_.h pw_plypt_.h \
+                pw_put_.h pw_read_.h pw_traprop_.h pw_vector_.h xv_olgx_.h \
+                xv_stencil_.h xv_text_.h
 
 DATA_OBJS =
 

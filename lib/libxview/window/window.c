@@ -10,6 +10,17 @@ static char     sccsid[] = "@(#)window.c 20.156 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/window_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/font_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/windowcmpt_.h>
+#include <xview_private/windowlayt_.h>
+#include <xview_private/window_set_.h>
+#include <xview_private/windowutil_.h>
+#include <xview_private/win_treeop_.h>
+#include <xview_private/win_geom_.h>
+#include <xview_private/xv_.h>
 #ifdef _XV_DEBUG
 #include <xview_private/xv_debug.h>
 #endif
@@ -47,12 +58,6 @@ static char     sccsid[] = "@(#)window.c 20.156 93/06/28";
 static int      parent_dying = 0;	/* Don't destroy this window if */
 /* its parent window is dying.  */
 /* Server will do this for us.  */
-Pkg_private int window_init();
-Pkg_private int window_destroy_win_struct();
-Pkg_private XID window_new();
-Pkg_private void window_get_grab_flag();
-
-Xv_Font xv_font_with_name();
 
 #define eexit(msg, error_msg) \
   if (error_msg) { \
@@ -104,7 +109,6 @@ window_init(parent_public, win_public, avlist)
     int				is_wcs_error_msg = FALSE;	
     int                         win_use_im = TRUE;
     int				win_ic_active = TRUE;
-    Xv_private void    		_xv_status_start(), _xv_status_done(), _xv_status_draw();
 #ifdef FULL_R5
     XIMStyle			win_im_style_mask = NULL;
 #endif 
@@ -119,8 +123,6 @@ window_init(parent_public, win_public, avlist)
     /*
      * Initialize flags that control whether passive grabs are done
      */
-    window_get_grab_flag();
-
     win = xv_alloc(Window_info);
     rect_construct(&win->cache_rect, EMPTY_VALUE, EMPTY_VALUE,
 				     EMPTY_VALUE, EMPTY_VALUE);
@@ -472,7 +474,7 @@ window_init(parent_public, win_public, avlist)
 	xv_cms_fg(info) = xv_cms_fg(parent_info);
 	xv_fg(info) = xv_fg(parent_info);
     } else {
-	sprintf(cms_name, "xv_default_cms_for_0x%x", xv_visual(info)->vinfo->visualid);
+	sprintf(cms_name, "xv_default_cms_for_0x%lx", xv_visual(info)->vinfo->visualid);
 	xv_cms(info) = (Cms)xv_find(screen, CMS,
              CMS_NAME, cms_name,				    
              XV_VISUAL, xv_visual(info)->vinfo->visual,
@@ -738,7 +740,7 @@ window_destroy_win_struct(win_public, status)
 	if (win->font)
 	    (void) xv_set(win->font, XV_DECREMENT_REF_COUNT, NULL);
 
-	if (win->cmdline && ((int)win->cmdline != -1))  {
+	if (win->cmdline && ((int)(long)win->cmdline != -1))  {
 	    free(win->cmdline);
 	}
 

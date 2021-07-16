@@ -21,6 +21,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
+#include <X11/Intrinsic.h>
 
 #include "i18n.h"
 #include "ollocale.h"
@@ -33,16 +34,18 @@
 #include "group.h"
 #include "virtual.h"
 #include "error.h"
+#include "moveresize.h"
+#include "resources.h"
+#include "st.h"
+#include "info.h"
+#include "selection.h"
+#include "evbind.h"
+#include "kbdfuncs.h"
+#include "wingframe.h"
+#include "winframe.h"
 
 /* REMIND - find out how to get rid of this */
 extern int Resize_width, Resize_height;
-
-typedef enum {
-    Unconstrained,		/* resizing not constrained */
-    EitherConstrained,		/* constrained, but no direction yet */
-    HorizConstrained,		/* constrained horizontally */
-    VertConstrained		/* constrained vertically */
-} Constraint;
 
 
 #define	DELTA_INCREASE		(1)
@@ -64,6 +67,31 @@ typedef enum {
 
 #define defrect(r, X, Y, W, H) \
 	(r).x = X, (r).y = Y, (r).width = W, (r).height = H
+
+static void drawDouble(Display *dpy, Window win, ScreenInfo *si, GC gc, int x, int y, int w, int h);
+static StatusWinInfo *createStatusWindow(Display *dpy, ScreenInfo *scrinfo, Text *proto);
+static void paintStatusWindow(StatusWinInfo *sw, Text *text);
+static void destroyStatusWindow(StatusWinInfo *sw);
+static void mouseMovePaintStatus(MoveClosure *mstuff, int x, int y);
+static int getWindowStackingOrder(Window win, MoveClosure *mstuff);
+static void *moveAddRegion(Client *cli, MoveClosure *mstuff);
+static int movewinInterposer(Display *dpy, XEvent *event, WinGeneric *w, MoveClosure *mstuff);
+static void windowOff(WinGenericFrame *win, MoveClosure *mstuff, int *pox, int *poy);
+static void *moveOneWindow(WinGenericFrame *win, MoveClosure *mstuff);
+static void *drawOneBox(WinGenericFrame *w, MoveClosure *mstuff);
+static void *doConfigOneWindow(WinGenericFrame *win, MoveClosure *mstuff);
+static void *configOneClient(Client *cli, MoveClosure *mstuff);
+static void *configOneWindow(WinGenericFrame *win, MoveClosure *mstuff);
+static void *doConfigOneClientCleanup(Client *cli);
+static void *configOneWindowCleanup(WinGeneric *win);
+static void moveDone(MoveClosure *mstuff);
+static void resizeDraw(ResizeClosure *rstuff);
+static void resizePaintStatus(ResizeClosure *rstuff);
+static void resizeDone(Display *dpy, XEvent *e, WinGeneric *w, ResizeClosure *rstuff, Bool doit);
+static void resizeMotion(ResizeClosure *rstuff, int x, int y);
+static int resizeInterposer(Display *dpy, XEvent *e, WinGeneric *w, ResizeClosure *rstuff);
+static int rootBoxInterposer(Display *dpy, XEvent *event, WinGeneric *w, RootBoxClosure *rbc);
+
 
 /* ARGSUSED */
 static void
@@ -113,16 +141,6 @@ drawDouble(dpy, win, si, gc, x, y, w, h)
 #define VMARGIN 3
 
 
-typedef struct {
-    Display	*dpy;
-    Window	win;
-    int		ypos;
-    int		width;
-    int		height;
-    XFontStruct	*font;
-    ScreenInfo	*scrinfo;
-} StatusWinInfo;
-
 
 static StatusWinInfo *
 createStatusWindow(dpy, scrinfo, proto)
@@ -138,8 +156,8 @@ createStatusWindow(dpy, scrinfo, proto)
     sw = MemNew(StatusWinInfo);
     sw->dpy = dpy;
     sw->font = TitleFont;
-    sw->height = FontHeight(sw->font) + 2*VMARGIN;
-    sw->width = FontWidth(sw->font, proto, TextLen(proto)) + 2*HMARGIN;
+    sw->height = FontHeight((DisplayFont)sw->font) + 2*VMARGIN;
+    sw->width = FontWidth((DisplayFont)sw->font, proto, TextLen(proto)) + 2*HMARGIN;
     sw->scrinfo = scrinfo;
 
     if (MatchString(GRV.ResizePosition, "center")) {
@@ -159,7 +177,7 @@ createStatusWindow(dpy, scrinfo, proto)
 	    else ;
 	else y = 0;
     }
-    sw->ypos = FontAscent(sw->font) + VMARGIN;
+    sw->ypos = FontAscent((DisplayFont)sw->font) + VMARGIN;
 
     attr.border_pixel = 0;
     attr.colormap = scrinfo->colormap;
@@ -187,8 +205,8 @@ paintStatusWindow(sw, text)
     
     textlen = TextLen(text);
 
-    DrawText(sw->dpy, sw->win, sw->font, sw->scrinfo->gc[FOREGROUND_GC], 
-		(sw->width - FontWidth(sw->font, text, textlen)) / 2,
+    DrawText(sw->dpy, sw->win, (DisplayFont)sw->font, sw->scrinfo->gc[FOREGROUND_GC], 
+		(sw->width - FontWidth((DisplayFont)sw->font, text, textlen)) / 2,
 		sw->ypos, text, textlen);
 }
 
@@ -206,49 +224,6 @@ destroyStatusWindow(sw)
 
 
 /* ===== mouse-based window moving ======================================== */
-
-
-typedef struct {
-    Display		*dpy;
-    int			initX, initY;
-    int			offX, offY;
-    int			curX, curY;
-    int			rounder, divider;
-    List		*winlist;
-    WinGenericFrame	*frame;
-    StatusWinInfo	*statuswindow;
-    char		*statusfmt;
-    Constraint		constraint;
-    Bool		dragwin;	    /* true=dragwin, false=dragframe */
-    Bool		mouse;
-    Bool		AutoRaise;	    /* orig value of autoraise */
-/*
- * Virtual Desktop things
- */
-    int			check_vdm;
-    int			vdm_screenX;
-    int			vdm_screenY;
-    int			inVDM;
-    VirtualDesktop	*vdm;
-    int			targetScreenX;
-    int			targetScreenY;
-    int			initScreenX;
-    int			initScreenY;
-    Region		region;
-    Window		*children;
-    unsigned int	num_children;
-    int			vdm_stacking_order;
-} MoveClosure;
-
-
-static Bool movewinInterposer();
-static void *moveOneWindow();
-static void *configOneWindow();
-static void *configOneWindowCleanup();
-static void *drawOneBox();
-static void moveDone();
-
-
 static void
 mouseMovePaintStatus(mstuff, x, y)
     MoveClosure *mstuff;
@@ -746,7 +721,7 @@ movewinInterposer(dpy, event, w, mstuff)
 	    break;
 	
 	case ACTION_FRONT:
-	    KeyFrontFocus(dpy, event);
+	    KeyFrontFocus(dpy, (XKeyEvent *)event);
 	    break;
 
 	default:
@@ -758,7 +733,7 @@ movewinInterposer(dpy, event, w, mstuff)
 		    moveUpdate(mstuff, (XEvent *) NULL);
 		}
 	    } else {
-		KeyBeep(dpy, event);
+		KeyBeep(dpy, (XKeyEvent *)event);
 	    }
 	    break;
 	}
@@ -956,7 +931,7 @@ doConfigOneWindow(win, mstuff)
 		        win->core.width, win->core.height);
     }
     if (GRV.RaiseOnMove)
-	RaiseWindow(win);
+	RaiseWindow((WinGeneric *)win);
     return (void *) 0;
 }
 
@@ -1113,17 +1088,6 @@ moveDone(mstuff)
  * or left if zero.  The two-bit indicates vertical if one, horizontal if zero.
  * The four-bit indicates a jump if one, normal if zero.
  */
-typedef enum {
-    RS_LEFT = 0,
-    RS_RIGHT,
-    RS_UP,
-    RS_DOWN,
-    RS_J_LEFT,
-    RS_J_RIGHT,
-    RS_J_UP,
-    RS_J_DOWN
-} ResizeAction;
-
 #define RS_ISRIGHT	    (1<<0)
 #define RS_ISDOWN	    (1<<0)
 #define RS_ISVERT	    (1<<1)
@@ -1143,33 +1107,6 @@ struct {
     {            0, -RS_JUMPMULT },	/* jump up */
     {            0,  RS_JUMPMULT }	/* jump down */
 };
-
-
-typedef struct {
-    Client		*cli;
-    Constraint		constraint;
-    Bool		drawn;
-    Bool		moving;
-    Bool		useAspect;
-    Bool		baseProvided;
-    int			origX, origY;
-    int			curX, curY;	/* current mouse position */
-    int			winX, winY;	/* current window position */
-    int			winW, winH;	/* current window height */
-    int			minW, minH;
-    int			maxW, maxH;
-    int			incW, incH;
-    int			minAspectX, minAspectY;
-    int			maxAspectX, maxAspectY;
-    int			baseW, baseH;
-    int			borderW, borderH;   /* size of frame border */
-    void		(*callback)();
-    void		*cbarg;
-    StatusWinInfo	*statuswindow;
-    char		*statusfmt;
-    int			gravity;		/* see note above */
-    Bool		mouse;			/* using mouse? */
-} ResizeClosure;
 
 
 /*
@@ -1253,8 +1190,8 @@ resizeDone(dpy, e, w, rstuff, doit)
 
     if (doit) {
 	if (GRV.RaiseOnResize)
-	    GFrameSetStack(rstuff->cli->framewin, CWStackMode, Above, None);
-	GFrameSetConfig(rstuff->cli->framewin, rstuff->winX, rstuff->winY,
+	    GFrameSetStack((WinGenericFrame *)rstuff->cli->framewin, CWStackMode, Above, None);
+	GFrameSetConfig((WinGenericFrame *)rstuff->cli->framewin, rstuff->winX, rstuff->winY,
 			rstuff->winW, rstuff->winH);
     }
 
@@ -1605,7 +1542,7 @@ resizeInterposer(dpy, e, w, rstuff)
 	    } else if (mask == ModMaskMap[MOD_INVERT]) {
 		rstuff->moving = True;
 	    } else {
-		KeyBeep(dpy, e);
+		KeyBeep(dpy, (XKeyEvent *)e);
 	    }
 	    break;
 	}
@@ -1806,19 +1743,6 @@ UserResizeWin(cli, trigger, corner, callback, cbarg)
 
 /* ===== root bounding box ================================================ */
 
-
-typedef struct _rootboxclosure {
-    int x0, y0;
-    int x, y;
-    unsigned int w, h;
-    WinRoot *rootWin;
-    ScreenInfo *scrInfo;
-    GC rootGC;
-    void *closure;
-    void (*callback)();
-} RootBoxClosure;
-
-
 static int
 /* ARGSUSED */
 rootBoxInterposer(dpy, event, w, rbc)
@@ -1888,7 +1812,7 @@ rootBoxInterposer(dpy, event, w, rbc)
 
     case KeyPress:
 	if (FindKeyboardAction(dpy, event) != ACTION_STOP) {
-	    KeyBeep(dpy,event);
+	    KeyBeep(dpy, (XKeyEvent *)event);
 	    return DISPOSE_USED;
 	}
 	break;

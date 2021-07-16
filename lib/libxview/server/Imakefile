@@ -22,7 +22,10 @@ XCOMM # @(#)Imakefile	1.12 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=     server.h 
-HDRSPRIVATE=    svr_impl.h svr_atom.h svr_kmdata.h
+HDRSPRIVATE=    svr_impl.h svr_atom.h svr_kmdata.h server_.h svr_atom_.h \
+                svr_get_.h \
+                svr_parse_.h \
+                svr_set_.h svr_x_.h
 
 DATA_OBJS = svr_data.o
 

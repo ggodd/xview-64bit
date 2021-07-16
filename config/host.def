@@ -1,3 +1,4 @@
-#undef AMD64Architecture
-#define i386Architecture
+#undef i386Architecture
+#define AMD64Architecture
+#define DefaultCDebugFlags -O2
 

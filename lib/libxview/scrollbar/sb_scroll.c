@@ -24,19 +24,12 @@ static char     sccsid[] = "@(#)sb_scroll.c 1.41 93/06/28";
  * Include files:
  */
 
-#include <xview_private/sb_impl.h>
+#include <xview_private/sb_scroll_.h>
+#include <xview_private/sb_pos_.h>
 #include <xview/win_notify.h>
 
-/*
- * Declaration of Functions Defined in This File (in order):
- */
-Xv_public void  scrollbar_default_compute_scroll_proc();
-
-Pkg_private int scrollbar_scroll();
-Pkg_private int scrollbar_scroll_to_offset();
-
-static int      scrollbar_offset_to_client_units();
-static unsigned long scrollbar_absolute_offset();
+static int scrollbar_offset_to_client_units(Xv_scrollbar_info *sb, long unsigned pixel_offset, Scroll_motion motion, long unsigned *view_start);
+static unsigned long scrollbar_absolute_offset(Xv_scrollbar_info *sb, int pos, int length);
 
 
 /******************************************************************/
@@ -80,9 +73,6 @@ scrollbar_scroll_to_offset(sb, view_start)
     Xv_scrollbar_info *sb;
     long unsigned   view_start;
 {
-    extern Notify_arg win_copy_event();
-    extern void     win_free_event();
-
     /* do bounds checking */
     if (sb->view_length > sb->object_length)
       view_start = 0;

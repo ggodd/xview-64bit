@@ -14,6 +14,8 @@ static char     sccsid[] = "@(#)ev_field.c 20.15 93/06/28";
  * Procedure for doing field matching.
  */
 
+#include <xview_private/ev_field_.h>
+#include <xview_private/es_util_.h>
 #include <xview_private/primal.h>
 #include <xview_private/txt_impl.h>
 

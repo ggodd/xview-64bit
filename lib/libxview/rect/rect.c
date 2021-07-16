@@ -15,6 +15,8 @@ static char     sccsid[] = "@(#)rect.c 20.17 93/06/28 Copyr 1984 Sun Micro";
  * the rectangle structure
  */
 
+#include <xview_private/rect_.h>
+#include <xview_private/gettext_.h>
 #include <stdio.h>
 #include <xview_private/i18n_impl.h>
 #include <xview/base.h>		/* HUH? xv_error.h also does this */

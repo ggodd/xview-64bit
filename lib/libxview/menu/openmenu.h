@@ -64,7 +64,7 @@
 #define ATTR_MENU_ITEM			ATTR_OPAQUE
 #define ATTR_MENU_ITEM_PAIR		ATTR_INT_PAIR
 /* Alpha compatibility, mbuck@debian.org */
-#if defined(__alpha) || defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT)
+#if defined(__alpha) || defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT) || defined(__amd64__)
 #define ATTR_STRING_VALUE_PAIR		ATTR_OPAQUE_PAIR
 #define ATTR_IMAGE_VALUE_PAIR		ATTR_OPAQUE_PAIR
 #define ATTR_STRING_MENU_PAIR		ATTR_OPAQUE_PAIR
@@ -119,7 +119,7 @@ typedef enum {
 	MENU_FEEDBACK		= MENU_ATTR(ATTR_BOOLEAN,		 33), 
 /*--G*/	MENU_FIRST_EVENT	= MENU_ATTR(ATTR_NO_VALUE,		 36), 
 /* Alpha compatibility, mbuck@debian.org */
-#if defined(__alpha) || defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT)
+#if defined(__alpha) || defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT) || defined(__amd64__)
 	MENU_GEN_PIN_WINDOW	= MENU_ATTR(ATTR_OPAQUE_PAIR, 		 39),
 #else
 	MENU_GEN_PIN_WINDOW	= MENU_ATTR(ATTR_INT_PAIR, 		 39),
@@ -203,7 +203,7 @@ typedef enum {
 	MENU_LINE_AFTER_ITEM	= MENU_ATTR(ATTR_INT,			219),
 	MENU_POS		= MENU_ATTR(ATTR_INT_PAIR, 		222), 
 	/* MENU_POSITION_RECT should really be ATTR_OPAQUE */
-#if defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT)
+#if defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT) || defined(__amd64__)
 	MENU_POSITION_RECT	= MENU_ATTR(ATTR_OPAQUE,		225),
 #else
 	MENU_POSITION_RECT	= MENU_ATTR(ATTR_INT,			225),
@@ -281,6 +281,23 @@ typedef struct {
 	Xv_opaque		private_data;
 } Xv_menu_item;
 
+#include <xview/macros.h>
+
+#define menu_show(...) \
+    MACRO_DEF3(_menu_show, Menu, Xv_Window, Event*, __VA_ARGS__)
+    
+#define menu_create(...) \
+    MACRO_DEF1(_menu_create, Attr_attribute, __VA_ARGS__)
+    
+#define menu_create_item(...) \
+    MACRO_DEF1(_menu_create_item, Attr_attribute, __VA_ARGS__)
+    
+#define menu_find(...) \
+    MACRO_DEF1(_menu_find, Menu, __VA_ARGS__)
+    
+#define menu_set(...) \
+    MACRO_DEF1(_menu_set, Menu, __VA_ARGS__)
+
 /*
  ***********************************************************************	
  *				Globals
@@ -308,7 +325,7 @@ extern struct pixrect 	menu_gray50_pr;
  */
 EXTERN_FUNCTION (Xv_opaque menu_return_value, (Menu menu, Menu_item item));
 EXTERN_FUNCTION (Xv_opaque menu_return_item, (Menu menu, Menu_item item));
-EXTERN_FUNCTION (void menu_show, (Menu menu, Xv_Window win, Event *event, DOTDOTDOT));
+EXTERN_FUNCTION (void _menu_show, (Menu menu, Xv_Window win, Event *event, DOTDOTDOT));
 
 /*
  * PRIVATE functions 
@@ -321,11 +338,11 @@ EXTERN_FUNCTION (void menu_select_default, (Menu menu));
  * for SunView 1 compatibility 
  */
  
-EXTERN_FUNCTION (Menu menu_create, (Attr_attribute attr1, DOTDOTDOT));
-EXTERN_FUNCTION (Menu_item menu_create_item, (Attr_attribute attr1, DOTDOTDOT));
-EXTERN_FUNCTION (Menu_item 	menu_find, (Menu menu, DOTDOTDOT));
+EXTERN_FUNCTION (Menu _menu_create, (Attr_attribute attr1, DOTDOTDOT));
+EXTERN_FUNCTION (Menu_item _menu_create_item, (Attr_attribute attr1, DOTDOTDOT));
+EXTERN_FUNCTION (Menu_item 	_menu_find, (Menu menu, DOTDOTDOT));
 EXTERN_FUNCTION (Xv_opaque 	menu_get, (Menu menu, Xv_opaque attr, Xv_opaque v1));
-EXTERN_FUNCTION (Xv_opaque 	menu_set, (Menu menu, DOTDOTDOT));
+EXTERN_FUNCTION (Xv_opaque 	_menu_set, (Menu menu, DOTDOTDOT));
 EXTERN_FUNCTION (void 		menu_destroy_with_proc, (Menu menu, void (*proc)()));
 
 #endif /* xview_walkmenu_DEFINED */

@@ -10,15 +10,12 @@ static char     sccsid[] = "@(#)windowdrop.c 1.14 93/06/28";
  *      file for terms of the license.
  */
 
-#include <xview_private/windowimpl.h>
+#include <xview_private/windowdrop_.h>
+#include <xview_private/site_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_list_.h>
 #include <xview/server.h>
 #include <assert.h>
-
-Pkg_private	void		win_add_drop_item();
-Pkg_private	Xv_opaque	win_delete_drop_item();
-Xv_private      int		DndStoreSiteData();
-Pkg_private	void		win_update_dnd_property();
-
 
 /* 
  * Save the drop site information.  It is stored in a linked list, where
@@ -65,7 +62,7 @@ win_delete_drop_item(win, dropItem, mode)
     if (mode == Win_Drop_Site) {
         if (!win->dropSites) return(XV_ERROR); 
 	nodeHead = winDropSiteNode = win->dropSites;
-        assert(dropItem != NULL);
+        assert(dropItem != (Xv_drop_site)NULL);
     } else {
         if (!win->dropInterest) return(XV_ERROR); 
 	nodeHead = winDropSiteNode = win->dropInterest;

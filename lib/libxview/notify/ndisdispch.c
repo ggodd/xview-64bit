@@ -14,13 +14,28 @@ static char     sccsid[] = "@(#)ndisdispch.c 20.22 93/06/28 Copyr 1985 Sun Micro
  * Ndis_dispatch.c - Central control mechanism for the dispatcher.
  */
 
+#include <xview_private/ndisdispch_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/ndet_fd_.h>
+#include <xview_private/ndet_death_.h>
+#include <xview_private/ndetitimer_.h>
+#include <xview_private/ndetpevent_.h>
+#include <xview_private/ndet_sig_.h>
+#include <xview_private/ndisdsched_.h>
+#include <xview_private/nint_copy_.h>
+#include <xview_private/nint_stack_.h>
+#include <xview_private/ntfyclient_.h>
+#include <xview_private/ntfy_cond_.h>
+#include <xview_private/ntfy_debug_.h>
+#include <xview_private/ntfy_list_.h>
+#include <xview_private/ntfy_node_.h>
+#include <xview_private/ntfyprotec_.h>
 #include <xview_private/i18n_impl.h>
-#include <xview_private/ntfy.h>
 #include <xview_private/ndis.h>
 #include <xview_private/nint.h>
 #include <xview_private/ndet.h>	/* For ndet_set_event_processing/ndet_flags */
 #include <signal.h>
-#ifdef SVR4
+#if defined(SVR4) || defined(linux)
 #include <unistd.h>
 #endif /* SVR4 */
 
@@ -33,6 +48,10 @@ int             dtablesize_cache = 0;
 #define GETDTABLESIZE() \
  (dtablesize_cache?dtablesize_cache:(dtablesize_cache=getdtablesize()))
 #endif /* SVR4 */
+
+static NTFY_ENUM ndis_setup_sched_clients(NTFY_CLIENT *client, NTFY_CONDITION *condition, NTFY_ENUM_DATA context);
+static Notify_error notify_fd(Notify_client nclient, int fd, NTFY_TYPE type);
+static Notify_error ndis_send_func(Notify_client nclient, NTFY_TYPE type, NTFY_DATA data, int use_data, Notify_func *func_ptr, NTFY_DATA *data_ptr, Notify_release *release_func_ptr);
 
 pkg_private_data u_int ndis_flags = 0;
 pkg_private_data NTFY_CLIENT *ndis_clients = 0;
@@ -59,12 +78,8 @@ static u_int    ndis_event_count;	/* Last valid position (plus one) in
 static u_int    ndis_event_length;	/* Current length of ndis_events &
 					 * ndis_args */
 
-static Notify_error ndis_send_func();	/* Used to get func for
-					 * sending notify */
 
 #define	NDIS_RELEASE_NULL	((Notify_release *)0)
-
-static NTFY_ENUM ndis_setup_sched_clients();
 
 /* Enqueue condition from dectector on to the dispatchers client list */
 pkg_private     Notify_error
@@ -348,7 +363,7 @@ notify_fd(nclient, fd, type)
 
     /* Check arguments and get function to call */
     if (ndet_check_fd(fd) ||
-	ndis_send_func(nclient, type, (NTFY_DATA) fd, NTFY_USE_DATA,
+	ndis_send_func(nclient, type, (NTFY_DATA)(long)fd, NTFY_USE_DATA,
 		 &func, NTFY_DATA_PTR_NULL, NDIS_RELEASE_NULL) != NOTIFY_OK)
 	return (notify_errno);
     (void) func(nclient, fd);
@@ -434,7 +449,7 @@ notify_signal(nclient, sig)
 
     /* Check arguments and get function to call */
     if (ndet_check_sig(sig) ||
-	ndis_send_func(nclient, NTFY_SYNC_SIGNAL, (NTFY_DATA) sig,
+	ndis_send_func(nclient, NTFY_SYNC_SIGNAL, (NTFY_DATA)(long)sig,
 	     NTFY_USE_DATA, &func, NTFY_DATA_PTR_NULL, NDIS_RELEASE_NULL) !=
 	NOTIFY_OK)
 	return (notify_errno);

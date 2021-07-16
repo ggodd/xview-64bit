@@ -24,7 +24,26 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #include <XView.tmpl>
 
 HDRSPUBLIC= notify.h
-HDRSPRIVATE= ndet.h ndis.h nint.h ntfy.h ultrix_cpt.h ntfy_ctbl.h
+HDRSPRIVATE= ndet.h ndis.h nint.h ntfy.h ultrix_cpt.h ntfy_ctbl.h \
+    ndet_auto_.h ndet_death_.h ndet_die_.h ndisdsched_.h sys_select_.h \
+    ndet_dodis_.h ndet_event_.h ndet_fcntl_.h ndet_fd_.h ndetgetfnc_.h \
+    ndetgevent_.h ndet_loop_.h ndetgdeath_.h ndetpevent_.h ndetgexcep_.h \
+    ndet_g_fd_.h ndet_g_in_.h ndetgitimr_.h ndet_g_out_.h ndet_g_pri_.h \
+    ndet_g_sig_.h ndetg_wait_.h ndetitimer_.h \
+    ndet_nodis_.h ndetpdeath_.h ndet_read_.h ndetremove_.h ndetsdeath_.h \
+    ndetselect_.h ndetsevent_.h ndetsexcep_.h ndet_s_fd_.h ndet_sig_.h \
+    ndet_s_in_.h ndetsingle_.h ndetsitimr_.h ndet_s_out_.h ndet_s_pri_.h \
+    ndet_s_sig_.h ndets_wait_.h \
+    ndet_value_.h ndet_veto_.h ndet_wait_.h \
+    ndisdispch_.h ndis_d_pri_.h ndisd_wait_.h ndisgsched_.h ndisssched_.h\
+    nint_copy_.h nint_get_.h nintideath_.h nintievent_.h nintiexcpt_.h \
+    nint_i_fd_.h nint_i_in_.h nintiitimr_.h nint_inter_.h nint_i_out_.h \
+    nint_i_sig_.h ninti_wait_.h nintndeath_.h nintnevent_.h nintnexcpt_.h \
+    nint_next_.h nint_n_fd_.h nint_n_in_.h nintnitimr_.h nint_n_out_.h \
+    nint_n_sig_.h nintn_wait_.h nintrdeath_.h nintremove_.h nintrevent_.h \
+    nintrexcpt_.h nint_r_fd_.h nint_r_in_.h nintritimr_.h nint_r_out_.h nint_r_sig_.h nintr_wait_.h nint_set_.h nint_stack_.h ntfyclient_.h ntfy_cond_.h \
+    ntfy_ctbl_.h \
+    ntfy_debug_.h ntfy_dump_.h ntfy_fd_op_.h ntfy_list_.h ntfy_node_.h ntfyperror_.h ntfyprotec_.h sys_fcntl_.h sys_read_.h
 
 DATA_OBJS =\
 	notifydata.o	

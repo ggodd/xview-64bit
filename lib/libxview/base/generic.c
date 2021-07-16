@@ -14,8 +14,10 @@ static char     sccsid[] = "@(#)generic.c 20.25 91/02/27";
  * generic.c: Support for "generic object" - basically, a property list.
  */
 
-#include <xview/pkg.h>
-#include <xview/notify.h>
+#include <xview_private/generic_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/quark_.h>
 #include <xview_private/gen_impl.h>
 #include <xview_private/portable.h>
 
@@ -39,20 +41,14 @@ extern Xv_pkg   xv_generic_pkg;
 /*
  * Escape hatch to cope with SunView and/or client bugs in ref. counting.
  */
-Xv_private void generic_set_instance_name();
-Xv_private XrmQuarkList generic_create_instance_qlist();
 Xv_private_data int xv_free_unreferenced;
-Xv_private int  xv_destroy_status();
-Xv_private Xv_opaque db_name_from_qlist();
-Xv_private XrmQuarkList db_qlist_from_name();
+
 static Attr_attribute xv_next_key;	/* = 0 for -A-R */
 
-static Generic_node *add_node();
-static Generic_node *find_node();
-static void	     delete_node();
-
-XrmQuarkList db_qlist_from_name();
-Xv_opaque db_name_from_qlist();
+static void generic_data_free(Xv_object object, Attr_attribute key, Xv_opaque data);
+static Generic_node *add_node(Xv_object object, Attr_attribute key);
+static Generic_node *find_node(register Xv_object object, register Attr_attribute key, register Generic_node **prev);
+static void delete_node(Xv_object object, register Generic_node *node, register Generic_node *prev);
 
 /* ------------------------------------------------------------------------ */
 
@@ -160,7 +156,7 @@ generic_create_instance_qlist(parent, instance_name)
 	parent_quarks = (Xv_opaque)db_qlist_from_name(xv_instance_app_name, NULL);
     }
 
-    quarks = (Xv_opaque)db_qlist_from_name(instance_name, parent_quarks);
+    quarks = (Xv_opaque)db_qlist_from_name(instance_name, (XrmQuarkList)parent_quarks);
 
     if ((null_parent == TRUE) && (parent_quarks != XV_NULL))
 	free((void *)parent_quarks);

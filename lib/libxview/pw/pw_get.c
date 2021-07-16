@@ -14,7 +14,7 @@ static char     sccsid[] = "@(#)pw_get.c 20.19 93/06/28 Copyr 1985 Sun Micro";
  * Pw_get.c: Implement the pw_get functions of the pixwin.h interface.
  */
 
-#include <xview_private/pw_impl.h>
+#include <xview_private/pw_get_.h>
 #include <xview_private/draw_impl.h>
 
 #ifdef __STDC__ 

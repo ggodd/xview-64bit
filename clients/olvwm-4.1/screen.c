@@ -51,6 +51,11 @@
 #include "pixmap.h"
 #include "usermenu.h"
 #include "screen.h"
+#include "winroot.h"
+#include "wincolor.h"
+#include "winnofoc.h"
+#include "states.h"
+#include "winpinmenu.h"
 
 /*-------------------------------------------------------------------------
  *      Default Constants
@@ -157,31 +162,47 @@ static XrmQuark virtualGridIQ;
 static XrmQuark virtualPixmapColorCQ;
 static XrmQuark virtualPixmapColorIQ;
 
-#ifdef __STDC__
-static void updateScreenBackgroundColor(Display *dpy, ScreenInfo *scrInfo);
-static void updateScreenBorderColor(Display *dpy, ScreenInfo *scrInfo);
-static void updateScreenForegroundColor(Display *dpy, ScreenInfo *scrInfo);
-static void updateScreenInputFocusColor(Display *dpy, ScreenInfo *scrInfo);
-static void updateScreenTitleFont(Display *dpy, ScreenInfo *scrInfo);
-static void updateScreenTextFont(Display *dpy, ScreenInfo *scrInfo);
-static void updateScreenButtonFont(Display *dpy, ScreenInfo *scrInfo);
-static void updateScreenIconFont(Display *dpy, ScreenInfo *scrInfo);
-static void updateScreenGlyphFont(Display *dpy, ScreenInfo *scrInfo);
-static void updateScreenWindowColor(Display *dpy, ScreenInfo *scrInfo);
-static void updateScreenWorkspaceColor(Display *dpy, ScreenInfo *scrInfo);
-#else
-static void updateScreenBackgroundColor();
-static void updateScreenBorderColor();
-static void updateScreenForegroundColor();
-static void updateScreenInputFocusColor();
-static void updateScreenTitleFont();
-static void updateScreenTextFont();
-static void updateScreenButtonFont();
-static void updateScreenIconFont();
-static void updateScreenGlyphFont();
-static void updateScreenWindowColor();
-static void updateScreenWorkspaceColor();
+
+static void makeScreenQuarks(void);
+static char *getResource(ScreenInfo *scrInfo, XrmQuark classQ, XrmQuark instanceQ);
+static Bool isColorScreen(ScreenInfo *scrInfo, XVisualInfo *visInfo, int nvisuals);
+static Bool use3D(ScreenInfo *scrInfo);
+static void initBasic(Display* dpy, ScreenInfo *scrInfo, XVisualInfo *visInfo, int nvis);
+static void initVisual(Display* dpy, ScreenInfo *scrInfo);
+static void initColormap(Display* dpy, ScreenInfo *scrInfo);
+static void initWinCache(Display* dpy, ScreenInfo *scrInfo);
+#if 0
+static void makeBitmapSearchPath(void);
+static char * findBitmapFile(char *fileName);
 #endif
+static Bool makeColor(Display* dpy, ScreenInfo *scrInfo, char *colorname, char *defaultcolor, XColor *color); 
+static Bool makeRootColors(Display* dpy, ScreenInfo *scrInfo, char *colorname, char *defaultcolor, XColor *olwmcolor, XColor *rootcolor);
+static Bool makeBitmapColors(Display* dpy, ScreenInfo *scrInfo, char *fgColorName, XColor *fgColor, char *bgColorName, XColor *bgColor);
+static void setScreenWorkspaceColor(Display* dpy, ScreenInfo *scrInfo);
+static void setScreenWorkspaceBitmap(Display* dpy, ScreenInfo *scrInfo);
+static void setScreenWorkspaceBackground(Display* dpy, ScreenInfo *scrInfo);
+static void setScreenWindowColor(Display* dpy, ScreenInfo *scrInfo);
+static void setScreenForegroundColor(Display* dpy, ScreenInfo *scrInfo);
+static void setScreenBackgroundColor(Display* dpy, ScreenInfo *scrInfo);
+static void setScreenBorderColor(Display* dpy, ScreenInfo *scrInfo);
+static void initColors(Display* dpy, ScreenInfo *scrInfo);
+static void initPixmaps(Display* dpy, ScreenInfo *scrInfo);
+static void initGCs(Display* dpy, ScreenInfo *scrInfo);
+static void initOLGX(Display* dpy, ScreenInfo *scrInfo);
+static void updateScreenWorkspaceColor(Display* dpy, ScreenInfo *scrInfo);
+static void updateScreenWindowColor(Display* dpy, ScreenInfo *scrInfo);
+static void updateScreenForegroundColor(Display* dpy, ScreenInfo *scrInfo);
+static void updateScreenBackgroundColor(Display* dpy, ScreenInfo *scrInfo);
+static void updateScreenBorderColor(Display* dpy, ScreenInfo *scrInfo);
+static void updateScreenInputFocusColor(Display* dpy, ScreenInfo *scrInfo);
+static void initFonts(Display* dpy, ScreenInfo *scrInfo);
+static void updateScreenTitleFont(Display* dpy, ScreenInfo *scrInfo);
+static void updateScreenTextFont(Display* dpy, ScreenInfo *scrInfo);
+static void updateScreenButtonFont(Display* dpy, ScreenInfo *scrInfo);
+static void updateScreenIconFont(Display* dpy, ScreenInfo *scrInfo);
+static void updateScreenGlyphFont(Display* dpy, ScreenInfo *scrInfo);
+static void initVDM(Display* dpy, ScreenInfo *scrInfo, Client *client);
+static void initScreenInfo(Display* dpy, int screenno, XVisualInfo *visInfo, int nvis);
 
 /*-------------------------------------------------------------------------
  *	Local Functions
@@ -2705,7 +2726,7 @@ InitScreens(dpy)
  	 *	the ScreenInfoList.
 	 */
 	scrInfo = (ScreenInfo *)ScreenInfoList->value;
-	MakeNoFocus(dpy,scrInfo->rootwin);
+	MakeNoFocus(dpy, (WinGeneric *)scrInfo->rootwin);
 	/*
 	 * Initialize the screen Menu pixmaps
 	 */
@@ -3189,14 +3210,13 @@ CreateAutoRootMenuScreen(dpy, si)
     ScreenInfo	*si;
 {
 MenuInfo	*info;
-extern MenuInfo	*FindMenuInfo();
 
-    info = FindMenuInfo(si->rootwin, si->menuTable[MENU_ROOT]);
+    info = FindMenuInfo((WinGeneric *)si->rootwin, (Menu *)si->menuTable[MENU_ROOT]);
     if (!info)
 	return;
     info->menuX = GRV.AutoRootMenuX;
     info->menuY = GRV.AutoRootMenuY;
-    (void) MakePinMenu(dpy, si->rootwin, info);
+    (void) MakePinMenu(dpy, (WinGeneric *)si->rootwin, info);
 }
 
 void

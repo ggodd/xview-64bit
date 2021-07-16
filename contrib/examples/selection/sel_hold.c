@@ -24,6 +24,7 @@ Selection_item  sel_targets;
 
 #define ATOM(server, name)	(Atom)xv_get(server, SERVER_ATOM, name)
 
+void
 main(argc, argv)
     int    argc;
     char **argv;

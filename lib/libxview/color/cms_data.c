@@ -10,6 +10,8 @@ static char     sccsid[] = "@(#)cms_data.c 1.12 89/08/18";
  *	file for terms of the license.
  */
 
+#include <xview_private/cms_.h>
+#include <xview_private/cms_pblc_.h>
 #include <xview_private/cms_impl.h>
 
 Xv_pkg          xv_cms_pkg = {

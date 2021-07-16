@@ -10,7 +10,10 @@ static char     sccsid[] = "@(#)cnvs_data.c 1.17 90/06/21o";
  *	file for terms of the license.
  */
 
-#include <xview_private/cnvs_impl.h>
+#include <xview_private/canvas_.h>
+#include <xview_private/cnvs_get_.h>
+#include <xview_private/cnvs_set_.h>
+#include <xview_private/cnvs_view_.h>
 
 Xv_pkg          xv_canvas_pkg = {
     "Canvas",

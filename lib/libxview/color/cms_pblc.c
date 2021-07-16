@@ -4,6 +4,11 @@ static char     sccsid[] = "@(#)cms_pblc.c 1.21 91/03/21";
 #endif
 #endif
 
+#include <xview_private/cms_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/xv_.h>
 #include <xview/cms.h>
 #include <xview/notify.h>
 #ifdef OW_I18N
@@ -138,7 +143,7 @@ cms_set_avlist(cms_public, avlist)
     register Attr_avlist    attrs;
     unsigned long	    cms_index, cms_count;
     Xv_Singlecolor	    *colors = NULL;
-    XColor	    	    *xcolors = NULL, *cms_parse_named_colors();
+    XColor	    	    *xcolors = NULL;
     char		    **named_colors = NULL;
 
     /* defaults */
@@ -205,7 +210,7 @@ cms_set_avlist(cms_public, avlist)
 
 		if (STATUS(cms, control_cms)) {
 		    register int    i;
-		    char	    *control_color, *defaults_get_string();
+		    char	    *control_color;
     		    XColor	    *xcolors = NULL;
 		    Display         *display;
 		    Colormap	     cmap;

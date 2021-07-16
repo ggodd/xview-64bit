@@ -22,7 +22,7 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=     cms.h
-HDRSPRIVATE=    cms_impl.h
+HDRSPRIVATE=    cms_impl.h cms_.h cms_pblc_.h
 
 DATA_OBJS= \
 	cms_data.o

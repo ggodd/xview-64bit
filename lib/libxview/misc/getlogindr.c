@@ -15,6 +15,8 @@ static char     sccsid[] = "@(#)getlogindr.c 20.18 93/06/28 Copyr 1984 Sun Micro
  * Next try password file.  Print message if can't get login directory.
  */
 
+#include <xview_private/getlogindr_.h>
+#include <xview_private/gettext_.h>
 #include <stdio.h>
 #include <pwd.h>
 #include <xview_private/i18n_impl.h>
@@ -22,16 +24,11 @@ static char     sccsid[] = "@(#)getlogindr.c 20.18 93/06/28 Copyr 1984 Sun Micro
 #ifdef __linux__
 #include <unistd.h>
 #include <stdlib.h>			/* getenv() */
-#else
-extern char    *getlogin(), *getenv();
 #endif
 
 char           *
 xv_getlogindir()
 {
-#ifndef __linux__
-    extern struct passwd *getpwnam(), *getpwuid();
-#endif
     struct passwd  *passwdent;
     char           *home, *loginname;
 

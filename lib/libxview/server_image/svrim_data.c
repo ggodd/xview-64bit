@@ -14,7 +14,6 @@ static char     sccsid[] = "@(#)svrim_data.c 1.17 93/06/28";
 #include <sys/types.h>
 #include <stdio.h>
 #include <pixrect/pixrect.h>
-
 #ifdef __STDC__ 
 #ifndef CAT
 #define CAT(a,b)        a ## b 
@@ -23,6 +22,7 @@ static char     sccsid[] = "@(#)svrim_data.c 1.17 93/06/28";
 #include <pixrect/memvar.h>
 
 #include <xview_private/svrim_impl.h>
+#include <xview_private/svrim_pblc_.h>
 
 Xv_pkg          xv_server_image_pkg = {
     "Server Image",			/* seal -> package name */

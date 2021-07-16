@@ -9,7 +9,8 @@ static char     sccsid[] = "@(#)canvas.c 20.44 93/06/28";
  *	pending in the U.S. and foreign countries. See LEGAL_NOTICE 
  *	file for terms of the license.
  */
-
+#include <xview_private/canvas_.h>
+#include <xview_private/xv_.h>
 #include <xview_private/cnvs_impl.h>
 #include <xview_private/win_keymap.h>
 #include <xview_private/draw_impl.h> 

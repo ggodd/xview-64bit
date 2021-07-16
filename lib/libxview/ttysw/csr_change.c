@@ -13,7 +13,11 @@ static char     sccsid[] = "@(#)csr_change.c 20.51 93/06/28";
  * Character screen operations (except size change and init).
  */
 
-#include <xview_private/tty_impl.h>
+#include <xview_private/csr_change_.h>
+#include <xview_private/ttyansi_.h>
+#include <xview_private/tty_newtxt_.h>
+#include <xview_private/ttyselect_.h>
+#include <xview_private/win_bell_.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <string.h>
@@ -60,12 +64,8 @@ extern char *xv_shell_prompt;
 extern Xv_Window csr_pixwin;
 extern int      cursor;		/* NOCURSOR, UNDERCURSOR, BLOCKCURSOR */
 
-/* static */ void ttysw_fixup_display_mode();
-
-#ifdef OW_I18N
-/* static */ void ttysw_convert_string();
-#endif
-static void ttysw_paintCursor();
+static void ttysw_displayrow(register int row, register int leftcol);
+static void ttysw_paintCursor(int op);
 
 static int      caretx, carety, lxhome;
 static short    charcursx, charcursy;
@@ -140,6 +140,7 @@ ttysw_get_underline_mode()
 
 Pkg_private void
 ttysw_setleftmargin(left_margin)
+int left_margin;
 {
     chrleftmargin = left_margin > 0 ? left_margin : 0;
 }
@@ -265,7 +266,6 @@ ttysw_pstring(s, mode, col, row, op)
     }
     if (mode & MODE_UNDERSCORE) {
         struct pr_size str_size;
-        struct pr_size xv_pf_textwidth_wc();
         str_size = xv_pf_textwidth_wc(STRLEN(buf),pixfont,buf);
         tty_background(csr_pixwin,
                        col_to_x(col), row_to_y(row) + chrheight - 1,
@@ -282,31 +282,31 @@ ttysw_pstring(s, mode, col, row, op)
 		   col_to_x(col) - x_home,
 		   row_to_y(row) - y_home,
 		   (mode & MODE_INVERT) ? PIX_NOT(PIX_SRC) : op, 
-		   pixfont, s, strlen(s));
+		   (Xv_opaque)pixfont, s, strlen(s));
 
 	if (boldstyle & TTYSW_BOLD_OFFSET_X)
 	    tty_newtext(csr_pixwin,
 		       col_to_x(col) - x_home + 1,
 		       row_to_y(row) - y_home,
 		 (mode & MODE_INVERT) ? PIX_NOT(PIX_SRC) & PIX_DST :
-		       PIX_SRC | PIX_DST, pixfont, s, strlen(s));
+		       PIX_SRC | PIX_DST, (Xv_opaque)pixfont, s, strlen(s));
 	if (boldstyle & TTYSW_BOLD_OFFSET_Y)
 	    tty_newtext(csr_pixwin,
 		       col_to_x(col) - x_home,
 		       row_to_y(row) - y_home + 1,
 		 (mode & MODE_INVERT) ? PIX_NOT(PIX_SRC) & PIX_DST :
-		       PIX_SRC | PIX_DST, pixfont, s, strlen(s));
+		       PIX_SRC | PIX_DST, (Xv_opaque)pixfont, s, strlen(s));
 	if (boldstyle & TTYSW_BOLD_OFFSET_XY)
 	    tty_newtext(csr_pixwin,
 		       col_to_x(col) - x_home + 1,
 		       row_to_y(row) - y_home + 1,
 		 (mode & MODE_INVERT) ? PIX_NOT(PIX_SRC) & PIX_DST :
-		       PIX_SRC | PIX_DST, pixfont, s, strlen(s));
+		       PIX_SRC | PIX_DST, (Xv_opaque)pixfont, s, strlen(s));
     } else {
 	tty_newtext(csr_pixwin,
 		   col_to_x(col) - x_home,
 		   row_to_y(row) - y_home,
-(mode & MODE_INVERT) ? PIX_NOT(PIX_SRC) : op, pixfont, s, strlen(s));
+(mode & MODE_INVERT) ? PIX_NOT(PIX_SRC) : op, (Xv_opaque)pixfont, s, strlen(s));
     }
     if (mode & MODE_UNDERSCORE) {
 	tty_background(csr_pixwin,
@@ -522,7 +522,6 @@ ttysw_prepair(eventp)
 		 */
 		struct textselpos *begin, *end;
 		int	selected_lines_damaged = FALSE;
-		Xv_private void ttysortextents();
 
 		ttysortextents(&ttysw->ttysw_primary, &begin, &end);
 
@@ -569,6 +568,7 @@ ttysw_prepair(eventp)
 
 Pkg_private void
 ttysw_drawCursor(yChar, xChar)
+int yChar, xChar;
 {
 #ifdef  OW_I18N
     int         offset;

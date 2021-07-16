@@ -13,6 +13,7 @@
 #define _OLWM_SCREEN_H
 
 #include <olgx/olgx.h>
+#include "olwm.h"
 
 /*
  *	Index's into GC array of ScreenInfo struct

@@ -10,14 +10,11 @@ static char     sccsid[] = "@(#)frame_sw.c 20.26 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/frame_sw_.h>
+#include <xview_private/fm_bdry_.h>
+#include <xview_private/win_geom_.h>
 #include <xview_private/fm_impl.h>
 #include <xview/win.h>
-
-#ifdef OW_I18N
-#ifdef FULL_R5
-Pkg_private void frame_update_status_subwindows();
-#endif
-#endif
 
 /*
  * some parts of the system cannot deal with zero sized subwindows.  So, when
@@ -44,7 +41,6 @@ frame_layout_subwindows(frame_public)
     register short  right, bottom, outer_right, outer_bottom, avs;
     short           hole, need_constraint;
     int             desired_width, desired_height;
-    Pkg_private void frame_compute_constraint();
 
     width = (int)xv_get(frame_public, XV_WIDTH);
     height = (int)xv_get(frame_public, XV_HEIGHT);

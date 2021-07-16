@@ -10,24 +10,12 @@ static char     sccsid[] = "@(#)attr_copy.c 20.14 93/06/28 Copyr 1985 Sun Micro"
  *	file for terms of the license.
  */
 
-#include <xview/attr.h>
+#include <xview_private/attr_copy_.h>
 
 static int copy_1_attr(Attr_attribute attr, Attr_avlist *source, Attr_avlist *dest);
 static int copy_counted_list(Attr_attribute **source, Attr_attribute **dest);
 static int copy_singleton(Attr_attribute attr, Attr_attribute **source, Attr_attribute **dest);
 static int copy_null_list(Attr_attribute attr, Attr_attribute **source, Attr_attribute **dest);
-
-#ifdef __STDC__
-static int copy_1_attr(Attr_attribute attr, Attr_avlist *source, Attr_avlist *dest);
-static int copy_counted_list(Attr_attribute **source, Attr_attribute **dest);
-static int copy_singleton(Attr_attribute attr, Attr_attribute **source, Attr_attribute **dest);
-static int copy_null_list(Attr_attribute attr, Attr_attribute **source, Attr_attribute **dest);
-#else
-static int copy_1_attr();
-static int copy_counted_list();
-static int copy_singleton();
-static int copy_null_list();
-#endif
 
 /*
  * attr_copy:	copy an attribute list, returning the size in bytes

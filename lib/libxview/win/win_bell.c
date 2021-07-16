@@ -14,6 +14,10 @@ static char     sccsid[] = "@(#)win_bell.c 20.20 93/06/28";
  * Win_bell.c: Implement the keyboard bell.
  */
 
+#include <xview_private/win_bell_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/ndetitimer_.h>
+#include <xview_private/win_geom_.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/file.h>
@@ -21,7 +25,6 @@ static char     sccsid[] = "@(#)win_bell.c 20.20 93/06/28";
 #include <pixrect/pixrect.h>
 #include <xview/base.h>
 #include <xview/pixwin.h>
-#include <xview/defaults.h>
 #include <xview/rect.h>
 #include <X11/Xlib.h>
 #include <xview_private/draw_impl.h>
@@ -86,7 +89,6 @@ void
 win_blocking_wait(wait_tv)
     struct timeval  wait_tv;
 {
-    extern struct timeval ndet_tv_subt();	/* From notifier code */
     struct timeval  start_tv, now_tv, waited_tv;
     fd_set		bits;
 

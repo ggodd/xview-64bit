@@ -10,12 +10,21 @@ static char     sccsid[] = "@(#)othr_strms.c 20.20 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/othr_strms_.h>
+#include <xview_private/input_.h>
+#include <xview_private/io_.h>
+#include <xview_private/xv_.h>
 #include <xview/xv_error.h>
-#include <xview_private/io_stream.h>
 
 /* FILTER COMMENTS STREAM */
 
 #define GetFCSData struct xv_filter_comments_stream_data *data = (struct xv_filter_comments_stream_data*) in->client_data
+
+static void xv_filter_comments_stream_close(STREAM *in);
+static int xv_filter_comments_stream_getc(STREAM *in);
+static struct posrec xv_filter_comments_stream_get_pos(STREAM *in);
+static int xv_filter_comments_stream_ungetc(char c, STREAM *in);
+static int xv_filter_comments_stream_chars_avail(STREAM *in);
 
 struct xv_filter_comments_stream_data {
     Bool            backed_up;

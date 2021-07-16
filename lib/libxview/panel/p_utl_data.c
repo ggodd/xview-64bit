@@ -15,7 +15,7 @@ static char     sccsid[] = "@(#)p_utl_data.c 20.17 93/06/28";
  * from p_utl.c.
  */
 
-#include <xview_private/panel_impl.h>
+#include <xview_private/p_utl_.h>
 
 /* selection service functions */
     void            (*panel_seln_hilite_proc) () = (void (*) ()) panel_nullproc;

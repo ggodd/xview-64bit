@@ -14,7 +14,8 @@ static char     sccsid[] = "@(#)nint_i_in.c 20.12 93/06/28 Copyr 1985 Sun Micro"
  * Nint_i_in.c - Implement the notify_interpose_input_func interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/nint_i_in_.h>
+#include <xview_private/nint_i_fd_.h>
 #include <xview_private/nint.h>
 
 extern          Notify_error

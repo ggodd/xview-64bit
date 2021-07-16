@@ -14,6 +14,9 @@ static char     sccsid[] = "@(#)win_treeop.c 20.55 93/06/28";
  * win_treeop.c: Implement window tree operations. 
  */
 
+#include <xview_private/win_treeop_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/windowutil_.h>
 #include <stdio.h>
 #include <xview_private/i18n_impl.h>
 #include <xview_private/portable.h>
@@ -28,8 +31,6 @@ static char     sccsid[] = "@(#)win_treeop.c 20.55 93/06/28";
 #include <X11/X.h>
 #include <xview/screen.h>
 #include <xview/win.h>
-
-Xv_object       win_data();
 
 /*
  * Tree operations.
@@ -283,7 +284,7 @@ win_numbertoname(winnumber, name)
     extern Xv_object xv_default_display;
 
     (void) win_name_for_qualified_xid(name,
-                xv_get(xv_default_display, XV_DISPLAY), winnumber);
+                (Display*)xv_get(xv_default_display, XV_DISPLAY), winnumber);
 }
  
 Xv_public char *

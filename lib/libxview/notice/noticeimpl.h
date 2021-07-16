@@ -14,6 +14,7 @@
 #ifdef OW_I18N
 #include <xview/xv_i18n.h>
 #endif /* OW_I18N */
+#include <xview_private/defaults_.h>
 #include <xview_private/i18n_impl.h>
 #include <olgx/olgx.h>
 #include <xview/pkg.h>
@@ -23,7 +24,6 @@
 #include <xview/frame.h>
 #include <xview/fullscreen.h>
 #include <xview/font.h>
-#include <xview/defaults.h>
 
 #include <xview/notice.h>
 
@@ -167,40 +167,6 @@ typedef struct {
 }Notice_config;
 
 Pkg_private Notice_config	Notice_dimensions[];
-
-Pkg_private void			notice_add_default_button();
-Pkg_private void			notice_defaults();
-Pkg_private void			notice_add_button_to_list();
-Pkg_private void			notice_add_msg_to_list();
-Pkg_private void			notice_free_button_structs();
-Pkg_private void			notice_free_msg_structs();
-Pkg_private void			notice_do_bell();
-Pkg_private void			notice_init_cursor();
-Pkg_private void			notice_draw_borders();
-Pkg_private void			notice_get_notice_size();
-Pkg_private void			notice_layout();
-Pkg_private void			notice_do_buttons();
-Pkg_private void			notice_drawbox();
-Pkg_private void			notice_build_button();
-Pkg_private void			notice_button_panel_proc();
-Pkg_private int				notice_determine_font();
-Pkg_private int				notice_center();
-Pkg_private void			notice_subframe_layout();
-Pkg_private int				notice_text_width();
-Pkg_private int				notice_button_width();
-Pkg_private int				notice_get_owner_frame();
-Pkg_private notice_buttons_handle	notice_create_button_struct();
-Pkg_private notice_msgs_handle		notice_create_msg_struct();
-Pkg_private void			notice_update_xy(Notice_info *notice);
-Pkg_private int				notice_block_popup(Notice_info *notice);
-Pkg_private int				notice_do_show(Notice_info *notice);
-Pkg_private int				notice_create_base(Notice_info *notice);
-
-Pkg_private Xv_opaque	notice_set_avlist();
-Pkg_private Xv_opaque	notice_generic_set();
-Pkg_private Xv_opaque	notice_get_attr();
-Pkg_private int		notice_destroy_internal();
-Pkg_private int		notice_init_internal();
 
 Pkg_private int		default_beeps;
 Pkg_private int		notice_use_audible_bell;

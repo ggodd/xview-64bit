@@ -10,8 +10,12 @@ static char     sccsid[] = "@(#)attr_cu.c 20.12 90/06/21 Copyr 1984 Sun Micro";
  *	file for terms of the license.
  */
 
-#include <xview/attr.h>
-#include <xview/font.h>
+#include <xview_private/attr_cu_.h>
+#include <xview_private/attr_impl.h>
+#include <xview_private/attr_.h>
+
+static void attr_decode_cu(register u_int encoded_value, int *char_part, int *pixel_part);
+static Attr_avlist attr_rc_unit_to_pixel(Attr_base_type base_type, register Attr_avlist avlist, int col_width, int row_height, int left_margin, int top_margin, int col_gap, int row_gap);
 
 /*
  * attr_decode_cu decodes the encoded character row & pixel value in
@@ -205,7 +209,7 @@ attr_rc_units_to_pixels(avlist, col_width, row_height, left_margin, top_margin,
     register short  is_ptr;
     register int    count;
 
-    while ((attr = (int) * avlist++) != (Attr_attribute)NULL) {
+    while ((attr = *avlist++) != (Attr_attribute)NULL) {
 	switch (base_type = ATTR_BASE_TYPE(attr)) {
 	  default:
 	    avlist = attr_skip(attr, avlist);

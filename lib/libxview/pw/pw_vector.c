@@ -14,7 +14,8 @@ static char     sccsid[] = "@(#)pw_vector.c 20.20 89/07/31";
  * Pw_vector.c: Implement the pw_vector functions of the pixwin.h interface.
  */
 
-#include <xview_private/pw_impl.h>
+#include <xview_private/pw_vector_.h>
+#include <xview_private/xv_rop_.h>
 
 Xv_public int
 xv_vector(window, x0, y0, x1, y1, op, cms_index)

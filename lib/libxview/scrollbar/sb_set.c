@@ -21,17 +21,15 @@ static char     sccsid[] = "@(#)sb_set.c 1.52 93/06/28";
  * Include files:
  */
 
-#include <xview_private/sb_impl.h>
+#include <xview_private/sb_set_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/sb_pos_.h>
+#include <xview_private/sb_scroll_.h>
 #include <xview_private/draw_impl.h>
 #include <xview/xv_error.h>
 
-/*
- * Declaration of Functions Defined in This File (in order):
- */
-
-Pkg_private Xv_opaque scrollbar_set_internal();
-
-static int      scrollbar_parse_attr();
+static int scrollbar_parse_attr(Xv_scrollbar_info *sb, Attr_avlist argv);
 
 /******************************************************************/
 
@@ -57,7 +55,7 @@ scrollbar_parse_attr(sb, argv)
     long unsigned    view_start = 0;
     int              view_start_set = FALSE;
     
-    while (attr = (int)*argv++) {
+    while (attr = *argv++) {
 	switch (attr) {
 	  case SCROLLBAR_INACTIVE:
 	    sb->inactive = (int) *argv;

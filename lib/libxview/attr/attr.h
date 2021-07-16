@@ -448,6 +448,11 @@ typedef union {
     Attr_attribute	code;
 } Attr_union;
 
+#include <xview/macros.h>
+
+#define attr_create_list(...) \
+    MACRO_DEF1(_attr_create_list, Attr_attribute, __VA_ARGS__)
+
 /*
  ***********************************************************************
  *			Globals
@@ -457,17 +462,6 @@ typedef union {
 /*
  * Public Functions
  */
-EXTERN_FUNCTION (Attr_avlist attr_create_list, (Attr_attribute attr1, DOTDOTDOT));
-
-/*
- * Private Functions
- */
-EXTERN_FUNCTION (int attr_copy, (Attr_avlist *source, Attr_avlist *dest));
-EXTERN_FUNCTION (int attr_count, (Attr_avlist count));
-EXTERN_FUNCTION (char * attr_name, (Attr_attribute attr));
-EXTERN_FUNCTION (Attr_avlist attr_skip_value, (Attr_attribute attr, Attr_avlist avlist));
-EXTERN_FUNCTION (int attr_rc_unit_to_x, (unsigned int encoded_value, int col_width,  int left_margin, int col_gap));
-EXTERN_FUNCTION (int attr_rc_unit_to_y, (unsigned int encoded_value, int row_height, int top_margin,  int row_gap));
-EXTERN_FUNCTION (void attr_rc_units_to_pixels, (Attr_avlist avlist, int col_width, int row_height, int left_margin, int top_margin, int col_gap, int row_gap));
+EXTERN_FUNCTION (Attr_avlist _attr_create_list, (Attr_attribute attr1, DOTDOTDOT));
 
 #endif /* xview_attr_DEFINED */

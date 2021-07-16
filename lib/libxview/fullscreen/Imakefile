@@ -22,7 +22,7 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=	fullscreen.h
-HDRSPRIVATE=	fs_impl.h
+HDRSPRIVATE=	fs_impl.h fs_.h fs_compat_.h fs_get_.h fs_set_.h
 
 DATA_OBJS = fs_data.o
 

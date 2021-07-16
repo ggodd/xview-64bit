@@ -29,12 +29,14 @@ static char     sccsid[] = "@(#)expandpath.c 20.16 93/06/28 SMI";
 
  */
 
+#include <xview_private/expandpath_.h>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <pwd.h>
 #include <ctype.h>
 #include <string.h>
+#include <xview/pkg.h>
 #include <xview_private/portable.h>
 
 
@@ -48,7 +50,6 @@ expand_path(nm, buf)
     char            lnm[MAXPATHLEN];
     int             q;
     register char  *trimchars = "\n \t";
-    char           *getenv();
 
     /* Strip off leading & trailing whitespace and cr */
     while (XV_INDEX(trimchars, *nm) != NULL)
@@ -71,7 +72,7 @@ expand_path(nm, buf)
 		break;
 	} else if (*s++ == '$') {
 	    register char  *start = d;
-	    register        braces = *s == '{';
+	    register char   braces = *s == '{';
 	    register char  *value;
 	    while (*d++ = *s)
 		if (braces ? *s == '}' : !(isalnum(*s) || *s == '_') )

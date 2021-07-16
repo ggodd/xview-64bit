@@ -14,34 +14,28 @@ static char     sccsid[] = "@(#)txt_sel.c 20.55 93/06/28";
  * User interface to selection within text subwindows.
  */
 
-#include <xview/pkg.h>
+#include <xview_private/txt_sel_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/ev_edit_.h>
+#include <xview_private/ev_once_.h>
+#include <xview_private/finger_tbl_.h>
+#include <xview_private/txt_again_.h>
+#include <xview_private/txt_caret_.h>
+#include <xview_private/txt_event_.h>
+#include <xview_private/txt_getkey_.h>
+#include <xview_private/txt_input_.h>
+#include <xview_private/txt_scroll_.h>
+#include <xview_private/txt_selsvc_.h>
 #include <xview/attrol.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <xview_private/txt_18impl.h>
 #ifdef SVR4 
 #include <stdlib.h> 
 #endif /* SVR4 */
 
-Pkg_private Es_index 	ev_line_start();
-Pkg_private Es_index 	ev_resolve_xy();
-Pkg_private void     	ev_make_visible();
-Pkg_private Seln_rank 	textsw_acquire_seln();
-Pkg_private void	textsw_not_visible_normalize();
-Xv_public   void	textsw_set_selection();
-#ifdef OW_I18N
-Xv_public   void	textsw_set_selection_wcs();
-#endif
-
-Es_index ev_considered_for_line();
-Es_index ev_index_for_line();
-
-#ifdef __STDC__
-static void update_selection(Textsw_view_handle view, Event *ie);
-#else
-static void update_selection();
-#endif
+static void update_selection(Textsw_view_handle view, register Event *ie);
+static void done_tracking(Textsw_view_handle view, register int x, register int y);
 
 Xv_public void
 #ifdef OW_I18N
@@ -306,7 +300,6 @@ textsw_set_selection(abstract, first, last_plus_one, type)
     Es_index        first, last_plus_one;
     unsigned        type;
 {
-    extern int      ev_set_selection();
     Es_index        max_len;
     Textsw_view_handle view = VIEW_ABS_TO_REP(abstract);
     register Textsw_folio folio = (view ? FOLIO_FOR_VIEW(view) :
@@ -350,7 +343,6 @@ textsw_set_selection(abstract, first, last_plus_one, type)
     Es_index        first, last_plus_one;
     unsigned        type;
 {
-    extern int      ev_set_selection();
     Es_index        first_valid,max_len;
     Textsw_view_handle view = VIEW_ABS_TO_REP(abstract);
     register Textsw_folio folio = (view ? FOLIO_FOR_VIEW(view) :

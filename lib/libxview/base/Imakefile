@@ -22,8 +22,11 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=     base.h generic.h pkg_public.h pkg.h xview_xvin.h \
-                drawable.h xv_error.h 
-HDRSPRIVATE=    xv_debug.h xv_list.h draw_impl.h gen_impl.h 
+                drawable.h xv_error.h macros.h
+HDRSPRIVATE=    xv_debug.h xv_list.h draw_impl.h gen_impl.h generic_.h \
+        drawable_.h  xv_.h xv_error_.h xv_init_x_.h  xv_usage_.h \
+        generic_.h   xv_init_.h  xv_list_.h xv_parse_.h
+
 
 DATA_OBJS= \
 	base_data.o \

@@ -62,7 +62,7 @@ static char     sccsid[] = "@(#)sel_pkg.h 1.5 90/11/13";
 
 
 /* Errors */
-#define SEL_ERROR              -1
+#define SEL_ERROR              -1L
 
 #define SEL_BEGIN_MULTIPLE      2
 #define SEL_END_MULTIPLE        4

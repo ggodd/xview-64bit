@@ -40,7 +40,7 @@
 #include "defaults.h"
 #include "globals.h"
 #include "resources.h"
-
+#include "properties.h"
 
 /*
  * GetUserDefaults

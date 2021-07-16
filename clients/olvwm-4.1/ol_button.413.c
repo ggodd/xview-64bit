@@ -37,13 +37,12 @@
 #include "olwm.h"
 #include "win.h"
 #include "menu.h"
+#include "ol_button.413.h"
 
 /*
  * Private function declarations
  */
 
-void            olgx_set_busy_stipple();
-void            olgx_draw_pixmap_label();
 
 void
 olgx_draw_button(info, win, x, y, width, height, label, state)

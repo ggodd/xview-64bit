@@ -14,7 +14,10 @@ static char     sccsid[] = "@(#)ndet_death.c 20.13 93/06/28 Copyr 1985 Sun Micro
  * Ndet_death.c - Common routines between notify_post_destroy and notify_die.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndet_death_.h>
+#include <xview_private/nint_stack_.h>
+#include <xview_private/ntfy_debug_.h>
+#include <xview_private/ntfyprotec_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/ndis.h>
 #include <xview_private/nint.h>

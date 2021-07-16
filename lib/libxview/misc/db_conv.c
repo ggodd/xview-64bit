@@ -4,6 +4,7 @@ static char     sccsid[] = "@(#)db_conv.c 50.14 93/06/28";
 #endif
 #endif
 
+#include <xview_private/db_conv_.h>
 #include <xview_private/i18n_impl.h>
 #include <xview/xview.h>
 
@@ -92,7 +93,7 @@ db_cvt_string_to_bool(from_value, to_value)
 	    if (chr1 != chr2)
 		break;
   	}
-	if (chr1 == (char)NULL) {
+	if (chr1 == '\x0') {
 	    *to_value = (i % 2) ? False : True;
 	    return(XV_OK);
 	}

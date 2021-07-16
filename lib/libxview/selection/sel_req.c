@@ -10,8 +10,15 @@ static char     sccsid[] = "@(#)sel_req.c 1.43 93/06/29";
  *	file for terms of the license.
  */
 
-#include <xview_private/sel_impl.h>
+#include <xview_private/sel_req_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/sel_common_.h>
+#include <xview_private/sel_own_.h>
+#include <xview_private/sel_util_.h>
 #include <xview_private/svr_impl.h>
+#include <xview_private/win_treeop_.h>
+#include <xview_private/xv_.h>
 #include <xview/server.h>
 #include <xview/window.h>
 #include <xview/notify.h>
@@ -24,55 +31,28 @@ static char     sccsid[] = "@(#)sel_req.c 1.43 93/06/29";
 
 #define ITIMER_NULL  ((struct itimercal *)0)
 
-
-Pkg_private char *xv_sel_atom_to_str(/* display, atom */);
-Pkg_private Atom xv_sel_str_to_atom(/* display, string */);
-Pkg_private int xv_sel_add_prop_notify_mask();
-Pkg_private Atom xv_sel_get_property();
-Pkg_private void xv_sel_free_property();
-Pkg_private int WaitForReadableTimeout();
-Pkg_private int xv_sel_predicate();
-Pkg_private int xv_sel_check_selnotify();
-Pkg_private int xv_sel_block_for_event();
-Pkg_private int xv_sel_check_property_event();
-Xv_private Time xv_sel_get_last_event_time();
-Pkg_private Sel_owner_info  *xv_sel_find_selection_data();
-Pkg_private Notify_value xv_sel_handle_sel_timeout();
-
-static void SetExtendedData();
-static void SetupMultipleRequest();
-static void SelSaveData();
-static Xv_opaque SelBlockReq();
-static int CheckSelectionNotify();
-static int HandleLocalProcess();
-static int LocalMultipleTrans();
-static int ProcessIncr();
-static int TransferData();
-static int HandleLocalIncr();
-static int ProcessMultiple();
-static int GetSelection();
-static Requestor *SelGetReq();
-
-#ifdef __STDC__
-static int OldPkgIsOwner(Display *dpy, Atom selection, Window xid, Sel_reply_info *reply, Sel_req_info *selReq);
-static int ProcessNonBlkIncr(Sel_req_info *selReq, Sel_reply_info *reply, XSelectionEvent *ev, Atom target);
-static int ProcessReply(Sel_reply_info *reply, XPropertyEvent *ev);
-static int ProcessReq(Requestor *req, XPropertyEvent *ev);
+static Sel_reply_info *NewReplyInfo(Selection_requestor req, Window win, Sel_owner_info *selection, Time time, Sel_req_info *selReq);
+static int CheckSelectionNotify(Sel_req_info *selReq, Sel_reply_info *replyInfo, XSelectionEvent *ev, int blocking); 
+static int HandleLocalProcess(Sel_req_info *selReq, Sel_reply_info *reply, int blocking);
+static int LocalMultipleTrans(Sel_reply_info *reply, Sel_req_info *selReq, int blocking);
+static int TransferData(Sel_req_info *selReq, Sel_reply_info *reply, Atom target, int blocking, int multipleIndex);
+static int HandleLocalIncr(Sel_req_info *selReq, char *replyBuf, Sel_reply_info *reply, Atom target, Atom retType);
+static void SetupMultipleRequest(Sel_reply_info *reply, int numTarget);
+static int ProcessMultiple(Sel_req_info *selReq, Sel_reply_info *reply, XSelectionEvent *ev, int blocking);
+static int ProcessIncr(Sel_req_info *selReq, Sel_reply_info *reply, Atom target, XSelectionEvent *ev);
+static int XvGetRequestedValue(Sel_req_info *selReq, XSelectionEvent *ev, Sel_reply_info *replyInfo, Atom property, Atom target, int blocking);
+static int GetSelection(Display *dpy, XID xid, Sel_req_info *selReq, Sel_reply_info **reply, Time time);
+static Xv_opaque SelBlockReq(Sel_req_info *selReq, unsigned long *length, int *format);
 static XID SelGetOwnerXID(Sel_req_info *selReq);
-static int XvGetRequestedValue(Sel_req_info *selReq, XSelectionEvent *ev, Sel_reply_info *replyInfo, Atom target, Atom property, int blocking);
 static void XvGetSeln(Display *dpy, XID xid, Sel_req_info *selReq, Time time, int blocking);
-#else
-static int OldPkgIsOwner();
-static int ProcessNonBlkIncr();
-static int ProcessReply();
-static int ProcessReq();
-static XID SelGetOwnerXID();
-static int XvGetRequestedValue();
-static void XvGetSeln();
-#endif
-
-Xv_object win_data();
-
+static int CheckPropertyNotify(XPropertyEvent *ev, Sel_reply_info *reply);
+static int ProcessNonBlkIncr(Sel_req_info *selReq, Sel_reply_info *reply, XSelectionEvent *ev, Atom target);
+static void SetExtendedData(Sel_reply_info *reply, Atom property, int typeIndex);
+static int ProcessReply(Sel_reply_info *reply, XPropertyEvent *ev);
+static Requestor *SelGetReq(XPropertyEvent *ev);
+static int ProcessReq(Requestor *req, XPropertyEvent *ev);
+static void SelSaveData(char *buffer, Sel_reply_info *reply, int size);
+static int OldPkgIsOwner(Display *dpy, Atom selection, Window xid, Sel_reply_info *reply, Sel_req_info *selReq);
 
 /*ARGSUSED*/
 Pkg_private int
@@ -220,7 +200,7 @@ Attr_avlist	    avlist;
 	    sel_req->typeIndex = (int) attrs[1];
 	    sel_req->typeTbl[sel_req->typeIndex].propInfo = xv_alloc( Sel_prop_info);
 	    propInfo = sel_req->typeTbl[sel_req->typeIndex].propInfo;
-	    propInfo->data = NULL;
+	    propInfo->data = (Xv_opaque)NULL;
 	    propInfo->format = 8;
 	    propInfo->length = 0;
 	    propInfo->type = XA_STRING;
@@ -308,10 +288,14 @@ va_list	    valist;
     static char         **typeNames=NULL;
 
     switch (attr) {
-      case SEL_DATA:
+      case SEL_DATA: {
 	/* Initiate a blocking request */
-        arg = va_arg(valist, int);
-	return (Xv_opaque) SelBlockReq( sel_req, arg, va_arg(valist, int));
+        /*arg = va_arg(valist, int);
+	return (Xv_opaque) SelBlockReq( sel_req, arg, va_arg(valist, int));*/
+        unsigned long length;
+        int format;
+	return (Xv_opaque) SelBlockReq( sel_req, &length, &format);
+	}
       case SEL_REPLY_PROC:
 	return (Xv_opaque) sel_req->reply_proc;
       case XV_XID:
@@ -406,7 +390,7 @@ Sel_req_info         *selReq;
 
     replyInfo->property = xv_sel_get_property( selection->dpy );
     replyInfo->requestor = win;
-    if ( time == NULL )
+    if ( time == (Time)NULL )
 	replyInfo->time = xv_sel_get_last_event_time( selection->dpy, win );
     else
     	replyInfo->time = time;
@@ -414,7 +398,7 @@ Sel_req_info         *selReq;
     replyInfo->timeout = xv_get( req, SEL_TIMEOUT_VALUE );
     replyInfo->multiple = 0;
     replyInfo->data = (Xv_opaque) NULL;
-    replyInfo->format = NULL;
+    replyInfo->format = 0;
     replyInfo->incr = 0;
     replyInfo->status = 0;
     replyInfo->length = (long) NULL;
@@ -432,6 +416,7 @@ CheckSelectionNotify( selReq, replyInfo, ev, blocking )
 Sel_req_info    *selReq;
 Sel_reply_info  *replyInfo;
 XSelectionEvent *ev;
+int blocking;
 {
     if (ev->time != replyInfo->time) {
         xv_sel_handle_error( SEL_BAD_TIME, selReq, replyInfo, *replyInfo->target );
@@ -651,7 +636,7 @@ Atom           retType;
      */
     if ( retType != reply->seln->atomList->incr )   {	
 	size = BYTE_SIZE( reply->length, reply->format );
-	SelSaveData( &size, reply, sizeof( int ) );
+	SelSaveData( (char*)&size, reply, sizeof( int ) );
     }
 
     /*
@@ -1178,7 +1163,7 @@ int   *format;
 
     XTime = xv_sel_cvt_timeval_to_xtime( time );
     
-    if ( XTime == NULL )  {
+    if ( XTime == (Time)NULL )  {
         XTime = xv_sel_get_last_event_time( dpy, xid );
 	xv_set( requestor, SEL_TIME, xv_sel_cvt_xtime_to_timeval( XTime ), 0 );
     }
@@ -1231,7 +1216,7 @@ Selection_requestor  sel;
 
     XTime = xv_sel_cvt_timeval_to_xtime( time );
     
-    if ( XTime == NULL )  {
+    if ( XTime == (Time)NULL )  {
         XTime = xv_sel_get_last_event_time( dpy, xid );
 	xv_set( sel, SEL_TIME, xv_sel_cvt_xtime_to_timeval( XTime ), 0 );
     }
@@ -1327,7 +1312,7 @@ XSelectionEvent *ev;
     Sel_req_info     *selReq;
     XWindowAttributes  winAttr;
 
-    reply = (Sel_reply_info *) xv_sel_get_reply( ev );
+    reply = (Sel_reply_info *) xv_sel_get_reply( (XEvent*)ev );
 
 #ifdef SEL_DEBUG1
     printf("Recieved SelectionNotify win = %d\n",ev->requestor);
@@ -1462,7 +1447,7 @@ XPropertyEvent  *ev;
      * reply and return.
      * If it is for the selection owner, process the request.
      */
-    reply = (Sel_reply_info *) xv_sel_get_reply( ev );
+    reply = (Sel_reply_info *) xv_sel_get_reply( (XEvent*)ev );
     if ( reply != NULL )
         return ProcessReply( reply, ev );
 

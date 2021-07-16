@@ -14,9 +14,30 @@ static char	sccsid[] = "@(#)txt_once.c 20.131 93/06/28";
  * Initialization and finalization of text subwindows.
  */
 
+#include <xview_private/txt_once_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/attr_util_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/ei_text_.h>
+#include <xview_private/es_mem_.h>
+#include <xview_private/ev_once_.h>
+#include <xview_private/font_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/pf_.h>
+#include <xview_private/ps_impl_.h>
+#include <xview_private/txt_attr_.h>
+#include <xview_private/txt_again_.h>
+#include <xview_private/txt_attr_.h>
+#include <xview_private/txt_event_.h>
+#include <xview_private/txt_file_.h>
+#include <xview_private/txt_filter_.h>
+#include <xview_private/txt_input_.h>
+#include <xview_private/txt_menu_.h>
+#include <xview_private/txt_scroll_.h>
+#include <xview_private/txt_sel_.h>
+#include <xview_private/txt_view_.h>
 #include <xview_private/primal.h>
 #include <xview/textsw.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -38,7 +59,6 @@ static char	sccsid[] = "@(#)txt_once.c 20.131 93/06/28";
 #include <xview/frame.h>
 #include <xview/font.h>
 #include <xview/openmenu.h>
-#include <xview/defaults.h>
 #include <xview/cursor.h>
 #include <xview/screen.h>
 #include <xview_private/win_keymap.h>
@@ -51,28 +71,17 @@ static char	sccsid[] = "@(#)txt_once.c 20.131 93/06/28";
 #include <sys/dir.h>
 #endif /* SVR4 */
 
-Pkg_private void textsw_destroy_esh(), textsw_notify_replaced();
-Pkg_private Es_status textsw_checkpoint();
-Pkg_private long textsw_get_from_defaults();
-Pkg_private Es_handle ps_create(),
-                es_mem_create(),
-                textsw_create_mem_ps(),
-                textsw_create_file_ps();
-Pkg_private Ei_handle ei_plain_text_create();
-Pkg_private Ev_chain ev_create_chain(), ev_destroy_chain_and_views();
-Pkg_private Es_index textsw_set_insert();
-extern int      gettimeofday();
-
-Pkg_private Ev_handle ev_create_view();
-Xv_private Attr_avlist attr_find();
-Xv_private int      xv_pf_close();
-Xv_private char *xv_font_monospace();
-
-Xv_private void textsw_unregister_view();
-Xv_private void textsw_register_view();
-
-Menu textsw_menu_init();
-Pixfont * xv_pf_open();
+static int textsw_view_chain_notify(register Textsw_folio folio, Attr_avlist attributes);
+static int textsw_read_defaults(register Textsw_folio textsw, register Attr_avlist defaults);
+#if defined(__alpha) || defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT) || defined(__amd64__)
+static int textsw_layout(Textsw textsw, Xv_Window child, Window_layout_op op, unsigned long d1, unsigned long d2, unsigned long d3, unsigned long d4, unsigned long d5);
+#else
+static int textsw_layout(Textsw textsw, Xv_Window child, Window_layout_op op, int d1, int d2, int d3, int d4, int d5);
+#endif
+static void textsw_destroy_popup(int key_data_name, Textsw textsw, Frame parent_frame);
+static void textsw_folio_cleanup(register Textsw_folio folio);
+static void textsw_unlink_view(register Textsw_folio folio, register Textsw_view_handle view);
+static void textsw_view_cleanup(register Textsw_view_handle view);
 
 Textsw_folio    textsw_head;	/* = 0; implicit for cc -A-R */
 extern int termsw_creation_flag;
@@ -160,7 +169,6 @@ textsw_view_chain_notify(folio, attributes)
     register Textsw_folio folio;
     Attr_avlist     attributes;
 {
-    Pkg_private Textsw_view_handle textsw_view_for_entity_view();
     register Ev_handle e_view;
     register Textsw_view_handle view = 0;
     register Attr_avlist attrs;
@@ -211,7 +219,7 @@ textsw_read_defaults(textsw, defaults)
 {
     char           *def_str;	/* Strings owned by defaults. */
     register Attr_attribute attr;
-    Xv_opaque       font = NULL;
+    Xv_opaque       font = (Xv_opaque)NULL;
     char	   *name;
     Xv_opaque       textsw_public = TEXTSW_PUBLIC(textsw);
     int             is_client_pane = (int)xv_get(textsw_public,
@@ -441,7 +449,7 @@ textsw_layout(textsw, child, op, d1, d2, d3, d4, d5)
     Xv_Window       child;
     Window_layout_op op;
 /* Alpha compatibility, mbuck@debian.org */
-#if defined(__alpha) || defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT)
+#if defined(__alpha) || defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT) || defined(__amd64__)
     unsigned long   d1, d2, d3, d4, d5;
 #else
     int             d1, d2, d3, d4, d5;
@@ -487,7 +495,7 @@ textsw_set_cursor(textsw, cursor_type)
 	/*
 	 * BUG: Should print out error message
 	 */
-	if (cursor == NULL)
+	if (cursor == (Xv_Cursor)NULL)
 	    return;
 	FORALL_TEXT_VIEWS(folio, view) {
 	    xv_set(VIEW_REP_TO_ABS(view), WIN_CURSOR, cursor, NULL);
@@ -548,7 +556,7 @@ Pkg_private     Textsw_folio
 textsw_init_internal(folio, status, default_notify_proc, attrs)
     Textsw_folio    folio;
     Textsw_status  *status;
-    int             (*default_notify_proc) ();
+    void             (*default_notify_proc) (Textsw, Attr_attribute*);
     Textsw_attribute *attrs;
 {
     register Textsw textsw = TEXTSW_PUBLIC(folio);
@@ -561,7 +569,6 @@ textsw_init_internal(folio, status, default_notify_proc, attrs)
     Es_status       es_status;
     Frame	    frame;
     Xv_Notice	    text_notice;
-    extern void     textsw_split_init_proc();
 #ifdef OW_I18N
     CHAR	    name_wc[MAXNAMLEN];
 #ifdef FULL_R5
@@ -620,13 +627,13 @@ textsw_init_internal(folio, status, default_notify_proc, attrs)
      * Look for client provided entity_stream creation proc, and client
      * provided data, which must be passed to the creation proc.
      */
-    defaults = attr_find(attrs, TEXTSW_ES_CREATE_PROC);
+    defaults = attr_find((Attr_avlist)attrs, TEXTSW_ES_CREATE_PROC);
     if (*defaults) {
 	ATTR_CONSUME(*defaults);
 	folio->es_create = (Es_handle(*) ()) defaults[1];
     } else
 	folio->es_create = ps_create;
-    defaults = attr_find(attrs, TEXTSW_CLIENT_DATA);
+    defaults = attr_find((Attr_avlist)attrs, TEXTSW_CLIENT_DATA);
     if (*defaults) {
 	ATTR_CONSUME(*defaults);
 	folio->client_data = defaults[1];
@@ -635,7 +642,7 @@ textsw_init_internal(folio, status, default_notify_proc, attrs)
     if (termsw_creation_flag)
 	folio->es_mem_maximum = 130;
     else {
-        defaults = attr_find(attrs, TEXTSW_MEMORY_MAXIMUM);
+        defaults = attr_find((Attr_avlist)attrs, TEXTSW_MEMORY_MAXIMUM);
         if (*defaults) {
 	    folio->es_mem_maximum = (unsigned) defaults[1];
         }
@@ -645,7 +652,7 @@ textsw_init_internal(folio, status, default_notify_proc, attrs)
 	    folio->es_mem_maximum = 128;
     }
 
-    defaults = attr_find(attrs, TEXTSW_FILE);
+    defaults = attr_find((Attr_avlist)attrs, TEXTSW_FILE);
     if (*defaults) {
 	ATTR_CONSUME(*defaults);
 	name = (char *) defaults[1];
@@ -656,7 +663,7 @@ textsw_init_internal(folio, status, default_notify_proc, attrs)
     }
 
 #ifdef OW_I18N
-    defaults = attr_find(attrs, TEXTSW_FILE_WCS);
+    defaults = attr_find((Attr_avlist)attrs, TEXTSW_FILE_WCS);
     if (*defaults) {
 	char	name_mb[MAXNAMLEN];
 
@@ -721,7 +728,7 @@ textsw_init_internal(folio, status, default_notify_proc, attrs)
 	extern CHAR    _xv_null_string_wc[];
 #endif
 
-	attr = attr_find(attrs, TEXTSW_FILE_CONTENTS);
+	attr = attr_find((Attr_avlist)attrs, TEXTSW_FILE_CONTENTS);
 	have_file_contents = (*attr != 0);
 	/*
 	 * Always look for TEXTSW_CONTENTS in defaults_array so that it is
@@ -729,7 +736,7 @@ textsw_init_internal(folio, status, default_notify_proc, attrs)
 	 * always consume TEXTSW_CONTENTS from attrs.
 	 */
 	defaults = attr_find(defaults_array, TEXTSW_CONTENTS);
-	attr = attr_find(attrs, TEXTSW_CONTENTS);
+	attr = attr_find((Attr_avlist)attrs, TEXTSW_CONTENTS);
 	initial_greeting =
 	    (have_file_contents) ? ""
 	    : ((*attr) ? (char *) attr[1]
@@ -740,7 +747,7 @@ textsw_init_internal(folio, status, default_notify_proc, attrs)
 	    initial_greeting_ws = _xv_mbstowcsdup(initial_greeting);
 	    free_string = TRUE;
 	} else {
-	    attr = attr_find(attrs, TEXTSW_FILE_CONTENTS_WCS);
+	    attr = attr_find((Attr_avlist)attrs, TEXTSW_FILE_CONTENTS_WCS);
 	    if (!have_file_contents)
 		have_file_contents = (*attr != 0);
 	/*
@@ -749,7 +756,7 @@ textsw_init_internal(folio, status, default_notify_proc, attrs)
 	 * always consume TEXTSW_CONTENTS_WCS from attrs.
 	 */
 	    defaults = attr_find(defaults_array, TEXTSW_CONTENTS_WCS);
-	    attr = attr_find(attrs, TEXTSW_CONTENTS_WCS);
+	    attr = attr_find((Attr_avlist)attrs, TEXTSW_CONTENTS_WCS);
 	    initial_greeting_ws =
 		(have_file_contents) ? _xv_null_string_wc
 		: ((*attr) ? (CHAR  *) attr[1]
@@ -797,7 +804,7 @@ textsw_init_internal(folio, status, default_notify_proc, attrs)
 	(void) textsw_set_null_view_avlist(folio, defaults_array);
 	(void) xv_set_avlist(textsw, defaults_array);
 
-	(void) textsw_set_null_view_avlist(folio, attrs);
+	(void) textsw_set_null_view_avlist(folio, (Attr_avlist)attrs);
     }
     folio->layout_proc = (int (*) ()) xv_get(textsw, WIN_LAYOUT_PROC);
 
@@ -883,10 +890,6 @@ textsw_init_internal(folio, status, default_notify_proc, attrs)
      * by setting TEXTSW_READ_ONLY to TRUE, or by loading another file.
      */
     if (folio->need_im) {
-	Xv_private void		textsw_pre_edit_start();
-	Xv_private void		textsw_pre_edit_draw();
-	Xv_private void		textsw_pre_edit_done();
-
 	/* Set preedit callbacks */
 	xv_set(textsw,
 	       WIN_IC_PREEDIT_START,
@@ -923,8 +926,6 @@ Pkg_private void
 textsw_setup_scrollbar(sb)
     Scrollbar       sb;
 {
-
-    Pkg_private int textsw_compute_scroll();
     if (sb)
 	(void) xv_set(sb,
 		      SCROLLBAR_PIXELS_PER_UNIT, 1L,
@@ -1363,7 +1364,7 @@ contents or store the contents as a new file."),
 	textsw_view_cleanup(view);
 	/* Since this will resolve to an lvalue cast, modern compilers won't like it. */
 	/* VIEW_PRIVATE(view_public) = NULL; */ /* WG Mar '95 */
-	((Xv_textsw_view*)view_public)->private_data = NULL; /* WG Mar '95 */
+	((Xv_textsw_view*)view_public)->private_data = (Xv_opaque)NULL; /* WG Mar '95 */
 	break;
 
       default:			/* Conservative in face of new cases. */

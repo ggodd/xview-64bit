@@ -10,6 +10,8 @@ static char     sccsid[] = "@(#)dnd_decode.c 1.15 93/06/28";
  *      file for terms of the license.
  */
 
+#include <xview_private/dnd_decode_.h>
+#include <xview_private/dnd_.h>
 #include <sys/time.h>
 #include <X11/Xatom.h>
 #include <xview/xview.h>
@@ -20,10 +22,8 @@ static char     sccsid[] = "@(#)dnd_decode.c 1.15 93/06/28";
 #include <xview_private/dndimpl.h>
 #include <xview_private/xv_list.h>
 
-static int SendACK(),
-	   MakeSelRequest(); 
-Pkg_private int	DndMatchEvent(),
-		DndMatchProp();
+static int SendACK(Xv_object sel, Event *ev, XClientMessageEvent *cM);
+static int MakeSelRequest(Display *dpy, Atom selection, Xv_object sel_obj, Atom target, Window window, Time time);
 
 typedef struct dnd_drop_site {
     Xv_sl_link           next;
@@ -113,7 +113,6 @@ MakeSelRequest(dpy, selection, sel_obj, target, window, time)
 {
     struct timeval	 timeout;
     char	        *data;
-    int		 	 DndMatchEvent();
     int			 format;
     unsigned long        nitems,
 			 remain;

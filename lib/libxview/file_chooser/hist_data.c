@@ -15,14 +15,9 @@ static char     sccsid[] = "@(#)hist_data.c 1.3 93/06/28";
  * Hist package information
  */
 
-#include <xview/xview.h>
-#include <xview/hist.h>
-
-extern int 		hist_list_init();
-extern Xv_opaque	hist_list_set();
-extern Xv_opaque	hist_list_get();
-extern Xv_opaque	hist_list_find();
-extern int 		hist_list_destroy();
+/*#include <xview/xview.h>*/
+#include <xview_private/hist_list_.h>
+#include <xview_private/hist_menu_.h>
 
 Xv_pkg history_list_pkg = {
     "History List",
@@ -37,11 +32,6 @@ Xv_pkg history_list_pkg = {
 };
 
 
-
-extern int 		hist_menu_init();
-extern Xv_opaque	hist_menu_set();
-extern Xv_opaque	hist_menu_get();
-extern int 		hist_menu_destroy();
 
 Xv_pkg history_menu_pkg = {
     "History Menu",

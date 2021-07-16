@@ -32,6 +32,14 @@
 #include "globals.h"
 #include "events.h"
 #include "error.h"
+#include "winipane.h"
+#include "virtual.h"
+#include "winframe.h"
+#include "wingframe.h"
+#include "states.h"
+#include "winnofoc.h"
+#include "info.h"
+#include "wincolor.h"
 
 /***************************************************************************
 * global data
@@ -41,7 +49,6 @@ extern Atom AtomChangeState;
 extern Atom AtomColorMapWindows;
 extern Window NoFocusWin;
 
-extern Time TimeFresh();
 
 /***************************************************************************
 * private data
@@ -64,6 +71,15 @@ static ClassPane classIconPane;
 #define IPANE_DEFAULT_PIXMAP(w) (w)->core.client->scrInfo->pixmap[ICON_BITMAP]
 #define IPANE_DEFAULT_MASK(w) 	(w)->core.client->scrInfo->pixmap[ICON_MASK]
 
+static void drawIPane(Display* dpy, WinIconPane *winInfo);
+static int focusIPane(Display* dpy, WinGeneric *winInfo, Bool focus);
+static int destroyIPane(Display* dpy, WinIconPane *winInfo);
+static int setconfigIPane(Display* dpy, WinIconPane *winInfo);
+static int newconfigIPane(WinIconPane *win, XConfigureRequestEvent *pxcre);
+static int newposIPane(WinIconPane *win, int x, int y);
+static int setsizeIPane(WinIconPane *win, int w, int h);
+static int eventEnterNotify(Display* dpy, XEvent *event, WinIconPane *winInfo);
+
 /***************************************************************************
 * private functions
 ***************************************************************************/
@@ -72,7 +88,7 @@ static ClassPane classIconPane;
  * drawIPane -- draw the pane window
  */
 /*ARGSUSED*/	/* dpy arg will be used when multiple Displays supported */
-static int
+static void
 drawIPane(dpy, winInfo)
 Display	*dpy;
 WinIconPane *winInfo;
@@ -226,7 +242,7 @@ WinIconPane *winInfo;
                 xwc.y = winInfo->core.y;
                 xwc.width = winInfo->core.width;
                 xwc.height = winInfo->core.height;
-                ConfigureWindow(dpy, winInfo,
+                ConfigureWindow(dpy, (WinGeneric *)winInfo,
                         winInfo->core.dirtyconfig&(CWX|CWY|CWWidth|CWHeight), &xwc);
                 winInfo->core.dirtyconfig &= ~(CWX|CWY|CWWidth|CWHeight);
         }
@@ -274,13 +290,13 @@ XConfigureRequestEvent *pxcre;
 
     if (pxcre->value_mask & (CWX | CWY)) 
     {
-	FrameSetPosFromPane(winFrame, (pxcre->value_mask & CWX)?(pxcre->x):oldX,
+	FrameSetPosFromPane((WinPaneFrame *)winFrame, (pxcre->value_mask & CWX)?(pxcre->x):oldX,
 		(pxcre->value_mask & CWY)?(pxcre->y):oldY);
     }
 
     if (pxcre->value_mask & (CWStackMode | CWSibling))
     {
-	GFrameSetStack(winFrame, pxcre->value_mask, pxcre->detail, pxcre->above);
+	GFrameSetStack((WinGenericFrame *)winFrame, pxcre->value_mask, pxcre->detail, pxcre->above);
     }
 
     return win->core.dirtyconfig;
@@ -337,7 +353,7 @@ XEvent		*event;
 WinIconPane	*winInfo;
 {
     if (event->xany.type == EnterNotify)
-        ColorWindowCrossing(dpy, event, winInfo);
+        ColorWindowCrossing(dpy, event, (WinGeneric *)winInfo);
 }
 
 
@@ -375,7 +391,7 @@ Bool fexisting;
 	w = MemNew(WinIconPane);
 	w->class = &classIconPane;
 	w->core.kind = WIN_ICONPANE;
-	WinAddChild(par,w);
+	WinAddChild(par,(WinGeneric *)w);
 	w->core.children = NULL;
 	w->core.client = cli;
 	w->core.x = 0;
@@ -506,7 +522,7 @@ goodicon:
 	XDefineCursor(dpy, w->core.self, GRV.IconPointer);
 
 	/* register the window */
-	WIInstallInfo(w);
+	WIInstallInfo((WinGeneric *)w);
 
 	/* Reparent the pane.  olwm didn't do this; since it never moved the
 	 * icon while it was in StateNorm, it could afford to unparent the
@@ -531,14 +547,14 @@ Display *dpy;
 {
 	classIconPane.core.kind = WIN_ICONPANE;
 	classIconPane.core.xevents[Expose] = WinEventExpose;
-	classIconPane.core.xevents[ButtonRelease] = PropagateEventToParent;
-	classIconPane.core.xevents[MotionNotify] = PropagateEventToParent;
-	classIconPane.core.xevents[ButtonPress] = PropagateEventToParent;
+	classIconPane.core.xevents[ButtonRelease] = (FuncPtr)PropagateEventToParent;
+	classIconPane.core.xevents[MotionNotify] = (FuncPtr)PropagateEventToParent;
+	classIconPane.core.xevents[ButtonPress] = (FuncPtr)PropagateEventToParent;
 	classIconPane.core.xevents[EnterNotify] = eventEnterNotify;
 	classIconPane.core.focusfunc = focusIPane;
-	classIconPane.core.drawfunc = drawIPane;	/* NULL */
+	classIconPane.core.drawfunc = (FuncPtr)drawIPane;	/* NULL */
 	classIconPane.core.destroyfunc = destroyIPane;
-	classIconPane.core.selectfunc = drawIPane;	/* NULL */
+	classIconPane.core.selectfunc = (FuncPtr)drawIPane;	/* NULL */
 	classIconPane.core.newconfigfunc = newconfigIPane;
 	classIconPane.core.newposfunc = newposIPane;
 	classIconPane.core.setconfigfunc = setconfigIPane;

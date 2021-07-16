@@ -15,8 +15,14 @@ static char     sccsid[] = "@(#)xv_init.c 20.62 92/07/07";
 #else
 #include <stdio.h>
 #endif
+#include <xview_private/xv_init_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_init_x_.h>
+#include <xview_private/xv_usage_.h>
+#include <xview_private/xv_rop_.h>
 #include <xview_private/i18n_impl.h>
-#include <xview/defaults.h>
 #include <xview_private/portable.h>
 #include <xview/pkg.h>
 #include <xview/xview_xvin.h>
@@ -30,19 +36,13 @@ static char     sccsid[] = "@(#)xv_init.c 20.62 92/07/07";
 
 #define ERROR_MSG "Cannot open connection to window server: "
 
+static void init_custom_attrs(void);
+
 /* XXX: This should probably become integrated into the get/set paradigm */
 int (*xv_error_proc) ();
 int (*xv_x_error_proc)();
 void (*xv_xlib_error_proc)();
-extern void     xv_usage();
 static int      xv_init_called;	/* = FALSE */
-
-Xv_private void xv_init_x_pr();
-Xv_private void xv_connection_error();
-Xv_private int  xv_handle_xio_errors();
-Xv_private void xv_x_error_handler();
-Xv_private char *xv_base_name();
-Xv_private int xv_has_been_initialized();
 
 #ifdef OW_I18N
 Xv_private_data wchar_t *xv_app_name_wcs;
@@ -51,8 +51,6 @@ Xv_private_data wchar_t *xv_app_name_wcs;
 Xv_private_data char *xv_app_name;
 #ifdef __linux__
 #include <stdlib.h>
-#else
-char 			*getenv();
 #endif
 Xv_private_data char 	*xv_instance_app_name = NULL;
 Xv_private_data int	_xv_use_locale;
@@ -74,17 +72,15 @@ Xv_public_data char xv_iso_default_action;
 Xv_public_data char xv_iso_input_focus_help;
 Xv_public_data char xv_iso_next_element;
 Xv_public_data char xv_iso_select;
-static 	       void init_custom_attrs();
-
 
 /*
  * Initialize XView.
  */
 Xv_public	Xv_object
 #ifdef ANSI_FUNC_PROTO
-xv_init(Attr_attribute attr1, ...)
+_xv_init(Attr_attribute attr1, ...)
 #else
-xv_init(attr1, va_alist)
+_xv_init(attr1, va_alist)
     Attr_attribute attr1;
 va_dcl
 #endif

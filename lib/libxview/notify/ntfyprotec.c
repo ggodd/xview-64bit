@@ -16,7 +16,11 @@ static char     sccsid[] = "@(#)ntfyprotec.c 20.20 93/06/28 Copyr 1985 Sun Micro
  * dispatcher.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ntfyprotec_.h>
+#include <xview_private/ndet_loop_.h>
+#include <xview_private/ntfy_debug_.h>
+#include <xview_private/ntfy_node_.h>
+#include <xview_private/xv_.h>
 #include <xview_private/ndet.h>	/* For ndet_send_delayed_sigs */
 
 Notify_error    notify_errno = (Notify_error) 0;

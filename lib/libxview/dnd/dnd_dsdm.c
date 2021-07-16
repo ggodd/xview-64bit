@@ -10,6 +10,9 @@ static char     sccsid[] = "@(#)dnd_dsdm.c 1.8 93/06/28";
  *      file for terms of the license.
  */
 
+#include <xview_private/dnd_dsdm_.h>
+#include <xview_private/dnd_.h>
+#include <xview_private/xv_.h>
 #include <stdio.h>
 #include <sys/time.h>
 #include <xview/xview.h>
@@ -25,16 +28,7 @@ static char     sccsid[] = "@(#)dnd_dsdm.c 1.8 93/06/28";
 #define SCREENS_MATCH(dnd, i) \
 			(dnd->siteRects[i].screen_number == dnd->screenNumber)
 
-Xv_private int DndSendPreviewEvent();
-
-#ifdef __STDC__
 static void ReplyProc(Selection_requestor sel, Atom target, Atom type, Xv_opaque buffer, unsigned long length, int format);
-#else
-static void ReplyProc();
-#endif
-
-
-static void ReplyProc();
 
 Xv_private int
 DndContactDSDM(dnd)

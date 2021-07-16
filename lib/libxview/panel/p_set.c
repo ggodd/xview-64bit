@@ -10,27 +10,27 @@ static char     sccsid[] = "@(#)p_set.c 20.94 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview_private/panel_impl.h>
+#include <xview_private/p_set_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/font_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/panel_.h>
+#include <xview_private/p_paint_.h>
+#include <xview_private/p_scroll_.h>
+#include <xview_private/p_txt_.h>
+#include <xview_private/p_utl_.h>
+#include <xview_private/win_input_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_olgx_.h>
 #include <xview/font.h>
 #include <xview/scrollbar.h>
 #include <xview/xv_xrect.h>
 #include <xview_private/draw_impl.h>
 #include <xview/win.h>
 
-Xv_private void	    win_set_no_focus();
-Xv_private Graphics_info *xv_init_olgx();
-Xv_private Xv_font xv_find_olglyph_font();
-Xv_private char     *xv_font_bold();
-Xv_private char     *xv_font_regular_cmdline();
-
-#ifdef __STDC__
-static void panel_set_fonts(Panel panel_public, Panel_info *panel);
-#else
-static void panel_set_fonts();
-#endif
+static void panel_set_fonts(Panel panel_public, register Panel_info *panel);
 static int column_from_absolute_x(int x_position, int col_gap, int left_margin, Xv_Font font);
-static int row_from_absolute_y(int y_position, int col_gap, int left_margin, Xv_Font font);
-
+static int row_from_absolute_y(int y_position, int row_gap, int top_margin, Xv_Font font);
 
 Pkg_private     Xv_opaque
 panel_set_avlist(panel_public, avlist)

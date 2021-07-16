@@ -4,7 +4,10 @@ static char     sccsid[] = "@(#)ntfy_ctbl.c 1.22 93/06/28";
 #endif
 #endif
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ntfy_ctbl_.h>
+#include <xview_private/ntfy_debug_.h>
+#include <xview_private/ntfyprotec_.h>
+#include <xview_private/xv_.h>
 #include <stdio.h>
 #include <signal.h>
 
@@ -14,7 +17,7 @@ NTFY_CNDTBL *ntfy_cndtbl[NTFY_LAST_CND];
  * Add a client into the condition table (ntfy_cndtbl) for the condition it
  * has an interest in.
  */
-
+void
 ntfy_add_to_table(client, condition, type)
     NTFY_CLIENT    *client;
     NTFY_CONDITION *condition;
@@ -69,7 +72,7 @@ ntfy_add_to_table(client, condition, type)
  * Remove a condition interest for a particular client from the condition
  * table.
  */
-
+void
 ntfy_remove_from_table(client, condition)
     NTFY_CLIENT    *client;
     NTFY_CONDITION *condition;
@@ -174,7 +177,7 @@ ntfy_new_enum_conditions(cnd_list, enum_func, context)
 /* Variables used in paranoid enumerator */
 static NTFY_CONDITION *ntfy_enum_condition;
 static NTFY_CONDITION *ntfy_enum_condition_next;
-static          ntfy_paranoid_count;
+static int ntfy_paranoid_count;
 
 pkg_private     NTFY_ENUM
 ntfy_new_paranoid_enum_conditions(cnd_list, enum_func, context)
@@ -252,6 +255,7 @@ Done:
 }
 
 #ifdef notdef
+void
 dump_table(type)
     int             type;
 {

@@ -14,6 +14,8 @@ static char     sccsid[] = "@(#)tty_compat.c 20.21 93/06/28";
  * Compatibility bridge for SunView1.X programs.
  */
 
+#include <xview_private/tty_compat_.h>
+#include <xview_private/tty_main_.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <xview_private/i18n_impl.h>

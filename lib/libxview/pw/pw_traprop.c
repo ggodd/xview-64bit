@@ -14,7 +14,8 @@ static char     sccsid[] = "@(#)pw_traprop.c 20.18 93/06/28 Copyr 1985 Sun Micro
  * see pr_traprop.c for algorithmic details
  */
 
-#include <xview_private/pw_impl.h>
+#include <xview_private/pw_traprop_.h>
+#include <xview_private/gettext_.h>
 #include <xview_private/i18n_impl.h>
 #include <pixrect/traprop.h>
 

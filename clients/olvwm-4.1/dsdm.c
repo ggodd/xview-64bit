@@ -26,6 +26,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <X11/Xlib.h>
@@ -40,6 +41,11 @@
 #include "win.h"
 #include "error.h"
 #include "dsdm.h"
+#include "st.h"
+#include "info.h"
+#include "selection.h"
+#include "winnofoc.h"
+#include "mem.h"
 
 /*
  * Round-trip metering.  Meter the XGetGeometry, XGetWindowAttributes, 
@@ -132,6 +138,16 @@ typedef struct {
 
 #define REGION_NUMRECTS(r) (((REGION *)(r))->numRects)
 
+static void *GetInterestProperty(Display *dpy, Window win, unsigned long *nitems);
+static Region MakeRegionFromRect(int x, int y, unsigned int w, unsigned int h);
+static Region GetWindowRegion(Display *dpy, WinGeneric *winInfo, Bool offset);
+static void SubtractWindowFromVisibleRegion(Display *dpy, WinGeneric *winInfo, Region visrgn);
+static void ProcessInterestProperty(Display *dpy, WinGeneric *winInfo, int screen, void *data, unsigned long datalen, Region visrgn, int xoff, int yoff);
+static void FindDropSites(Display *dpy);
+static void FreeDropSites(void);
+static void WriteSiteRectList(Display *dpy, Window win, Atom prop);
+static Bool convertTarget(Display *dpy, Window requestor, Atom target, Atom property);
+static void handleDSDMrequest(XEvent *event);
 
 /* ===== private functions ================================================ */
 
@@ -244,7 +260,7 @@ GetWindowRegion(dpy, winInfo, offset)
 static void
 SubtractWindowFromVisibleRegion(dpy, winInfo, visrgn)
     Display *dpy;
-    Window winInfo;
+    WinGeneric *winInfo;
     Region visrgn;
 {
     Region winrgn = GetWindowRegion(dpy, winInfo, True);
@@ -429,11 +445,11 @@ FindDropSites(dpy)
 
 	/* Find the virtual root here, if necessary. */
 	root = RootWindow(dpy, s);
-	rootInfo = (WinRoot *) WIGetInfo(root);
+	rootInfo = (WinRoot *)WIGetInfo(root);
 	if (rootInfo == NULL || rootInfo->core.kind != WIN_ROOT)
 	    continue;
 
-	visrgn = GetWindowRegion(dpy, rootInfo, False);
+	visrgn = GetWindowRegion(dpy, (WinGeneric*)rootInfo, False);
 
 	if (_XQueryTree((dpy, root, &junk, &junk, &children,
 			 (unsigned int *) &nchildren)) == 0)
@@ -477,16 +493,16 @@ FindDropSites(dpy)
 		paneInfo = (WinPane *) PANEOFCLIENT(winInfo->core.client);
 		sitedata = GetInterestProperty(dpy, paneInfo->core.self,
 		    &datalen);
-		WinRootPos(paneInfo, &xoff, &yoff);
+		WinRootPos((WinGeneric*)paneInfo, &xoff, &yoff);
 		if (sitedata != NULL) {
-		    ProcessInterestProperty(dpy, paneInfo, s, sitedata,
+		    ProcessInterestProperty(dpy, (WinGeneric*)paneInfo, s, sitedata,
 					    datalen, visrgn, xoff, yoff);
 		    XFree(sitedata);
 
 		    if (fwdsitedata != NULL) {
 			framergn = GetWindowRegion(dpy, winInfo, True);
 			XIntersectRegion(framergn, visrgn, framergn);
-			toprgn = GetWindowRegion(dpy, paneInfo, False);
+			toprgn = GetWindowRegion(dpy, (WinGeneric*)paneInfo, False);
 			XOffsetRegion(toprgn, xoff, yoff);
 			XSubtractRegion(framergn, toprgn, framergn);
 			ProcessInterestProperty(dpy, winInfo, s, fwdsitedata,

@@ -10,14 +10,11 @@ static char     sccsid[] = "@(#)p_msg.c 20.30 93/06/28 Copyr 1987 Sun Micro";
  *	file for terms of the license.
  */
 
-#include <xview_private/panel_impl.h>
+#include <xview_private/p_msg_.h>
+#include <xview_private/p_utl_.h>
 
-/* XView functions */
-Pkg_private int	    panel_message_init();
-
-/* Panel Item Operations */
-static void         msg_accept_preview();
-static void	    msg_paint();
+static void msg_accept_preview(Panel_item item_public, Event *event);
+static void msg_paint(Panel_item item_public);
 
 static Panel_ops ops = {
     panel_default_handle_event,		/* handle_event() */

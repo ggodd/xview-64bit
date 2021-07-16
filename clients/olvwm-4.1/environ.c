@@ -13,13 +13,12 @@
 #include <string.h>
 #else
 #include <strings.h>
-extern char *strrchr();
-extern char *strchr();
 #endif
 #include <X11/Xos.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include "mem.h"
+#include "properties.h"
 
 extern	char **environ;
 
@@ -35,6 +34,13 @@ typedef struct _env {
 	int	length;		/* length of environ array */
 	int	used;		/* number of entries actually used */
 } Env;
+
+static void createEnv(Env *env, int nadditions);
+static void putEnv(Env *env, char *name, char *value);
+static void putDisplayEnv(Env *env, Display *dpy, int screen);
+#ifndef NOSVENV
+static void putSunViewEnv(Env *env, Display *dpy, int screen);
+#endif 
 
 /* -----------------------------------------------------------------------
  *	Local Functions
@@ -151,7 +157,6 @@ putSunViewEnv(env,dpy,screen)
 	int		i, svEnvLen = sizeof(svEnv)/sizeof(char *);
 	char		*result,*curpos;
 	unsigned long	nitems,remainder;
-	extern void	*GetWindowProperty();
 	extern Atom	AtomSunViewEnv;
 
 	result = (char *)GetWindowProperty(dpy,RootWindow(dpy,screen),

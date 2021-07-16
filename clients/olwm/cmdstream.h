@@ -11,6 +11,7 @@
  
 #ifndef _OLWM_CMDSTREAM_H
 #define _OLWM_CMDSTREAM_H
+#include <stdio.h>
 
 #ifndef TRUE
 #define TRUE	1
@@ -50,11 +51,11 @@ typedef struct _Command {
 /* ----------------------------------------------------------------------
  *      Function Definitions
  * ---------------------------------------------------------------------*/
+void SetCmdStream(FILE *instream, FILE *outstream);
+int SendCmd(Command *cmd);
+void RegisterCmd(Command *cmd);
+int GetCmd(void);
+int ParseCmd(char *line);
 
-extern	void	SetCmdStream(/* FILE *instream, FILE * outstream */);
-extern	int	SendCmd(/* Command* cmd */);
-extern	void	RegisterCmd(/* Command *cmd */);
-extern	int	GetCmd();
-extern	int	ParseCmd(/* char *line */);
 
 #endif /* _OLWM_CMDSTREAM_H */

@@ -14,6 +14,11 @@ static char     sccsid[] = "@(#)xv.c 20.47 91/01/30";
 
 /* ------------------------------------------------------------------------- */
 
+#include <xview_private/xv_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/attr_cust_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/xv_init_.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <xview_private/i18n_impl.h>
@@ -34,15 +39,6 @@ static char     sccsid[] = "@(#)xv.c 20.47 91/01/30";
 /*
  * Private
  */
-
-Xv_private  Xv_object	xv_create_avlist( /* parent, pkg, avlist */ );
-Xv_private  Xv_object	xv_find_avlist( /* parent, pkg, avlist */ );
-Xv_private  Xv_opaque	xv_set_avlist( /* object, avlist */ );
-Xv_private  Xv_opaque	xv_get_varargs( /* object, attribute, varargs */ );
-Xv_private  int	    	xv_destroy_status( /* object, status */ );
-Xv_private  Attr_avlist attr_customize(/* obj,pkg,instance_name,owner,avlist_copy,size,avlist */);
-Xv_private  int		xv_has_been_initialized( /* void */ );
-
 
 typedef int     (*int_fnp) ();
 typedef         Xv_opaque(*opaque_fnp) ();
@@ -214,9 +210,9 @@ xv_object_to_standard(object, caller)
 
 Xv_public       Xv_object
 #ifdef ANSI_FUNC_PROTO
-xv_find( Xv_opaque parent, Xv_pkg *pkg, ... )
+_xv_find( Xv_opaque parent, Xv_pkg *pkg, ... )
 #else
-xv_find(parent, pkg, va_alist)
+_xv_find(parent, pkg, va_alist)
     Xv_opaque        parent;
     register Xv_pkg *pkg;
 va_dcl
@@ -291,9 +287,9 @@ xv_find_avlist(parent, pkg, avlist)
 
 Xv_public       Xv_object
 #ifdef ANSI_FUNC_PROTO
-xv_create(Xv_opaque parent, Xv_pkg *pkg, ...)
+_xv_create(Xv_opaque parent, Xv_pkg *pkg, ...)
 #else
-xv_create(parent, pkg, va_alist)
+_xv_create(parent, pkg, va_alist)
     	    	Xv_opaque   parent;
     register	Xv_pkg	   *pkg;
 va_dcl
@@ -443,9 +439,9 @@ xv_create_avlist(parent, pkg, avlist)
 
 Xv_public       Xv_opaque
 #ifdef ANSI_FUNC_PROTO
-xv_set(Xv_opaque object, ...)
+_xv_set(Xv_opaque object, ...)
 #else
-xv_set(object, va_alist)
+_xv_set(object, va_alist)
     Xv_opaque       object;
 va_dcl
 #endif
@@ -528,9 +524,9 @@ xv_super_set_avlist(object, pkg, avlist)
 
 Xv_public       Xv_opaque
 #ifdef ANSI_FUNC_PROTO
-xv_get(Xv_opaque passed_object, Attr_attribute attr, ...)
+_xv_get(Xv_opaque passed_object, Attr_attribute attr, ...)
 #else
-xv_get(passed_object, attr, va_alist)
+_xv_get(passed_object, attr, va_alist)
     Xv_opaque       passed_object;
     Attr_attribute  attr;
 va_dcl

@@ -14,8 +14,36 @@ static char     sccsid[] = "@(#)txt_input.c 20.109 93/06/28";
  * User input interpreter for text subwindows.
  */
 
+#include <xview_private/txt_input_.h>
+#include <xview_private/ev_edit_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/ev_op_bdry_.h>
+#include <xview_private/es_util_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/help_.h>
+#include <xview_private/svr_x_.h>
+#include <xview_private/txt_again_.h>
+#include <xview_private/txt_attr_.h>
+#include <xview_private/txt_caret_.h>
+#include <xview_private/txt_disp_.h>
+#include <xview_private/txt_edit_.h>
+#include <xview_private/txt_event_.h>
+#include <xview_private/txt_field_.h>
+#include <xview_private/txt_file_.h>
+#include <xview_private/txt_filter_.h>
+#include <xview_private/txt_find_.h>
+#include <xview_private/txt_getkey_.h>
+#include <xview_private/txt_menu_.h>
+#include <xview_private/txt_move_.h>
+#include <xview_private/txt_popup_.h>
+#include <xview_private/txt_putkey_.h>
+#include <xview_private/txt_scroll_.h>
+#include <xview_private/txt_sel_.h>
+#include <xview_private/txt_selsvc_.h>
+#include <xview_private/win_compat_.h>
+#include <xview_private/win_keymap_.h>
+#include <xview_private/win_input_.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <xview_private/txt_18impl.h>
 #include <errno.h>
@@ -40,56 +68,31 @@ static char     sccsid[] = "@(#)txt_input.c 20.109 93/06/28";
 #include <stdlib.h> 
 #endif /* SVR4 */
 
+#ifdef GPROF
+static void textsw_gprofed_routine(register Textsw_folio view, register Event *ie);
+#endif
+static Key_map_handle find_key_map(register Textsw_folio textsw, register Event *ie);
+static void setupmasks(void);
+static void textsw_begin_again(Textsw_view_handle view);
+static void textsw_end_again(Textsw_view_handle view,int  x, int y);
+static void textsw_begin_delete(Textsw_view_handle view);
+static void textsw_begin_undo(Textsw_view_handle view);
+static void textsw_end_undo(Textsw_view_handle view);
+static void textsw_undo_notify(register Textsw_folio folio, register Es_index start, register Es_index delta);
+static void textsw_do_undo(Textsw_view_handle view);
+static int textsw_scroll_event(register Textsw_view_handle view, register Event *ie, Notify_arg arg);
+static int textsw_function_key_event(register Textsw_view_handle view, register Event *ie, int *result);
+static void textsw_set_copy_or_quick_move_cursor(register Textsw_folio folio);
+static int textsw_mouse_event(register Textsw_view_handle view, register Event *ie);
+static int textsw_edit_function_key_event(register Textsw_view_handle view, register Event *ie, int *result);
+static int textsw_caret_motion_event(register Textsw_view_handle view, register Event *ie);
+static int textsw_field_event(register Textsw_view_handle view, register Event *ie);
+static int textsw_file_operation(register Textsw abstract, register Event *ie);
+static int textsw_erase_action(Textsw textsw, Event *ie);
+
 extern int      errno;
 
 Pkg_private Xv_Cursor move_cursor, dup_cursor;	/* laf */
-Pkg_private void termsw_menu_set();
-Pkg_private Key_map_handle textsw_do_filter();
-Pkg_private Ev_finger_handle ev_add_finger();
-Pkg_private struct pixrect *textsw_get_stopsign_icon();
-Pkg_private struct pixrect *textsw_get_textedit_icon();
-Pkg_private int textsw_load_done_proc();
-Pkg_private void textsw_init_timer();
-Pkg_private int textsw_timer_active;
-Pkg_private void textsw_do_save();
-static	void	textsw_do_undo();
-#ifdef OW_I18N
-Pkg_private     void textsw_implicit_commit_doit();
-#endif
-
-#ifdef __STDC__
-static void textsw_begin_delete(Textsw_view_handle view);
-static void textsw_end_again(Textsw_view_handle view, int x, int y);
-static void textsw_begin_again(Textsw_view_handle view);
-#ifndef OW_I18N
-static int textsw_do_newline(Textsw_view_handle view, int action);
-#endif
-static int textsw_scroll_event(Textsw_view_handle view, Event *ie, Notify_arg arg);
-static int textsw_function_key_event(Textsw_view_handle view, Event *ie, int *result);
-static int textsw_mouse_event(Textsw_view_handle view, Event *ie);
-static int textsw_edit_function_key_event(Textsw_view_handle view, Event *ie, int *result);
-static int textsw_caret_motion_event(Textsw_view_handle view, Event *ie);
-static int textsw_field_event(Textsw_view_handle view, Event *ie);
-static int textsw_file_operation(Textsw abstract, Event *ie);
-static int textsw_erase_action(Textsw textsw, Event *ie);
-#else
-static void textsw_begin_delete();
-static void textsw_end_again();
-static void textsw_begin_again();
-#ifndef OW_I18N
-static int textsw_do_newline();
-#endif
-static int textsw_scroll_event();
-static int textsw_function_key_event();
-static int textsw_mouse_event();
-static int textsw_edit_function_key_event();
-static int textsw_caret_motion_event();
-static int textsw_field_event();
-static int textsw_file_operation();
-static int textsw_erase_action();
-#endif
-
-Es_index ev_resolve_xy();
 
 #define SPACE_CHAR 0x20
 
@@ -226,23 +229,12 @@ textsw_gprofed_routine(view, ie)
 
 #endif
 
-
-static int      textsw_scroll_event();
-static int      textsw_function_key_event();
-static int      textsw_mouse_event();
-static int      textsw_edit_function_key_event();
-static int      textsw_caret_motion_event();
-static int      textsw_field_event();
-static int      textsw_file_operation();
-static int      textsw_erase_action();
-
 Pkg_private int
 textsw_process_event(view_public, ie, arg)
     Textsw_view     view_public;
     register Event *ie;
     Notify_arg      arg;
 {
-    Pkg_private void     textsw_update_scrollbars();
     int             caret_was_up;
     int             result = TEXTSW_PE_USED;
     register Textsw_view_handle view = VIEW_PRIVATE(view_public);
@@ -323,7 +315,7 @@ textsw_process_event(view_public, ie, arg)
 	       action == ACTION_INPUT_FOCUS_HELP) {
 	if (down_event)
 	    xv_help_show(WINDOW_FROM_VIEW(view),
-			 xv_get(view_public, XV_HELP_DATA), ie);
+			 (char*)xv_get(view_public, XV_HELP_DATA), ie);
 #ifdef GPROF
     } else if (action == KEY_RIGHT(13)) {
 	if (down_event) {
@@ -546,8 +538,6 @@ textsw_do_filter(view, ie)
     switch (result->type) {
       case TXTSW_KEY_SMART_FILTER:
       case TXTSW_KEY_FILTER:{
-	    Pkg_private int      textsw_call_smart_filter();
-	    Pkg_private int      textsw_call_filter();
 	    int             again_state, filter_result;
 
 	    again_state = textsw->func_state & TXTSW_FUNC_AGAIN;
@@ -879,7 +869,6 @@ textsw_end_function(view, function)
     Textsw_view_handle view;
     unsigned        function;
 {
-    Pkg_private void textsw_end_selection_function();
     register Textsw_folio folio = FOLIO_FOR_VIEW(view);
 
     /* restore insertion point */
@@ -949,8 +938,6 @@ Pkg_private int
 textsw_end_delete(view)
     Textsw_view_handle view;
 {
-    Pkg_private void     textsw_init_selection_object();
-    Pkg_private void     textsw_clear_secondary_selection();
     Textsw_selection_object selection;
     int             result = 0;
     register Textsw_folio folio = FOLIO_FOR_VIEW(view);
@@ -1043,7 +1030,6 @@ textsw_undo_notify(folio, start, delta)
     register Textsw_folio folio;
     register Es_index start, delta;
 {
-    Pkg_private void     textsw_notify_replaced();
     register Ev_chain chain = folio->views;
     register Es_index old_length =
     es_get_length(chain->esh) - delta;
@@ -1069,7 +1055,6 @@ static void
 textsw_do_undo(view)
     Textsw_view_handle view;
 {
-    Pkg_private Es_index textsw_set_insert();
     register Textsw_folio folio = FOLIO_FOR_VIEW(view);
     register Ev_finger_handle saved_insert_finger;
     register Ev_chain views = folio->views;
@@ -1149,7 +1134,6 @@ textsw_scroll_event(view, ie, arg)
 {
     Textsw_folio    folio = FOLIO_FOR_VIEW(view);
     int             is_scroll_event = FALSE;
-    Pkg_private void     textsw_update_scrollbars();
     int             action = event_action(ie);
 
     if (action == SCROLLBAR_REQUEST) {
@@ -1463,14 +1447,6 @@ textsw_caret_motion_event(view, ie)
 {
     int             is_caret_motion_event = TRUE;
     register int    action = event_action(ie);
-
-    Pkg_private void textsw_move_down_a_line();
-    Pkg_private void textsw_move_up_a_line();
-    Pkg_private void textsw_move_forward_a_word();
-    Pkg_private void textsw_move_backward_a_word();
-    Pkg_private void textsw_move_to_line_end();
-    Pkg_private void textsw_move_to_line_start();
-    Pkg_private void textsw_move_caret();
 
     if (event_is_up(ie))
 	return (FALSE);

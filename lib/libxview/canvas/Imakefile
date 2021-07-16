@@ -22,7 +22,9 @@ XCOMM # @(#)Imakefile	1.5 24 Mar 1992 SMI
 #endif
 
 HDRSPUBLIC=	canvas.h
-HDRSPRIVATE=	cnvs_impl.h
+HDRSPRIVATE= cnvs_impl.h canvas_.h   cnvs_get_.h    cnvs_resze_.h  cnvs_set_.h \
+    cnvs_cb_.h  cnvs_input_.h  cnvs_scrol_.h  cnvs_view_.h
+
 
 CFILES.canvas.3        =
 CFILES.canvas.4        = cnvs_cb.c

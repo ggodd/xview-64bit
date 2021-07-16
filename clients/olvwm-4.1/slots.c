@@ -48,6 +48,24 @@
 #define ISDECREASING(so) (((so)==SORightToLeft)||((so)==SOBottomToTop))
 
 #ifdef NOT
+static char *sotochar(SlotOrder so);
+#endif
+#ifdef DEBUG
+static void dumpocc(IconGrid *iconGrid);
+#endif
+static void setMajorMinor(IconGrid *iconGrid, int r, int c, int *pma, int *pmi);
+#ifdef NOT
+static void setAbsolute(IconGrid *iconGrid, int ma, int mi, int *pr, int *pc);
+#endif
+static void incrRegion(IconGrid *iconGrid, IconSlot *slot, int val);
+static void findMinMaxRgn(IconGrid *iconGrid,int ma,int  mi, int nmajor, int nminor, int *pminrgn, int *pmaxrgn);
+static IconSlot *incrDynamicSlots(IconGrid *iconGrid, int nmajor, int nminor);
+static void setIconPos(WinIconFrame *win, IconSlot *slot);
+static Bool slotsIntersect(IconSlot *slot1, IconSlot *slot2);
+static void bounceOverlappingIcons(WinIconFrame *win, IconSlot *slot);
+static IconSlot *incrPositionedSlots(IconGrid *iconGrid, int x, int y, int w, int h, Bool snaptogrid);
+
+#ifdef NOT
 static char *
 sotochar(so)
 SlotOrder so;
@@ -535,6 +553,7 @@ Bool snaptogrid;
  * Note that if this code is changed, the similar code in SlotSetLocations
  * may need to be changed also.
  */
+void
 SlotFree(winicon)
 WinIconFrame *winicon;
 {
@@ -566,6 +585,7 @@ WinIconFrame *winicon;
  * in the new order.
  */
 /*ARGSUSED*/
+void
 SlotSetLocations(dpy,iconGrid)
 Display *dpy;
 IconGrid *iconGrid;

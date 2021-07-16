@@ -228,6 +228,26 @@ typedef struct {
 	unsigned	data[SELN_FUNCTION_WORD_COUNT];
 }	Seln_functions_state;
 
+#include <xview/macros.h>
+
+#define selection_ask(...) \
+    MACRO_DEF2(_selection_ask, Xv_Server, Seln_holder*, __VA_ARGS__)
+
+#define selection_init_request(...) \
+    MACRO_DEF3(_selection_init_request, Xv_Server, Seln_request*, Seln_holder*, __VA_ARGS__)
+    
+#define selection_query(...) \
+    MACRO_DEF4(_selection_query, Xv_Server, Seln_holder*, Seln_result (*)(Seln_request *), char*, __VA_ARGS__)
+    
+#define seln_ask(...) \
+    MACRO_DEF1(_seln_ask, Seln_holder*, __VA_ARGS__)
+
+#define seln_query(...) \
+    MACRO_DEF3(_seln_query, Seln_holder*, Seln_result (*)(), char*, __VA_ARGS__)
+
+#define seln_init_request(...) \
+    MACRO_DEF2(_seln_init_request, Seln_request*, Seln_holder*, __VA_ARGS__)
+
 /*
  ***********************************************************************
  *				Globals
@@ -251,7 +271,7 @@ extern Seln_request     seln_null_request;
  */
 
 EXTERN_FUNCTION (Seln_rank selection_acquire, (Xv_Server server, Seln_client seln_client, Seln_rank asked));
-EXTERN_FUNCTION (Seln_request *	selection_ask, (Xv_Server server, Seln_holder *holder, DOTDOTDOT));
+EXTERN_FUNCTION (Seln_request *	_selection_ask, (Xv_Server server, Seln_holder *holder, DOTDOTDOT));
 EXTERN_FUNCTION (void selection_clear_functions, (Xv_Server server));
 EXTERN_FUNCTION (Seln_client selection_create, (Xv_Server server, void (*func)(Xv_opaque, Seln_function_buffer *), Seln_result (*request_proc)( Seln_attribute, Seln_replier_data *, int), char *client_data));
 EXTERN_FUNCTION (void selection_destroy, (Xv_Server server, Seln_client client));
@@ -259,10 +279,10 @@ EXTERN_FUNCTION (Seln_result selection_done, (Xv_Server server, Seln_client seln
 EXTERN_FUNCTION (Seln_response 	selection_figure_response, (Xv_Server server, Seln_function_buffer *buffer, Seln_holder **holder));
 EXTERN_FUNCTION (Seln_result selection_hold_file, (Xv_Server server, Seln_rank rank, char *path));
 EXTERN_FUNCTION (Seln_function_buffer selection_inform, (Xv_Server server, Seln_client seln_client, Seln_function which, int down));
-EXTERN_FUNCTION (void selection_init_request, (Xv_Server server, Seln_request *buffer, Seln_holder *holder, DOTDOTDOT));
+EXTERN_FUNCTION (void _selection_init_request, (Xv_Server server, Seln_request *buffer, Seln_holder *holder, DOTDOTDOT));
 EXTERN_FUNCTION (Seln_holder selection_inquire, (Xv_Server server, Seln_rank which));
 EXTERN_FUNCTION (Seln_holders_all selection_inquire_all, (Xv_Server server));
-EXTERN_FUNCTION (Seln_result selection_query, (Xv_Server server, Seln_holder *holder, Seln_result (*reader)(Seln_request *), char *context, DOTDOTDOT));
+EXTERN_FUNCTION (Seln_result _selection_query, (Xv_Server server, Seln_holder *holder, Seln_result (*reader)(Seln_request *), char *context, DOTDOTDOT));
 EXTERN_FUNCTION (void selection_report_event, (Xv_Server server, Seln_client seln_client, Event *event));
 EXTERN_FUNCTION (Seln_result selection_request, (Xv_Server server, Seln_holder *holder, Seln_request *buffer));
 EXTERN_FUNCTION (void selection_use_timeout, (Xv_Server server, int seconds));
@@ -273,11 +293,11 @@ EXTERN_FUNCTION (Seln_function_buffer seln_inform, (Seln_client seln_client, Sel
 EXTERN_FUNCTION (Seln_holder seln_inquire, (Seln_rank which));
 EXTERN_FUNCTION (Seln_holders_all seln_inquire_all, (void));
 EXTERN_FUNCTION (Seln_rank seln_acquire, (Seln_client seln_client, Seln_rank asked));
-EXTERN_FUNCTION (Seln_request *seln_ask, (Seln_holder *holder, DOTDOTDOT));
+EXTERN_FUNCTION (Seln_request *_seln_ask, (Seln_holder *holder, DOTDOTDOT));
 EXTERN_FUNCTION (Seln_response seln_figure_response, (Seln_function_buffer *buffer, Seln_holder **holder));
 EXTERN_FUNCTION (Seln_result seln_done, (Seln_client seln_client, Seln_rank rank));
 EXTERN_FUNCTION (Seln_result seln_hold_file, (Seln_rank rank, char *path));
-EXTERN_FUNCTION (Seln_result seln_query, (Seln_holder *holder, Seln_result (*reader)(), char *context, DOTDOTDOT));
+EXTERN_FUNCTION (Seln_result _seln_query, (Seln_holder *holder, Seln_result (*reader)(), char *context, DOTDOTDOT));
 EXTERN_FUNCTION (Seln_result seln_request, (Seln_holder *holder, Seln_request *buffer));
 EXTERN_FUNCTION (void seln_report_event, (Seln_client seln_client, Event *event));
 EXTERN_FUNCTION (void seln_yield_all, (void));
@@ -286,7 +306,7 @@ EXTERN_FUNCTION (int seln_holder_same_client, (Seln_holder *holder, char *client
 EXTERN_FUNCTION (int seln_holder_same_process, (Seln_holder *holder));
 EXTERN_FUNCTION (int seln_secondary_made, (Seln_function_buffer *buffer));
 EXTERN_FUNCTION (int seln_secondary_exists, (Seln_function_buffer *buffer));
-EXTERN_FUNCTION (void seln_init_request, (Seln_request *buffer, Seln_holder *holder, DOTDOTDOT));
+EXTERN_FUNCTION (void _seln_init_request, (Seln_request *buffer, Seln_holder *holder, DOTDOTDOT));
 EXTERN_FUNCTION (void seln_clear_functions, (void));
 EXTERN_FUNCTION (void seln_use_timeout, (int seconds));
 

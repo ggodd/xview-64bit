@@ -18,6 +18,7 @@ static char     sccsid[] = "@(#)xv_casecmp.c 1.4 93/06/28";
  * to that much trouble.
  */
 
+#include <xview_private/xv_casecmp_.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <xview_private/i18n_impl.h>

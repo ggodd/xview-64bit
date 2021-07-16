@@ -10,6 +10,8 @@ static char     sccsid[] = "@(#)file_strms.c 20.18 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/file_strms_.h>
+#include <xview_private/xv_.h>
 #include <xview/xv_error.h>
 #include <xview_private/io_stream.h>
 #include <stdio.h>	/* fgetc() */
@@ -22,6 +24,19 @@ struct xv_file_input_stream_data {
     FILE           *fp;
     int             lineno;
 };
+
+static void xv_file_input_stream_close(STREAM *in);
+static int xv_file_input_stream_getc(STREAM *in);
+static struct posrec xv_file_input_stream_get_pos(STREAM *in);
+static int xv_file_input_stream_set_pos(STREAM *in, int n);
+static int xv_file_input_stream_ungetc(char c, STREAM *in);
+static char *xv_file_input_stream_fgets(char *s, int n, STREAM *in);
+static int xv_file_input_stream_chars_avail(STREAM *in);
+static void xv_file_output_stream_close(STREAM *out);
+static void xv_file_output_stream_flush(STREAM *out);
+static int xv_file_output_stream_putc(char c, STREAM *out);
+static void xv_file_output_stream_fputs(char* s, STREAM *out);
+static struct posrec xv_file_output_stream_get_pos(STREAM *out);
 
 static void
 xv_file_input_stream_close(in)

@@ -14,7 +14,13 @@ static char     sccsid[] = "@(#)ndetsevent.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * Ndet_s_event.c - Implement the notify_set_event_func interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndetsevent_.h>
+#include <xview_private/ndet_event_.h>
+#include <xview_private/ndisdispch_.h>
+#include <xview_private/nint_set_.h>
+#include <xview_private/ntfyclient_.h>
+#include <xview_private/ntfy_cond_.h>
+#include <xview_private/ntfyprotec_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/ndis.h>
 #include <xview_private/nint.h>

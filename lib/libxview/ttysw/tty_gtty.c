@@ -14,12 +14,14 @@ static  char sccsid[] = "@(#)tty_gtty.c 20.29 93/06/28 Copyr 1983 Sun Micro";
  * Ttysw parameter retrieval mechanism to get original tty settings to pty.
  */
 
+#include <xview_private/tty_gtty_.h>
+#include <xview_private/tty_stty_.h>
+#include <xview_private/win_env_.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <xview_private/portable.h>	/* for tty_mode_t and XV* defines */
-#include <xview_private/tty_impl.h>
 #include <unistd.h>			/* isatty() */
 
 #undef CTRL
@@ -134,12 +136,6 @@ static struct ltchars default_ltchars = {
 };
 
 #endif	/* XV_USE_TERMIOS */
-
-#ifdef __STDC__
-extern int _we_setstrfromenvironment(char *tag, char *target);
-#else
-extern int _we_setstrfromenvironment();
-#endif
 
 #ifdef	XV_USE_TERMIOS
 

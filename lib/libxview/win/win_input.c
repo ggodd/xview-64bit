@@ -14,6 +14,21 @@ static char     sccsid[] = "@(#)win_input.c 20.208 93/06/28";
  * Win_input.c: Implement the input functions of the win_struct.h interface.
  */
 
+#include <xview_private/win_input_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/sel_req_.h>
+#include <xview_private/server_.h>
+#include <xview_private/svr_get_.h>
+#include <xview_private/svr_set_.h>
+#include <xview_private/svr_x_.h>
+#include <xview_private/window_set_.h>
+#include <xview_private/windowutil_.h>
+#include <xview_private/win_damage_.h>
+#include <xview_private/win_geom_.h>
+#include <xview_private/win_treeop_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_parse_.h>
 #include <stdio.h>
 #include <errno.h>
 #include <sys/time.h>
@@ -42,7 +57,6 @@ static char     sccsid[] = "@(#)win_input.c 20.208 93/06/28";
 #include <xview_private/win_keymap.h>
 #include <xview_private/windowimpl.h>
 #include <xview_private/fm_impl.h>
-#include <xview/defaults.h>
 #include <xview/frame.h>
 #include <xview/fullscreen.h>
 #include <xview/icon.h>
@@ -56,49 +70,22 @@ static char     sccsid[] = "@(#)win_input.c 20.208 93/06/28";
 #include <xview/termsw.h>
 #include <xview/win.h>
 
-static void     tvdiff();
-static void     win_handle_quick_selection();
-static int      BlockForEvent();
-static int      GetButtonEvent();
-static int	chording();
-
-#if 0
-static int      win_translate_KP_keysym();
-static int 	translate_key();
-#endif
-static int	xevent_to_event(Display *display, XEvent *xevent, Event *event, Xv_object *pwindow);
-
-extern struct rectlist *win_get_damage();
-extern void     server_set_timestamp();
-extern Xv_opaque server_get_timestamp();
-extern Xv_object win_data();
-extern void     window_update_cache_rect();
-extern char    *xv_app_name;
-
-Xv_private void xv_get_cmdline_str();
-Xv_private void xv_get_cmdline_argv();
-Xv_private void window_release_selectbutton();
-Xv_private void window_x_allow_events();
-Xv_private void server_do_xevent_callback();
-Xv_private void win_get_cmdline_option();
-Xv_private void win_set_wm_command_prop();
-Xv_private void server_refresh_modifiers();
-/* ACC_XVIEW */
-Xv_private int  win_handle_window_accel();
-Xv_private int  win_handle_menu_accel();
-/* ACC_XVIEW */
-
 #ifndef __linux__
 FILE           *fopen(), *fexp;
 #endif
 
-Xv_object       xview_x_input_readevent();
+static Bool is_reqwindow(Display *display, XEvent *xevent, char *info);
+static int xevent_to_event(Display *displaydisplay, XEvent *xeventxevent, Event *eventevent, Xv_object *pwindowpwindow);
+static int process_clientmessage_events(Xv_object window, XClientMessageEvent *clientmessage, Event *event);
+static int process_property_events(Xv_object window, XPropertyEvent *property, Event *event);
+static int process_wm_pushpin_state(Xv_object window, Atom atom, Event *event);
+static int chording(Display *display, XButtonEvent *bEvent, int timeout);
+static int BlockForEvent(Display *display, XEvent *xevent, long usec, int (*predicate)(), char *eventType);
+static int GetButtonEvent(Display *display, XEvent *xevent, char *args);
+static void tvdiff(struct timeval *t1, struct timeval *t2, struct timeval *diff);
+static void win_handle_quick_selection(Xv_Drawable_info *info, Event *event);
 
-static int      process_clientmessage_events();
-static int      process_property_events();
-static int      process_wm_pushpin_state();
-Pkg_private int win_handle_compose();
-static int	xevent_to_event(Display *display, XEvent *xevent, Event *event, Xv_object *pwindow);
+extern Xv_private_data char *xv_app_name;
 
 struct _XKeytrans {
         struct _XKeytrans *next;/* next on list */
@@ -374,12 +361,14 @@ input_readevent(window, event)
 /* BUG: implement or throw out all this focus stuff */
 
 /* ARGSUSED */
+void
 win_refuse_kbd_focus(window)
     Xv_object       window;
 {
 }
 
 /* ARGSUSED */
+void
 win_release_event_lock(window)
     Xv_object       window;
 {
@@ -646,7 +635,6 @@ xevent_to_event(display, xevent, event, pwindow)
                         /* ACC_XVIEW */
 			*acc_map;
                         /* ACC_XVIEW */
-    Bool            	 check_lang_mode();
     static XComposeStatus *compose_status;
 #ifdef OW_I18N
     static KeySym	 paste_keysym, cut_keysym;
@@ -801,11 +789,11 @@ ContProcess:
 	XErrorEvent    *er = (XErrorEvent *) & any;
 
 	fprintf(stderr, "Error event: \n");
-	fprintf(stderr, "   serial = %d, error code = %d\n", er->serial,
+	fprintf(stderr, "   serial = %ld, error code = %d\n", er->serial,
 		er->error_code);
 	fprintf(stderr, "   request code = %d, minor code = %d\n",
 		er->request_code, er->minor_code);
-	fprintf(stderr, "   resource id = %d\n", er->resourceid);
+	fprintf(stderr, "   resource id = %ld\n", er->resourceid);
 	goto Default;
     }
 
@@ -1683,8 +1671,8 @@ xv_input_pending(dpy, fd)
     }
 
     while (QLength(dpy)) {
-	window = xview_x_input_readevent(dpy, &event, NULL, FALSE, FALSE,
-				         NULL, &xevent);
+	window = xview_x_input_readevent(dpy, &event, (Xv_object)NULL, FALSE, FALSE,
+				         0, &xevent);
 	if (window)
 	    switch (event_id(&event)) {
 
@@ -2511,7 +2499,6 @@ check_lang_mode(server, display, event)
     Atom     enter_lang_atom, exit_lang_atom;
     Atom     translate_key_atom;
     XClientMessageEvent xclientm_event;
-    Window          xv_get_softkey_xid();
     static Window   sft_key_win;
     XKeyEvent      *keyevent;
 

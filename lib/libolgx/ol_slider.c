@@ -10,16 +10,13 @@
  * ol_slider.c Slider Module
  */
 
+#include <olgx_private/ol_slider_.h>
+#include <olgx_private/ol_draw_.h>
+#include <olgx_private/ol_init_.h>
 #include <stdio.h>
 #include <X11/Xlib.h>
 
 #include "olgx_impl.h"
-
-/*
- * Private function declarations
- */
-
-void            olgx_draw_slider_control();
 
 /*
  * olgx_draw_slider

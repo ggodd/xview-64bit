@@ -17,22 +17,22 @@ static char     sccsid[] = "@(#)sb.c 1.53 93/06/28";
  * Include files:
  */
 
-#include <xview_private/sb_impl.h>
+#include <xview_private/sb_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/sb_event_.h>
+#include <xview_private/win_input_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_olgx_.h>
 #include <xview_private/draw_impl.h>
 #include <xview/openwin.h>
 #include <xview/panel.h>
 #include <xview/xv_error.h>
-#include <xview/defaults.h>
 #include <xview/svrimage.h>
 #include <xview/screen.h>
 #include <xview/textsw.h>
 #include <xview/termsw.h>
 #include <X11/Xlib.h>
-
-/*
- * Declaration of Functions Defined in This File (in order):
- */
-Pkg_private int            scrollbar_create_internal();
 
 /*
  * Package global data
@@ -41,8 +41,6 @@ Attr_attribute  sb_context_key;
 Attr_attribute  sb_split_view_menu_item_key;
 Attr_attribute  sb_join_view_menu_item_key;
 
-Xv_private void	win_set_no_focus();
-Xv_private Graphics_info	*xv_init_olgx();
 #ifndef __linux__
 Xv_private_data Defaults_pairs xv_kbd_cmds_value_pairs[4];
 #else

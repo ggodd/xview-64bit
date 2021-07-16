@@ -10,12 +10,12 @@ static char     sccsid[] = "@(#)item.c 20.56 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview_private/panel_impl.h>
+#include <xview_private/item_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/p_utl_.h>
+#include <xview_private/xv_.h>
 
-
-Pkg_private int item_init();
-Pkg_private int item_destroy();
-static void     item_free();
+static void item_free(register Item_info *ip);
 
 #ifdef OW_I18N
 extern wchar_t		_xv_null_string_wc[];
@@ -84,7 +84,7 @@ item_init(parent, item_public, avlist)
     /*
      * Parse xv_create attributes
      */
-    for (attrs = avlist; (int)*attrs; attrs = attr_next(attrs)) {
+    for (attrs = avlist; *attrs; attrs = attr_next(attrs)) {
 	switch ((int)attrs[0]) {
 	  case PANEL_ITEM_X_GAP:
 	    ip->x_gap = (int) attrs[1];

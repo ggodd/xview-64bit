@@ -10,7 +10,13 @@ static char     sccsid[] = "@(#)p_choice.c 20.140 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview_private/panel_impl.h>
+#include <xview_private/p_choice_.h>
+#include <xview_private/item_set_.h>
+#include <xview_private/pf_text_.h>
+#include <xview_private/p_utl_.h>
+#include <xview_private/scrn_get_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/xv_.h>
 #include <pixrect/pr_line.h>
 #include <xview/openmenu.h>
 #include <xview/font.h>
@@ -71,87 +77,6 @@ static char     sccsid[] = "@(#)p_choice.c 20.140 93/06/28";
    for ((n) = 0; (n) <= (last_element); (n)++) \
       if (IN(set, n))
 
-
-
-
-/*
- * External functions and data
- */
-#ifdef OW_I18N
-extern struct pr_size   xv_pf_textwidth_wc();
-extern wchar_t         _xv_null_string_wc[];
-#else
-extern struct pr_size   xv_pf_textwidth();
-#endif /* OW_I18N */
-extern void             screen_adjust_gc_color();
-extern int		panel_item_destroy_flag;
-
-
-/*
- * Package private functions
- */
-Pkg_private int choice_init();
-Pkg_private Xv_opaque choice_set_avlist();
-Pkg_private Xv_opaque choice_get_attr();
-Pkg_private int choice_destroy();
-
-
-/*
- * Static functions
- */
-static void     choice_begin_preview(), choice_cancel_preview(),
-		choice_accept_preview(), choice_accept_menu(), choice_remove(),
-		choice_accept_key(), choice_paint(), choice_layout(),
-		choice_yield_kbd_focus();
-static void	choice_accept_kbd_focus(Panel_item item_public);
-static int      choice_number();
-static int	choice_x_gap();
-static int	choice_y_gap();
-static unsigned int choice_value();
-static void     choice_create_menu();
-static void	choice_images_to_menu_items();
-static void     choice_menu_busy_proc();
-static void     choice_menu_done_proc();
-static void	choice_update_focus_win();
-static void	compute_nrows_ncols();
-static void     layout_choices();
-static void     paint_choice();
-static void     preview_choice();
-static void     update_display();
-static void     update_item_rect();
-static void     update_value_rect();
-static Xv_opaque choice_do_menu_item(Menu menu, Menu_item menu_item);
-static int	re_alloc_choices(register Item_info *ip, int type, Xv_opaque choices[]);
-static int	move_specified(register Item_info *ip, register Attr_avlist avlist);
-static int	modify_choice(register Item_info *ip, int type, int which_choice, Xv_opaque choice_info);
-static int	find_choice(Item_info *ip, Event *event);
-
-static int find_choice(Item_info *ip, Event *event);
-static int modify_choice(Item_info *ip, int type, int which_choice, Xv_opaque       choice_info);
-static int move_specified(Item_info *ip, Attr_avlist avlist);
-static int re_alloc_choices(Item_info *ip, int type, Xv_opaque choices[]);
-
-static Panel_ops ops = {
-    panel_default_handle_event,		/* handle_event() */
-    choice_begin_preview,		/* begin_preview() */
-    choice_begin_preview,		/* update_preview() */
-    choice_cancel_preview,		/* cancel_preview() */
-    choice_accept_preview,		/* accept_preview() */
-    choice_accept_menu,			/* accept_menu() */
-    choice_accept_key,			/* accept_key() */
-    panel_default_clear_item,		/* clear() */
-    choice_paint,			/* paint() */
-    NULL,				/* resize() */
-    choice_remove,			/* remove() */
-    NULL,				/* restore() */
-    choice_layout,			/* layout() */
-    choice_accept_kbd_focus,		/* accept_kbd_focus() */
-    choice_yield_kbd_focus,		/* yield_kbd_focus() */
-    NULL				/* extension: reserved for future use */
-};
-
-static struct pr_size image_size();
-
 typedef struct {		/* data for a choice item */
     Panel_item      public_self;/* back pointer to object */
     int             actual;	/* actual value of current */
@@ -184,7 +109,67 @@ typedef struct {		/* data for a choice item */
     }               status;
 }               Choice_info;
 
+static void choice_begin_preview(Panel_item item_public, Event *event);
+static void choice_cancel_preview(Panel_item item_public, Event *event);
+static void choice_accept_preview(Panel_item item_public, Event *event);
+static void choice_accept_menu(Panel_item item_public, Event *event);
+static void choice_accept_key(Panel_item item_public, Event *event);
+static void choice_paint(Panel_item item_public);
+static void choice_remove(Panel_item item_public);
+static void choice_layout(Panel_item item_public, Rect *deltas);
+static void choice_accept_kbd_focus(Panel_item item_public);
+static void choice_yield_kbd_focus(Panel_item item_public);
+static void choice_create_menu(Item_info *ip);
+static Xv_opaque choice_do_menu_item(Menu menu, Menu_item menu_item);
+static void choice_images_to_menu_items(Item_info *ip, Panel_image images[], Menu_item mitems[], int last);
+static void choice_menu_busy_proc(Menu menu);
+static void choice_menu_done_proc(Menu menu, Xv_opaque result);
+static int choice_number(register unsigned int *value_set, register int last_element);
+static void choice_update_focus_win(Item_info *ip);
+static unsigned int choice_value(int choose_one, unsigned int *value_set, int last_element);
+static int choice_x_gap(int three_d, int choose_one);
+static int choice_y_gap(int three_d, int choose_one);
+static void compute_nrows_ncols (Item_info *ip, int *rows, int *cols);
+static int find_choice(Item_info *ip, Event *event);
+static struct pr_size image_size(register Panel_image *image, register int *above_baseline, int max_width);
+static void layout_choices(register Item_info *ip);
+static int modify_choice(Item_info *ip, int type, int which_choice, Xv_opaque choice_info);
+static int move_specified(Item_info *ip, Attr_avlist avlist);
+static void paint_choice(Panel_info *panel, Item_info *ip,register Choice_info * dp, register int which_choice, int selected);
+static void preview_choice(Item_info *ip, int new, Event *event, int paint);
+static int re_alloc_choices(Item_info *ip, int type, Xv_opaque choices[]);
+static void update_display(Item_info *ip, register int which_choice, int on, int preview);
+static void update_item_rect(Item_info *ip);
+static void update_value_rect(Item_info *ip);
 
+
+/*
+ * External functions and data
+ */
+#ifdef OW_I18N
+extern wchar_t         _xv_null_string_wc[];
+#else
+#endif /* OW_I18N */
+extern int		panel_item_destroy_flag;
+
+static Panel_ops ops = {
+    panel_default_handle_event,		/* handle_event() */
+    choice_begin_preview,		/* begin_preview() */
+    choice_begin_preview,		/* update_preview() */
+    choice_cancel_preview,		/* cancel_preview() */
+    choice_accept_preview,		/* accept_preview() */
+    choice_accept_menu,			/* accept_menu() */
+    choice_accept_key,			/* accept_key() */
+    panel_default_clear_item,		/* clear() */
+    choice_paint,			/* paint() */
+    NULL,				/* resize() */
+    choice_remove,			/* remove() */
+    NULL,				/* restore() */
+    choice_layout,			/* layout() */
+    choice_accept_kbd_focus,		/* accept_kbd_focus() */
+    choice_yield_kbd_focus,		/* yield_kbd_focus() */
+    NULL				/* extension: reserved for future use */
+};
 
 /* ========================================================================= */
 
@@ -311,7 +296,7 @@ choice_set_avlist(item_public, avlist)
     if (result != XV_OK)
 	return result;
 
-    while ((attr = (int)*avlist++) != XV_NULL) {
+    while ((attr = *avlist++) != XV_NULL) {
 	switch (attr) {
 #ifdef OW_I18N
           case PANEL_CHOICE_STRINGS:
@@ -335,7 +320,7 @@ choice_set_avlist(item_public, avlist)
             }
             temp_choices[num_choices] = XV_NULL;
 	    choices = temp_choices;
-	    while ((int)*avlist++);
+	    while (*avlist++);
             break;
 
           case PANEL_CHOICE_STRINGS_WCS:
@@ -359,13 +344,13 @@ choice_set_avlist(item_public, avlist)
             }
             temp_choices[num_choices] = XV_NULL;
 	    choices = temp_choices;
-	    while ((int)*avlist++);
+	    while (*avlist++);
             break;
 
           case PANEL_CHOICE_IMAGES:
             choices_type = PIT_SVRIM;
             choices = avlist;  /* base of the array */
-	    while ((int)*avlist++); /* skip past the list */
+	    while (avlist++); /* skip past the list */
             break;
 #else
 	  case PANEL_CHOICE_STRINGS:
@@ -414,7 +399,7 @@ choice_set_avlist(item_public, avlist)
 
 	  case PANEL_CHOICE_FONTS:
 	    /* Sunview1 compatibility attribute: not used */
-	    while ((int)*avlist++);	/* skip past the list */
+	    while (*avlist++);	/* skip past the list */
 	    break;
 
 	  case PANEL_CHOICES_BOLD:
@@ -526,7 +511,7 @@ choice_set_avlist(item_public, avlist)
      * attributes that were set above.
      */
     avlist = orig_avlist;
-    while ((attr = (int)*avlist++) != XV_NULL) {
+    while ((attr = *avlist++) != XV_NULL) {
 	switch (attr) {
 	  case PANEL_CHOICE_COLOR:
 	    which_choice = (int) *avlist++;
@@ -666,7 +651,7 @@ choice_get_attr(item_public, status, which_attr, valist)
 	return (Xv_opaque) choice_value(dp->choose_one, dp->value, dp->last);
 
       case PANEL_TOGGLE_VALUE:	/* on/off value of arg'th choice */
-	arg = va_arg(valist, int);
+	arg = va_arg(valist, Attr_attribute);
 	bad_arg = (arg < 0 || arg > dp->last);
 	if (bad_arg)
 	    return (Xv_opaque) 0;
@@ -692,7 +677,7 @@ choice_get_attr(item_public, status, which_attr, valist)
 	return (Xv_opaque) dp->choose_one;
 
       case PANEL_CHOICE_FONT:
-	arg = va_arg(valist, int);
+	arg = va_arg(valist, Attr_attribute);
 	bad_arg = (arg < 0 || arg > dp->last);
 	if (bad_arg || !is_string(&dp->choices[arg]))
 	    return (Xv_opaque) 0;
@@ -702,14 +687,14 @@ choice_get_attr(item_public, status, which_attr, valist)
 	return (Xv_opaque) NULL;
 
       case PANEL_CHOICE_COLOR:
-	arg = va_arg(valist, int);
+	arg = va_arg(valist, Attr_attribute);
 	bad_arg = (arg < 0 || arg > dp->last);
 	if (bad_arg)
 	    return (Xv_opaque) 0;
 	return (Xv_opaque) image_color(&dp->choices[arg]);
 
       case PANEL_CHOICE_RECT:
-	arg = va_arg(valist, int);
+	arg = va_arg(valist, Attr_attribute);
 	bad_arg = (arg < 0 || arg > dp->last);
 	if (bad_arg)
 	    return (Xv_opaque) 0;
@@ -717,14 +702,14 @@ choice_get_attr(item_public, status, which_attr, valist)
 
 #ifdef OW_I18N
       case PANEL_CHOICE_STRING_WCS:
-	arg = va_arg(valist, int);
+	arg = va_arg(valist, Attr_attribute);
 	bad_arg = (arg < 0 || arg > dp->last);
         if (bad_arg || !is_string(&dp->choices[arg]))
             return (Xv_opaque) NULL;
         return (Xv_opaque) image_string_wc(&dp->choices[arg]);
  
       case PANEL_CHOICE_STRING:
-	arg = va_arg(valist, int);
+	arg = va_arg(valist, Attr_attribute);
 	bad_arg = (arg < 0 || arg > dp->last);
         if (bad_arg || !is_string(&dp->choices[arg]))
             return (Xv_opaque) NULL;
@@ -733,7 +718,7 @@ choice_get_attr(item_public, status, which_attr, valist)
         return (Xv_opaque) image_string(&dp->choices[arg]);
 #else
       case PANEL_CHOICE_STRING:
-	arg = va_arg(valist, int);
+	arg = va_arg(valist, Attr_attribute);
 	bad_arg = (arg < 0 || arg > dp->last);
 	if (bad_arg || !is_string(&dp->choices[arg]))
 	    return (Xv_opaque) 0;
@@ -741,21 +726,21 @@ choice_get_attr(item_public, status, which_attr, valist)
 #endif /* OW_I18N */
 
       case PANEL_CHOICE_IMAGE:
-	arg = va_arg(valist, int);
+	arg = va_arg(valist, Attr_attribute);
 	bad_arg = (arg < 0 || arg > dp->last);
 	if (bad_arg || !is_svrim(&dp->choices[arg]))
 	    return (Xv_opaque) 0;
 	return (Xv_opaque) image_svrim(&dp->choices[arg]);
 
       case PANEL_CHOICE_X:
-	arg = va_arg(valist, int);
+	arg = va_arg(valist, Attr_attribute);
 	bad_arg = (arg < 0 || arg > dp->last);
 	if (bad_arg)
 	    return (Xv_opaque) 0;
 	return (Xv_opaque) dp->choice_rects[arg].r_left;
 
       case PANEL_CHOICE_Y:
-	arg = va_arg(valist, int);
+	arg = va_arg(valist, Attr_attribute);
 	bad_arg = (arg < 0 || arg > dp->last);
 	if (bad_arg)
 	    return (Xv_opaque) 0;
@@ -763,7 +748,7 @@ choice_get_attr(item_public, status, which_attr, valist)
 
       case PANEL_MARK_X:
 	/* SunView1 compatibility attribute */
-	arg = va_arg(valist, int);
+	arg = va_arg(valist, Attr_attribute);
 	bad_arg = (arg < 0 || arg > dp->last);
 	if (bad_arg)
 	    return (Xv_opaque) 0;
@@ -771,7 +756,7 @@ choice_get_attr(item_public, status, which_attr, valist)
 
       case PANEL_MARK_Y:
 	/* SunView1 compatibility attribute */
-	arg = va_arg(valist, int);
+	arg = va_arg(valist, Attr_attribute);
 	bad_arg = (arg < 0 || arg > dp->last);
 	if (bad_arg)
 	    return (Xv_opaque) 0;
@@ -945,7 +930,7 @@ choice_accept_menu(item_public, event)
 	dp->display_level != PANEL_CURRENT)
 	return;
 
-    if (ip->menu == NULL || paint_window == (Xv_Window)NULL)
+    if (ip->menu == (Menu)NULL || paint_window == (Xv_Window)NULL)
 	return;
 
     /* Invert the abbreviated menu button */
@@ -1616,6 +1601,7 @@ static struct pr_size
 image_size(image, above_baseline, max_width)
     register Panel_image *image;
     register int   *above_baseline;
+    int max_width;
 {
 #ifdef OW_I18N
     XFontSet            font_set;

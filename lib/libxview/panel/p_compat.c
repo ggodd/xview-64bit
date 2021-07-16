@@ -10,11 +10,9 @@ static char     sccsid[] = "@(#)p_compat.c 20.24 93/06/28 Copyr 1985 Sun Micro";
  *	file for terms of the license.
  */
 
+#include <xview_private/p_compat_.h>
 #include <xview/pkg.h>
-#include <xview_private/panel_impl.h>
 #include <xview_private/portable.h>
-
-Xv_private void window_rc_units_to_pixels();
 
 /*
  * routines for compatibility with SunView 1.n
@@ -23,9 +21,9 @@ Xv_private void window_rc_units_to_pixels();
 
 Sv1_public      Panel_item
 #ifdef ANSI_FUNC_PROTO
-panel_create_item(Panel client_panel, Xv_pkg *item_type, ...)
+_panel_create_item(Panel client_panel, Xv_pkg *item_type, ...)
 #else
-panel_create_item(client_panel, item_type, va_alist)
+_panel_create_item(client_panel, item_type, va_alist)
     Panel           client_panel;
     Xv_pkg *item_type;
 va_dcl
@@ -50,9 +48,9 @@ va_dcl
 
 Sv1_public      Panel_attribute_value
 #ifdef ANSI_FUNC_PROTO
-panel_get(Panel client_object, Panel_attr attr, ...)
+_panel_get(Panel client_object, Panel_attr attr, ...)
 #else
-panel_get(client_object, attr, va_alist)
+_panel_get(client_object, attr, va_alist)
     Panel           client_object;
     Panel_attr      attr;
 va_dcl
@@ -69,11 +67,11 @@ va_dcl
 }
 
 
-Sv1_public
+Sv1_public int
 #ifdef ANSI_FUNC_PROTO
-panel_set(Panel client_object, ...)
+_panel_set(Panel client_object, ...)
 #else
-panel_set(client_object, va_alist)
+_panel_set(client_object, va_alist)
     Panel           client_object;
 va_dcl
 #endif
@@ -102,7 +100,7 @@ va_dcl
     return 1;
 }
 
-Sv1_public
+Sv1_public void
 panel_destroy_item(client_item)
     Panel_item      client_item;
 {
@@ -110,7 +108,7 @@ panel_destroy_item(client_item)
 }
 
 
-Sv1_public
+Sv1_public void
 panel_free(client_object)
     Panel           client_object;
 {

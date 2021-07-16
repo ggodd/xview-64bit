@@ -38,18 +38,14 @@
 #include "olwm.h"
 #include "win.h"
 #include "menu.h"
+#include "ol_button.svr4.h"
+
+static void olgx_draw_diamond_mark(Graphics_info *info, Window win, int x, int y, int state);
+static void olgx_draw_accel_label_internal(Graphics_info *info, Window win, int texty, int x, int y, int width, int height, void *main_label, int m_pos, void *qualifier_label, int q_pos, int mark_type, int  mark_pos, void *key_label, int key_pos, int state, int centerflag);
 
 /*
  * Private function declarations
  */
-
-void	    olgx_set_busy_stipple();
-void	    olgx_draw_pixmap_label();
-void	    olgx_draw_ximage_label();
-
-static void     olgx_draw_accel_label_internal();
-static void     olgx_draw_diamond_mark();
-static void     olgx_draw_label();
 
 void
 olgx_draw_button(info, win, x, y, width, height, label, state)
@@ -525,6 +521,7 @@ void
 olgx_draw_menu_mark(info, win, x, y, state, fill_in)
     Graphics_info  *info;
     Window	  win;
+    int x, y;
     int	     state, fill_in;
 {
     char	    string[3];

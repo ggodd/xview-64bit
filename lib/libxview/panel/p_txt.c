@@ -10,14 +10,24 @@ static char     sccsid[] = "@(#)p_txt.c 20.217 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/p_txt_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/pf_text_.h>
+#include <xview_private/p_utl_.h>
+#include <xview_private/p_select_.h>
+#include <xview_private/scrn_get_.h>
+#include <xview_private/windowutil_.h>
+#include <xview_private/win_bell_.h>
+#include <xview_private/win_input_.h>
+#include <xview_private/xv_.h>
 #include <malloc.h>
 #include <string.h>
 #include <ctype.h>
 #include <X11/X.h>
 #include <xview_private/draw_impl.h>
-#include <xview_private/panel_impl.h>
 #include <xview/cursor.h>
-#include <xview/defaults.h>
 #include <xview/notice.h>
 #include <xview/screen.h>
 #include <xview/pixwin.h>
@@ -39,78 +49,71 @@ static char     sccsid[] = "@(#)p_txt.c 20.217 93/06/28";
 
 /* External procedures */
 #ifdef OW_I18N
-Xv_public struct pr_size  xv_pf_textwidth_wc();
 Xv_public wchar_t	 _xv_null_string_wc[];
-#else
-Xv_public struct pr_size  xv_pf_textwidth();
 #endif /*OW_I18N*/
-Xv_private void	    screen_adjust_gc_color();
-Xv_private void	    win_grab_quick_sel_keys();
 
-/* XView functions */
-Pkg_private int text_init();
-Pkg_private Xv_opaque text_set_avlist();
-Pkg_private Xv_opaque text_get_attr();
-Pkg_private int text_destroy();
-
-/* Panel Item Operations */
-static void     text_handle_event();
-static void     text_begin_preview();
-static void     text_cancel_preview();
-static void     text_accept_preview();
-static void     text_accept_key();
-static void	text_clear();
-static void     text_paint();
-static void     text_remove();
-static void     text_restore();
-static void	text_layout();
-static void     text_accept_kbd_focus();
-static void     text_yield_kbd_focus();
-#ifdef OW_I18N
-static void 	ml_panel_moded_interm();
-#ifdef notdef
-/* FIX_ME: Should be removed ? */
-static void 	ml_panel_simple_display();
-#endif
-static void 	paint_value_and_interm();
-#endif /* OW_I18N */
-
-/* Local functions */
-static int	char_position();
-static void	draw_scroll_btn();
-static void     horizontal_scroll();
+static void text_handle_event(Panel_item item_public, register Event *event);
+static Notify_value textitem_scroll_itimer_func(Panel_item item, int which);
+static void text_begin_preview(Panel_item item_public, Event *event);
+static void text_cancel_preview(Panel_item item_public, Event *event);
+static void text_accept_preview(Panel_item item_public, Event *event);
+static void text_accept_key(Panel_item item_public, Event *event);
+static void text_clear(Panel_item item_public);
+static void text_paint(Panel_item item_public);
+static void text_remove(Panel_item item_public);
+static void text_restore(Panel_item item_public);
+static void text_layout(Panel_item item_public, Rect *deltas);
+static void text_accept_kbd_focus(Panel_item item_public);
+static void text_yield_kbd_focus(Panel_item item_public);
+static int char_position(int caret_offset, Xv_Font font, CHAR *str, int balance_beam);
+static void draw_scroll_btn(register Item_info *ip, int state);
+static void horizontal_scroll(register Item_info *ip, int shift);
 #ifdef PAINT_BOX
-static void	paint_box();
-#endif /* PAINT_BOX */
-static void     paint_caret();
-static void     paint_text();
-static void     paint_value();
-static void     panel_find_word();
-static void	panel_multiclick_handler();
-static void     panel_select_line();
-static void	text_add_selection();
-static void	text_alarm();
-static int	text_convert_proc();
-static void	text_lose_proc();
-static void	text_lose_rank();
-static void	text_seln_dehighlight();
-static void	text_seln_delete();
+static void paint_box(Item_info *ip, Xv_Window pw);
+#endif 
+static void paint_caret(Item_info *ip, int on);
+static void paint_text(Item_info *ip);
+static void paint_value(register Item_info *ip, int highlight);
+static void panel_find_word(register Text_info *dp, int *first, int *last);
+static void panel_multiclick_handler(Item_info *ip, Event *event, int rank);
+static void panel_select_line(Item_info *ip, Event *event, int rank);
+static void text_add_selection(Panel_info *panel, Item_info *ip);
+static void text_alarm(Item_info *ip);
+static int text_convert_proc(Selection_owner sel_own, Atom *type, Xv_opaque *data, unsigned long *length, int *format);
+static void text_lose_proc(Selection_owner sel_owner);
+static void text_lose_rank(Panel_info *panel, int rank);
+static void text_seln_dehighlight(Item_info *ip, int rank);
+static void text_seln_delete(Item_info *ip, int rank);
 #ifdef OW_I18N
-static void	text_seln_done_proc();
+static void text_seln_done_proc(Selection_owner sel_own, Xv_opaque *data, Atom target);
+#endif 
+static void text_seln_highlight(Panel_info *panel, Item_info *ip, int rank);
+static void text_seln_init(Panel_info *panel);
+static void
+#ifdef OW_I18N
+text_set_clipboard(Panel_info *panel, Item_info *ip, Text_info *dp);
+#else
+text_set_clipboard(Panel_info *panel, Item_info *ip);
 #endif
-static void     text_seln_highlight();
-static void	text_seln_init();
-static void	text_set_clipboard();
 #ifndef OW_I18N
-static void	text_set_sel_data();
-#endif
-static void     update_caret_offset();
-static void     update_text_rect();
-static void     update_value();
-static void     update_value_offset();
+static void text_set_sel_data(Panel_info *panel, Text_info *dp, int rank);
+#endif 
+static void update_caret_offset(Item_info *ip, int caret_shift, int calc_from_caret_pos);
+static void update_text_rect(Item_info *ip);
 #ifdef OW_I18N
-static int	wslen_in_byte();
+static void update_value(Item_info *ip, Bool is_wc, register int action, int ok_to_insert, int synthetic_event, int *retstatus);
+#else
+static void update_value(Item_info *ip, register int action, int ok_to_insert, int synthetic_event, int *retstatus);
 #endif
+static void update_value_offset(Item_info *ip, int val_change, int val_shift, int caret_sensitive);
+#ifdef OW_I18N
+static void ml_panel_moded_interm(Item_info *ip, coord left, wchar_t *str, XIMFeedback *attr);
+#ifdef notdef
+static void ml_panel_simple_display(register Item_info *ip, register wchar_t *str, register XIMFeedback *attr);
+#endif
+static void paint_value_and_interm(register Item_info *ip, register wchar_t *interm_str, register XIMFeedback *interm_attr);
+static int wslen_in_byte(wchar_t *wcs);
+#endif 
 
 static Panel_ops ops = {
     text_handle_event,			/* handle_event() */
@@ -289,7 +292,7 @@ text_init(panel_public, item_public, avlist)
 	/* Print the string into an array to parse the potential
 	 * octal/special characters.
 	 */
-	sprintf(delim_chars, delims);
+	sprintf(delim_chars, "%s", delims);
 	/* Mark off the delimiters specified */
 	for (i = 0; i < 256; i++)
 	    delim_table[i] = FALSE;
@@ -1148,7 +1151,7 @@ text_begin_preview(item_public, event)
 	     (event_action(event) == LOC_DRAG && action_select_is_down(event)))
 	    && !(dp->flags & LEFT_SCROLL_BTN_SELECTED)) {
             panel_autoscroll_start_itimer( item_public,
-		textitem_scroll_itimer_func );
+		(int*)textitem_scroll_itimer_func );
 
 	    /* SELECT-down on left scrolling button: invoke left button */
 	    text_cancel_preview(item_public, event);
@@ -1170,7 +1173,7 @@ text_begin_preview(item_public, event)
 	     (event_action(event) == LOC_DRAG && action_select_is_down(event)))
 	    && !(dp->flags & RIGHT_SCROLL_BTN_SELECTED)) {
             panel_autoscroll_start_itimer( item_public,
-		textitem_scroll_itimer_func );
+		(int*)textitem_scroll_itimer_func );
 	    /* SELECT-down on right scrolling button: invoke right button */
 	    text_cancel_preview(item_public, event);
 	    draw_scroll_btn(ip,

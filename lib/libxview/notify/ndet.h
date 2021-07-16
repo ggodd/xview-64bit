@@ -153,100 +153,14 @@ extern	sigset_t   ndet_sigs_auto;	/* Bits that indicate which signals the
 					   notifier is automatically catching
 					   (SIGIO, SIGURG, SIGCHLD, SIGTERM,
 					   SIGALRM, SIGVTALRM) */
-extern	void	ndet_toggle_auto();	/* When some condition that the notifier
-					   is interested in changes, call this
-					   to adjust ndet_sigs_auto (TBD reword)
-					   (u_int obld_bits, sig) */
-extern	Notify_value ndet_auto_sig_func();/* (Notify_client nclient,
-					    int signal, Notify_signal_mode) */
-extern	Notify_client ndet_auto_nclient;/* Private notifier client for auto
-					   signal handling */
-extern	NTFY_ENUM ndet_auto_sig_send();	/* Tell auto sig manager that one of
-					   its condition has occurred
-					   (NTFY_CLIENT *client,
-					    NTFY_CONDITION *condition,
-					    NTFY_ENUM_DATA context) */
 
 extern  sigset_t  ndet_sigs_managing;   /* Signals that are managing (invalid if
 					   ndet_flags & NDET_SIGNAL_CHANGE) */
 extern	sigset_t  ndet_sigs_received;	/* Records signals received */
-extern	void	ndet_enable_sig();	/* Call this routine (other than from
-					   ndet_fig_sig_change) when you need
-					   to make sure that a signal is being
-					   caught but don't want to go through
-					   the whole process of globally finding
-					   out who else needs it. (u_int sig) */
-extern	void	ndet_send_delayed_sigs();/* Process any async signal conditions
-					   that have may have accumulated during
-					   a critical section. */
 
-extern	Notify_func ndet_set_fd_func();	/* (Notify_client nclient,
-					    Notify_func func, int fd
-					    NTFY_TYPE type) */
-extern	Notify_func ndet_get_fd_func();	/* (Notify_client nclient,
-					    int fd, NTFY_TYPE type) */
-extern	Notify_func ndet_get_func();	/* (Notify_client nclient,
-					    NTFY_TYPE type, NTFY_DATA data,
-					    int use_data) */
-extern	int ndet_check_fd(int fd);	/* Returns 0 if all OK else -1 and
-					   sets notify_errno to NOTIFY_BADF
-					   (int fd) */
-
-extern	int ndet_check_sig(int sig);	/* Returns 0 if all OK else -1 and sets
-					   notify_errno to NOTIFY_BAD_SIGNAL
-					   (int sig) */
-extern	int ndet_check_mode(Notify_signal_mode mode, NTFY_TYPE *type_ptr);
-					/* Returns 0 if all OK else -1 and sets
-					   notify_errno to NOTIFY_INVAL.  Sets
-					   type_ptr if not null.
-					   (Notify_signal_mode mode,
-					    NTFY_TYPE *type_ptr) */
-
-extern	int ndet_check_which(int which, NTFY_TYPE *type_ptr);
-					/* Turn itimer which into type.
-					   Returns 0 if all OK else -1 and sets
-					   notify_errno to NOTIFY_INVAL.  Sets
-					   type_ptr if not null.
-					   (int which, NTFY_TYPE *type_ptr) */
 #define       ndet_tv_equal(_a, _b)   \
       (_a.tv_sec == _b.tv_sec && _a.tv_usec == _b.tv_usec)
 #define	ndet_tv_polling(tv) ndet_tv_equal((tv), NOTIFY_POLLING_ITIMER.it_value)
-extern	struct timeval ndet_tv_subt();	/* Subtracts b from a.  Will round down
-					   any NOTIFY_POLLING_ITIMER.it_value
-					   results to {0,0}.  This is to prevent
-					   the notifier from generating a
-					   polling timer
-					   (struct timeval a, b) */
-extern	struct timeval ndet_tv_min();	/* Find min of b and a.
-					   (struct timeval a, b) */
-
-extern	struct timeval ndet_real_min();	/* Figure the interval that has
-					   transpired since this real interval
-					   timer has been set.  The difference
-					   between how much time the timer wants
-					   to wait and how long it has waited is
-					   the amount of time left to wait.
-					   The time left to wait is returned.
-					   (NTFY_ITIMER *ntfy_itimer,
-					    struct timeval current_tv) */
-extern	struct timeval ndet_virtual_min(); /* Update the interval until
-					    expiration by subtracting the amount
-					    of time on the process interval
-					    timer (current_tv) from the value of
-					    the process interval timer when it
-					    was last looked at by this client
-					    (ntfy_itimer->set_tv).
-					    Return the amount of time that this
-					    virtual interval timer has to go
-					    before expiration
-					    (ntfy_itimer->itimer.it_value).
-					    Need to update ntfy_itimer->set_tv
-					    with this value after calling
-					    ndet_virtual_min.
-					    (NTFY_ITIMER *ntfy_itimer,
-					     struct timeval current_tv) */
-extern	void ndet_reset_itimer_set_tv();/* Reset ntfy_itimer->set_tv based on
-					   type (NTFY_CONDITION *condition) */
 
 /*
  * NDET_ENUM_SEND is used to send the results of select around to conditions.
@@ -281,31 +195,7 @@ typedef	struct  ndet_enum_itimer {
 					   current virtual itimer value */
 	struct timeval	min_tv;		/* Global min of min_func return value*/
 } NDET_ENUM_ITIMER;
-extern	struct timeval	ndet_virtual_min();
-extern	struct timeval	ndet_real_min();
-extern	void ndet_update_virtual_itimer();/* Some virtual itimer related
-					   condition has changed.  Update all
-					   virtual itimers.  Determine minimum
-					   wait and set virtual itimer.  Enable
-					   (disable) notifier auto signal
-					   catching of SIGVTALRM. (int send) */
-extern	void ndet_update_real_itimer();	/* Some real itimer related condition
-					   has changed.  Determine minimum wait
-					   and set real itimer.  Enable(disable)
-					   notifier auto signal catching of
-					   SIGALRM. (int send) */
-extern	NTFY_ENUM ndet_fd_send();	/* Enqueue notifications for any fds
-					   in (NDET_ENUM_SEND *) context.
-					   (NTFY_CLIENT *client,
-					    NTFY_CONDITION *condition,
-					    NTFY_ENUM_DATA context) */
 
-extern	void ndet_set_event_processing();/* Called from dispatcher to tell
-					   detector that nclient is in the
-					   process of handling a client event
-					   (on == 1) or done handling a client
-					   event (on == 0).
-					   (Notify_client nclient, int on) */
 /*
 ********************** Interval Timer Algorithms *************************
 For both types of interval timers:

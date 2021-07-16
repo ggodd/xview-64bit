@@ -22,7 +22,8 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=     notice.h alert.h
-HDRSPRIVATE=    noticeimpl.h
+HDRSPRIVATE=    noticeimpl.h notice_.h notice_dstry_.h notice_get_.h \
+    notice_itm_.h notice_ol_.h notice_pt_.h notice_set_.h
 
 DATA_OBJS =	notice_data.o
 

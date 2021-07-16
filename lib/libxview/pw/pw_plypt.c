@@ -10,7 +10,9 @@ static char     sccsid[] = "@(#)pw_plypt.c 20.19 89/07/31";
  *	file for terms of the license.
  */
 
-#include <xview_private/pw_impl.h>
+#include <xview_private/pw_plypt_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_rop_.h>
 
 Xv_public int
 pw_polypoint(pw, dx, dy, npts, ptlist, op)

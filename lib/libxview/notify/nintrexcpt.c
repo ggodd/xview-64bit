@@ -14,7 +14,8 @@ static char     sccsid[] = "@(#)nintrexcpt.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * Nint_r_except.c - Implement the notify_remove_exception_func interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/nintrexcpt_.h>
+#include <xview_private/nint_r_fd_.h>
 #include <xview_private/nint.h>
 
 extern          Notify_error

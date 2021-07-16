@@ -21,7 +21,7 @@ SUBDIRS.4 = imcb
 
 SUBDIRS= \
 	attr base canvas color cursor defaults dnd file_chooser filter font frame fullscreen \
-	help icon io_stream menu misc notice notify openwin panel pw\
+	help icon io_stream menu misc notice notify openwin panel pw \
 	rect screen scrollbar sel selection server server_image string_utils \
 	textsw ttysw win window wmgr ${SUBDIRS.XvI18nLevel}
 

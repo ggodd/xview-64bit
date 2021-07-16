@@ -23,6 +23,9 @@ static char     sccsid[] = "@(#)omi.c 20.55 93/06/28";
  * 
  */
 
+#include <xview_private/omi_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/pf_text_.h>
 #include <sys/types.h>
 #include <stdio.h>
 
@@ -34,15 +37,8 @@ static char     sccsid[] = "@(#)omi.c 20.55 93/06/28";
 #include <xview_private/draw_impl.h>
 #include <olgx/olgx.h>
 
-#ifdef  OW_I18N
-extern struct pr_size xv_pf_textwidth_wc();
-#endif
-extern struct pr_size xv_pf_textwidth();
-
 #define IMAX(a, b) ((int)(b) > (int)(a) ? (int)(b) : (int)(a))
 #define INHERIT_VALUE(f) im->f ? im->f : std_image ? std_image->f : 0
-
-Pkg_private int menu_image_compute_size();
 
 
 Pkg_private int
@@ -87,7 +83,7 @@ menu_image_compute_size(m, im, std_image)	/* returns status */
 	/* make every string menu item with the same font the same height */
 	im->button_size.y = Button_Height(m->ginfo);
     } else if (!(m->pin && im->title)) {
-	xv_error(NULL,
+	xv_error(0,
 		 ERROR_STRING, 
 		    XV_MSG("Menu item does not have a string or image"),
 		 ERROR_PKG, MENU,

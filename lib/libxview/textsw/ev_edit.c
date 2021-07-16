@@ -13,6 +13,12 @@ static char     sccsid[] = "@(#)ev_edit.c 20.27 93/06/28";
 /*
  * Initialization and finalization of entity views.
  */
+#include <xview_private/ev_edit_.h>
+#include <xview_private/ev_attr_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/ev_once_.h>
+#include <xview_private/ev_update_.h>
+#include <xview_private/finger_tbl_.h>
 #include <xview/pkg.h>
 #include <xview/attrol.h>
 #include <xview_private/primal.h>
@@ -30,13 +36,7 @@ static char     sccsid[] = "@(#)ev_edit.c 20.27 93/06/28";
 
 #include <pixrect/pixfont.h>
 
-Pkg_private void     ev_clear_from_margins();
-Pkg_private void     ev_check_insert_visibility();
-Pkg_private struct rect ev_rect_for_line();
-Pkg_private void ev_update_after_edit();
-
-Es_index ev_index_for_line();
-
+static void ev_update_fingers_after_edit(register Ev_finger_table *ft, register Es_index insert, register Es_index delta);
 
 Pkg_private unsigned
 ev_span(views, position, first, last_plus_one, group_spec)
@@ -401,7 +401,7 @@ ev_update_view_display(view)
     line_seq = view->line_table.seq;
     view->line_table.seq = view->tmp_line_table.seq;
     view->tmp_line_table.seq = line_seq;
-    if ((int) ev_get(view, EV_NO_REPAINT_TIL_EVENT) == 0)
+    if ((int) ev_get(view, EV_NO_REPAINT_TIL_EVENT, (Xv_opaque)NULL, (Xv_opaque)NULL, (Xv_opaque)NULL) == 0)
 	ev_lt_paint(view, &view->line_table, &view->tmp_line_table);
     ASSERT(allock());
 }
@@ -473,7 +473,6 @@ ev_make_visible(view, position, lower_context, auto_scroll_by, delta)
     int             auto_scroll_by;
     Es_index        delta;
 {
-    Pkg_private int      ev_xy_in_view();
     Ev_impl_line_seq line_seq;
     int             top_of_lc;
     int             lt_index;

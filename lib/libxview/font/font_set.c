@@ -10,6 +10,8 @@ static char     sccsid[] = "@(#)font_set.c 20.28 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/font_set_.h>
+#include <xview_private/attr_.h>
 #ifdef OW_I18N
 #include <euc.h>
 #endif /* OW_I18N */
@@ -28,7 +30,7 @@ font_set_avlist(font_public, avlist)
     register Font_info *font = FONT_PRIVATE(font_public);
     register Attr_attribute *attrs;
 
-    for (attrs = avlist; (int)*attrs; attrs = attr_next(attrs)) {
+    for (attrs = avlist; *attrs; attrs = attr_next(attrs)) {
 	switch ((int)attrs[0]) {
 	  case FONT_TYPE:
 	    font->type = (Font_type) attrs[1];

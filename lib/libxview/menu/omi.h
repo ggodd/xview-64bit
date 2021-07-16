@@ -87,20 +87,4 @@ typedef enum {
  ***********************************************************************
  */
 
-/* 
- * 	Functions
- *
- *  extern Image	image_create(av_list);
- *  extern Xv_opaque	image_get(image|image_item, attr{, data});
- *  extern int		image_set(image|image_item, attr{, data}, value);
- *  extern void		image_destroy(image|image_item);
- *  extern void		image_paint();
- */
-
-   extern Image		 image_create();
-   extern Xv_opaque	 image_get();
-   extern int		 image_set();
-   extern void		 image_destroy();
-   extern void		 image_render();
-
 #endif /* ~xview_image_DEFINED */

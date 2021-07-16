@@ -10,6 +10,15 @@ static char     sccsid[] = "@(#)om_render.c 20.176 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/om_render_.h>
+#include <xview_private/help_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/omi_.h>
+#include <xview_private/om_public_.h>
+#include <xview_private/screen_.h>
+#include <xview_private/scrn_get_.h>
+#include <xview_private/windowutil_.h>
+#include <xview_private/xv_olgx_.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <stdio.h>
@@ -57,6 +66,27 @@ typedef enum {
 
 /* ------------------------------------------------------------------------ */
 
+static void get_mode(Xv_menu_info *m, Event *event);
+static void set_mode(register Xv_menu_info *m, short check_cmc, short menu_button_up);
+static int find_item_nbr(register Xv_menu_info *m, Event *event, int *row, int *column);
+static void process_event(register Xv_menu_info *m, Event *event);
+static void cleanup(register Xv_menu_info *m, Cleanup_mode cleanup_mode);
+static int compute_dimensions(register Xv_menu_info *menu, int iwidth, int iheight, register Rect *rect);
+static void compute_item_row_column(Xv_menu_info *menu, int item_nbr, int *row, int *column);
+static void compute_rects(Xv_menu_info *menu, struct inputevent *iep, int item_height, Rect *mrect, Rect *srect);
+static Menu_status render_pullright(register Xv_menu_info *parent_menu, register Xv_menu_item_info *mi, Rect *position_rect, int stay_up);
+static void submenu_done(register Xv_menu_info *m);
+static void feedback(register Xv_menu_info *m, int n, Menu_feedback state);
+static void paint_menu_item(register Xv_menu_info *m, int nn, Menu_feedback feedback_state);
+static void compute_menu_item_paint_rect(register Xv_menu_info *m, register int , register Rect *rect, int *item_top);
+static void constrainrect(register struct rect *rconstrain, register struct rect *rbound);
+static void destroy_gen_items(Xv_menu_info *menu);
+static int absolute_value(int x);
+static short compute_show_submenu(Xv_menu_info *m, Event *event, Rect *submenu_region_rect, int *submenu_stay_up);
+static void menu_window_paint(register Xv_menu_info *m, Xv_Window window);
+static void menu_shadow_paint(Xv_Window window);
+static void repaint_menu_group(Xv_menu_info *m);
+
 /*
  * XView Public
  */
@@ -67,48 +97,9 @@ Xv_public char xv_iso_next_element;
 Xv_public char xv_iso_select;
 
 /*
- * XView Private
- */
-Xv_private Graphics_info *xv_init_olgx();
-Xv_private Cms		  xv_set_control_cms();
-Xv_private Xv_Window screen_get_cached_window();
-Xv_private void screen_set_cached_window_busy();
-
-/*
  * Package private
  */
-Pkg_private Notify_value menu_client_window_event_proc();
-Pkg_private int menu_image_compute_size();
-Pkg_private void menu_done();
-Pkg_private void menu_render();
-Pkg_private void menu_shadow_event_proc();
-Pkg_private void menu_window_event_proc();
-
 Pkg_private int  menu_active_menu_key;	/* defined in om_public.c */
-Pkg_private int  compute_item_size();
-
-/*
- * Private
- */
-static Menu_status render_pullright();
-static short    compute_show_submenu();
-static int      absolute_value();
-static int      compute_dimensions();
-static void     constrainrect();
-static void     cleanup();
-static void     compute_menu_item_paint_rect();
-static void     compute_rects();
-static void     destroy_gen_items();
-static void     feedback();
-static void     get_mode();
-static void     menu_window_paint();
-static void     menu_shadow_paint();
-static void     paint_menu_item();
-static void     process_event();
-static void	repaint_menu_group();
-static void     set_mode();
-static void     submenu_done();
-
 
 
 /*
@@ -239,7 +230,7 @@ menu_render(menu, group, parent)
     DRAWABLE_INFO_MACRO(group->client_window, client_window_info);
     rect_construct(&used_window_rect, 0, 0, 0, 0);
     if (!m->window) {
-	m->window = screen_get_cached_window(screen, menu_window_event_proc,
+	m->window = screen_get_cached_window(screen, (Notify_func)menu_window_event_proc,
 	    m->group_info->three_d ? FALSE : TRUE, /* borders */
             m->group_info->vinfo->visual, &new_window);
 	if (!m->window) {
@@ -329,7 +320,7 @@ menu_render(menu, group, parent)
     if (!m->group_info->three_d) { 
 	if (!m->shadow_window) {
             m->shadow_window = screen_get_cached_window(screen,
-                menu_shadow_event_proc, FALSE,
+                (Notify_func)menu_shadow_event_proc, FALSE,
                 group->vinfo->visual, &new_window);							
             if (!m->shadow_window) {
                 xv_error((Xv_object)NULL,
@@ -496,12 +487,12 @@ menu_render(menu, group, parent)
 
     /* fix to make xv_window_loop work for menus */
     if (WIN_IS_IN_LOOP) {
-        window_set_tree_flag(m->window, NULL, FALSE, TRUE);
-        window_set_tree_flag(m->shadow_window, NULL, FALSE, TRUE);
+        window_set_tree_flag(m->window, 0, FALSE, TRUE);
+        window_set_tree_flag(m->shadow_window, 0, FALSE, TRUE);
     }
     else {
-        window_set_tree_flag(m->window, NULL, FALSE, FALSE);
-        window_set_tree_flag(m->shadow_window, NULL, FALSE, FALSE);
+        window_set_tree_flag(m->window, 0, FALSE, FALSE);
+        window_set_tree_flag(m->shadow_window, 0, FALSE, FALSE);
     }
 
     /*
@@ -1238,13 +1229,13 @@ cleanup:
                notify_remove_event_func(m->window,
                    (Notify_func)menu_window_event_proc,
                    NOTIFY_IMMEDIATE);
-	    m->window = NULL;
+	    m->window = 0;
 	}
 	if (m->shadow_window) {
 	    xv_set(m->shadow_window, XV_SHOW, FALSE, NULL);
 	    screen_set_cached_window_busy(xv_screen(info), m->shadow_window,
 					  FALSE);
-	    m->shadow_window = NULL;
+	    m->shadow_window = 0;
 	}
 	if (xv_get(xv_server(info), SERVER_JOURNALLING))
 	    xv_set(xv_server(info), SERVER_JOURNAL_SYNC_EVENT, 1, NULL);
@@ -1932,7 +1923,7 @@ paint_menu_item(m, n, feedback_state)
     char	    *tmp;
     /* ACC_XVIEW */
 
-    if (m->window == NULL)
+    if (m->window == 0)
 	return;	/* in case of race condition between unmap and expose */
 
     DRAWABLE_INFO_MACRO(m->window, info);

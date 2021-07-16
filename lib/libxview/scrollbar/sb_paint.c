@@ -23,25 +23,16 @@ static char     sccsid[] = "@(#)sb_paint.c 1.67 93/06/28";
  * Include files:
  */
 
-#include <xview_private/sb_impl.h>
+#include <xview_private/sb_paint_.h>
+#include <xview_private/sb_pos_.h>
 #include <xview_private/draw_impl.h>
 #include <xview/rectlist.h>
 #include <xview/window.h>
 #include <xview/svrimage.h>
 #include <X11/Xlib.h>
 
-/*
- * Declaration of Functions Defined in This File (in order):
- */
-
-Xv_public void  scrollbar_paint();
-
-Pkg_private void scrollbar_clear_damage();
-Pkg_private void scrollbar_paint_elevator();
-Pkg_private void scrollbar_paint_elevator_move();
-Pkg_private void scrollbar_invert_region();
-static void     scrollbar_proportional_indicator();
-static void     scrollbar_paint_anchor();
+static void scrollbar_paint_anchor(Xv_scrollbar_info *sb, Rect *r, int invoked);
+static void scrollbar_proportional_indicator(Xv_scrollbar_info *sb, int elev_pos, int *position, int *length);
 
 /******************************************************************/
 

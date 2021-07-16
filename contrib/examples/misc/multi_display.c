@@ -30,12 +30,12 @@ char	*argv[];
     xv_init(XV_INIT_ARGC_PTR_ARGV, &argc, argv, 0);
 
     /* Get the default servers's 0, and 1th screens */
-    scrn_0 = (Xv_Screen) xv_get( xv_default_server, SERVER_NTH_SCREEN, 0 );
-    scrn_1 = (Xv_Screen) xv_get( xv_default_server, SERVER_NTH_SCREEN, 1 );
+    scrn_0 = (Xv_Screen) xv_get( xv_default_server, SERVER_NTH_SCREEN, 0, NULL );
+    scrn_1 = (Xv_Screen) xv_get( xv_default_server, SERVER_NTH_SCREEN, 1, NULL );
 
     /* Get the root window for the screen 0 and screen 1 */
-    win_0 = (Xv_Window) xv_get( scrn_0, XV_ROOT );
-    win_1 = (Xv_Window) xv_get( scrn_1, XV_ROOT );
+    win_0 = (Xv_Window) xv_get( scrn_0, XV_ROOT, NULL );
+    win_1 = (Xv_Window) xv_get( scrn_1, XV_ROOT, NULL );
 
     baseFr = xv_create( win_0, FRAME,
 		       FRAME_LABEL,	"Control Panel",
@@ -43,7 +43,7 @@ char	*argv[];
 		       XV_HEIGHT, 150,
 		       0);
 
-    display = (Display *) xv_get( baseFr, XV_DISPLAY );    
+    display = (Display *) xv_get( baseFr, XV_DISPLAY, NULL );    
 
     panel = xv_create( baseFr, PANEL, 
 		      XV_X, 0,
@@ -108,7 +108,7 @@ void Display0(item, event)
 	fprintf( stderr,"Can't find lucidasans-14.\n" );
 	exit(1);
     }
-    XSetFont( display, gc_0, (Font)xv_get( demoFont, XV_XID ) );
+    XSetFont( display, gc_0, (Font)xv_get( demoFont, XV_XID, NULL ) );
     XSetLineAttributes( display, gc_0, 6, LineSolid, CapRound, JoinRound );
 }
 
@@ -139,7 +139,7 @@ void Display1(item, event)
 	fprintf( stderr,"Can't find lucidasans-BoldItalic-14.\n" );
 	exit(1);
     }
-    XSetFont( display, gc_1, (Font)xv_get( demoFont, XV_XID ) );
+    XSetFont( display, gc_1, (Font)xv_get( demoFont, XV_XID, NULL ) );
     XSetLineAttributes( display, gc_1, 6, LineSolid, CapRound, JoinRound );
 }
 
@@ -166,8 +166,8 @@ can_0_repaint_proc(canvas, pw, display, xid, xrects)
 	XChangeGC( display, gc_0, GCClipMask, &gcValue );
     }
     
-    width = (int) xv_get( pw, XV_WIDTH );
-    height = (int) xv_get( pw, XV_HEIGHT );
+    width = (int) xv_get( pw, XV_WIDTH, NULL );
+    height = (int) xv_get( pw, XV_HEIGHT, NULL );
 
     XDrawString( display, xid, gc_0, width/4, height/2, "Multi Headed XView!!!", 21 );
     
@@ -227,8 +227,8 @@ can_1_repaint_proc(canvas, pw, display, xid, xrects)
 	XChangeGC( display, gc_1, GCClipMask, &gcValue );
     }
     
-    width = (int) xv_get( pw, XV_WIDTH );
-    height = (int) xv_get( pw, XV_HEIGHT );
+    width = (int) xv_get( pw, XV_WIDTH, NULL );
+    height = (int) xv_get( pw, XV_HEIGHT, NULL );
 
     XDrawString(display,xid,gc_1,(5*width)/8,(5*height)/8,"Multi Headed XView!!!", 21 );
     

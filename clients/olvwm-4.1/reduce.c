@@ -11,6 +11,7 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <X11/X.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
@@ -19,6 +20,7 @@
 #include <X11/keysymdef.h>
 #include <X11/XWDFile.h>
 #include "mem.h"
+#include "reduce.h"
 
 #define MAXCOLORS 32767
 
@@ -37,13 +39,11 @@ struct box
     int sum;
 };
 
-typedef struct
-{
-    long        value;
-    XColor      *color;
-} ColorHist;
-
-typedef ColorHist *colorhist_vector;
+static int redcompare(colorhist_vector ch1, colorhist_vector ch2);
+static int greencompare(colorhist_vector ch1, colorhist_vector ch2);
+static int bluecompare(colorhist_vector ch1, colorhist_vector ch2);
+static int sumcompare(box_vector b1, box_vector b2);
+static XColor *mediancut(colorhist_vector chv, int colors, int sum, unsigned short maxval, int newcolors);
 
 int VDMPixCmp (el1, el2)
 ColorHist *el1, *el2;
@@ -82,7 +82,7 @@ int maxcolors, *pNcolors;
 	}
 
 /* Sort the histogram so all occurring values come first */
-    qsort ((char*)hist, maxcolors, sizeof (hist[0]), VDMPixCmp);
+    qsort ((char*)hist, maxcolors, sizeof (hist[0]), (__compar_fn_t)VDMPixCmp);
 
     return hist;
 }
@@ -225,15 +225,15 @@ mediancut( chv, colors, sum, maxval, newcolors )
 	if ( rl >= gl && rl >= bl )
 	    qsort(
 		(char*) &(chv[indx]), clrs, sizeof(ColorHist),
-		redcompare );
+		(__compar_fn_t)redcompare );
 	else if ( gl >= bl )
 	    qsort(
 		(char*) &(chv[indx]), clrs, sizeof(ColorHist),
-		greencompare );
+		(__compar_fn_t)greencompare );
 	else
 	    qsort(
 		(char*) &(chv[indx]), clrs, sizeof(ColorHist),
-		bluecompare );
+		(__compar_fn_t)bluecompare );
 	}
 #endif /*LARGE_LUM*/
 
@@ -259,7 +259,7 @@ mediancut( chv, colors, sum, maxval, newcolors )
 	bv[boxes].colors = clrs - i;
 	bv[boxes].sum = sm - lowersum;
 	++boxes;
-	qsort( (char*) bv, boxes, sizeof(struct box), sumcompare );
+	qsort( (char*) bv, boxes, sizeof(struct box), (__compar_fn_t)sumcompare );
     }
 
     /*

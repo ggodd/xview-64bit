@@ -14,6 +14,16 @@ static char     sccsid[] = "@(#)ndet_loop.c 20.36 93/06/28 Copyr 1985 Sun Micro"
  * Ndet_loop.c - Notification loop.
  */
 
+#include <xview_private/ndet_loop_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/ndet_auto_.h>
+#include <xview_private/ndetitimer_.h>
+#include <xview_private/ndisdispch_.h>
+#include <xview_private/nint_stack_.h>
+#include <xview_private/ntfy_cond_.h>
+#include <xview_private/ntfy_ctbl_.h>
+#include <xview_private/ntfy_debug_.h>
+#include <xview_private/ntfyprotec_.h>
 #include <xview_private/i18n_impl.h>
 #include <xview_private/ntfy.h>
 #include <xview_private/ndet.h>
@@ -40,6 +50,7 @@ static char     sccsid[] = "@(#)ndet_loop.c 20.36 93/06/28 Copyr 1985 Sun Micro"
 #include <rpc/rpc.h>
 
 extern int      errno;
+extern Notify_client ndet_auto_nclient;
 
 pkg_private_data u_int ndet_flags = 0;
 pkg_private_data NTFY_CLIENT *ndet_clients = 0;
@@ -74,12 +85,6 @@ pkg_private_data struct sigvec ndet_prev_sigvec[NSIG] = {
 pkg_private_data struct sigaction ndet_prev_sigvec[NSIG];
 #endif /* SVR4 */
 
-#ifdef vax			/* vax signal handlers return ints */
-pkg_private int ndet_signal_catcher();
-#else				/* sun signal handlers are void */
-pkg_private void ndet_signal_catcher();
-#endif
-
 #if !defined(SVR4) && !defined(__linux__)
 pkg_private_data struct sigvec ndet_sigvec = {ndet_signal_catcher, 0, 0};
 static int      ndet_signal_code;
@@ -89,25 +94,28 @@ pkg_private_data struct sigaction ndet_sigvec =
 #ifndef __linux__
 	{SA_RESTART, {ndet_signal_catcher}, {0}, {0,0}};
 #else
-	{ndet_signal_catcher,0,SA_RESTART,NULL}; /* handler,mask,flags,restorer */
+	{.sa_sigaction=ndet_signal_catcher,{0},SA_RESTART,NULL}; /* handler,mask,flags,restorer */
 #endif
 	static int      ndet_signal_code;
 	static ucontext_t *ndet_signal_context;
 #endif /* SVR4 */
 
-static void     ndet_update_itimer();
-static void     ndet_send_async_sigs();
-static void     ndet_fig_fd_change(), ndet_fig_wait3_change(),
-                ndet_fig_destroy_change(), ndet_fig_sig_change();
-static NTFY_ENUM ndet_sig_send(), ndet_poll_send();
-
-static NTFY_ENUM ndet_itimer_change();
-static NTFY_ENUM ndet_destroy_change();
-static NTFY_ENUM ndet_sig_change();
-static NTFY_ENUM ndet_fd_change();
-static NTFY_ENUM ndet_wait3_change();
-static NTFY_ENUM ndet_virtual_set_tv_update();
-static NTFY_ENUM ndet_async_sig_send();
+static void ndet_fig_fd_change(void);
+static NTFY_ENUM ndet_fd_change(NTFY_CLIENT *client, NTFY_CONDITION *condition, NTFY_ENUM_DATA context);
+static void ndet_fig_wait3_change(void);
+static NTFY_ENUM ndet_wait3_change(NTFY_CLIENT *client, NTFY_CONDITION *condition, NTFY_ENUM_DATA context);
+static void ndet_update_itimer(NDET_ENUM_ITIMER *enum_itimer);
+static NTFY_ENUM ndet_itimer_change(NTFY_CLIENT *client, NTFY_CONDITION *condition, NTFY_ENUM_DATA context);
+static NTFY_ENUM ndet_virtual_set_tv_update(NTFY_CLIENT *client, NTFY_CONDITION *condition, NTFY_ENUM_DATA context);
+static void ndet_fig_destroy_change(void);
+static void ndet_fig_sig_change(void);
+static void notify_merge_sigsets(sigset_t * sigs1, sigset_t *sigs2);
+static void ndet_send_async_sigs(sigset_t *sigs);
+static NTFY_ENUM ndet_async_sig_send(NTFY_CLIENT *client, register NTFY_CONDITION *condition, NTFY_ENUM_DATA context);
+static NTFY_ENUM ndet_destroy_change(NTFY_CLIENT *client, NTFY_CONDITION *condition, NTFY_ENUM_DATA context);
+static NTFY_ENUM ndet_sig_change(NTFY_CLIENT *client, NTFY_CONDITION *condition, NTFY_ENUM_DATA context);
+static NTFY_ENUM ndet_sig_send(NTFY_CLIENT *client, register NTFY_CONDITION *condition, NTFY_ENUM_DATA context);
+static NTFY_ENUM ndet_poll_send(NTFY_CLIENT *client, register NTFY_CONDITION *condition, NTFY_ENUM_DATA context);
 
 #ifdef	lint
 /* VARARGS */
@@ -120,7 +128,7 @@ syscall(a)
 
 #endif				/* lint */
 
-static do_rpc = 0;
+static int do_rpc = 0;
 static int pipefds[2], pipe_started;
 
 extern          Notify_error
@@ -240,6 +248,7 @@ notify_start()
 #else
 	    nfds = linux_select(FD_SETSIZE, &ibits, &obits, &ebits,
 		 (sigisempty(&ndet_sigs_received)) ? timer : &ndet_polling_tv);
+
 #endif
 #else /* SVR4 */
 	    nfds = notify_select(FD_SETSIZE, &ibits, &obits, &ebits,
@@ -508,7 +517,6 @@ ndet_wait3_change(client, condition, context)
 pkg_private void
 ndet_update_virtual_itimer()
 {
-    struct timeval  ndet_virtual_min();
     struct itimerval current_itimer;
     NDET_ENUM_ITIMER enum_itimer;
     int             n;
@@ -543,7 +551,6 @@ ndet_update_virtual_itimer()
 pkg_private void
 ndet_update_real_itimer()
 {
-    struct timeval  ndet_real_min();
     NDET_ENUM_ITIMER enum_itimer;
     int             n;
 
@@ -775,25 +782,15 @@ ndet_enable_sig(sig)
 
 pkg_private_data int ndet_track_sigs = 0;
 
-#ifdef vax
-pkg_private int			/* Should be static but there might be
-				 * clients of it */
-#else
-pkg_private void		/* Should be static but there might be
-				 * clients of it */
-#endif
-ndet_signal_catcher(sig, code, scp)
-    int             sig;
-    int             code;
-#if !defined(SVR4) && !defined(__linux__)
-    struct sigcontext *scp;
-#else /* SVR4 */
-    ucontext_t *scp;
-#endif /* SVR4 */
+pkg_private void ndet_signal_catcher(sig, info, ucontext)
+    int sig;
+    siginfo_t* info;
+    void* ucontext;
 {
-
+    int result;
+    
 #if defined(SVR4) || defined(__linux__)
-    void        (*old_handler) () = ndet_prev_sigvec[sig].sa_handler;
+    void        (*old_handler)(int, siginfo_t*, void*) = ndet_prev_sigvec[sig].sa_sigaction;
 #else
     void        (*old_handler) () = ndet_prev_sigvec[sig].sv_handler;
 #endif /* SVR4 */
@@ -807,7 +804,7 @@ ndet_signal_catcher(sig, code, scp)
 	sigprocmask(SIG_SETMASK, &oldmask, (sigset_t *) 0);
 #ifdef	NTFY_DEBUG
 	if (ndet_track_sigs)
-	    (void) fprintf(stdout, "SIG caught when CRITICAL %ld\n", sig);
+	    (void) fprintf(stdout, "SIG caught when CRITICAL %d\n", sig);
 #endif				/* NTFY_DEBUG */
 	goto Done;
     }
@@ -820,8 +817,8 @@ ndet_signal_catcher(sig, code, scp)
     }
 
     NTFY_BEGIN_INTERRUPT;
-    ndet_signal_code = code;
-    ndet_signal_context = scp;
+    ndet_signal_code = info->si_code;
+    ndet_signal_context = ucontext;
     sigemptyset( &newmask );
     sigaddset( &newmask, sig );
     ndet_send_async_sigs(&newmask);
@@ -834,18 +831,19 @@ Done:
      * definition but is included as a means of reducing compatibility
      * problems.
      */
-    if (old_handler != SIG_DFL && old_handler != SIG_IGN)
-	old_handler(sig, code, scp);
+    /*fgao if (old_handler != SIG_DFL && old_handler != SIG_IGN)*/
+    if(old_handler != NULL)
+	    old_handler(sig, info, ucontext);
 
     /* This write guarentees that the select will return so the signal can
      * be processed.
      */
     if( pipe_started )
-        write( pipefds[1], "a", 1 );
+        result = write( pipefds[1], "a", 1 );
 
 #ifdef	NTFY_DEBUG
     if (ndet_track_sigs)
-	(void) fprintf(stdout, "SIG caught %ld\n", sig);
+	(void) fprintf(stdout, "SIG caught %d\n", sig);
 #endif				/* NTFY_DEBUG */
     return;
 }

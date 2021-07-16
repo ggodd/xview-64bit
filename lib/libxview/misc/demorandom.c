@@ -5,6 +5,7 @@ static char     sccsid[] = "@(#)demorandom.c 20.15 93/06/28 SMI";	/* from Lucasf
 #endif
 #endif
 
+#include <xview_private/demorandom_.h>
 #include <stdio.h>
 /*
  *	(c) Copyright 1989 Sun Microsystems, Inc. Sun design patents 
@@ -19,6 +20,9 @@ static char     sccsid[] = "@(#)demorandom.c 20.15 93/06/28 SMI";	/* from Lucasf
 #define P	   98
 #define Q	   27
 #define Pm1	 (P-1)
+
+static int demo_random(void);
+
 static int      I = Pm1, J = (Pm1 + Q) % P;
 static unsigned short    Table[P] = {
     0020651, 0147643, 0164707, 0125262, 0104256, 0074760, 0114470, 0052607, 0045551,

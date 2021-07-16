@@ -10,7 +10,9 @@ static char     sccsid[] = "@(#)drawable.c 20.24 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview_private/draw_impl.h>
+#include <xview_private/drawable_.h>
+#include <xview_private/windowutil_.h>
+#include <xview_private/xv_.h>
 #include <xview_private/win_info.h>		/* window_private_gc() */
 #define _NOTIFY_MIN_SYMBOLS
 #include <xview/notify.h>

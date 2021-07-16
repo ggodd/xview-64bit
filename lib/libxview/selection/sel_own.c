@@ -11,54 +11,40 @@ static char     sccsid[] = "@(#)sel_own.c 1.50 93/06/29";
  */
 
 
+#include <xview_private/sel_own_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/sel_util_.h>
+#include <xview_private/xv_.h>
 #include <xview_private/i18n_impl.h>
-#include <xview_private/sel_impl.h>
 #include <xview/window.h>
 #include <X11/Xproto.h>
 #ifdef SVR4 
 #include <stdlib.h> 
 #endif /* SVR4 */
 
-Pkg_private char *xv_sel_atom_to_str(/* display, atom */);
-Pkg_private int xv_sel_add_prop_notify_mask();
-Pkg_private int xv_sel_block_for_event();
-Pkg_private int xv_sel_predicate();
-Pkg_private Sel_atom_list *xv_sel_find_atom_list();
-Pkg_private Sel_prop_list *xv_sel_get_prop_list();
-Xv_private Time xv_sel_get_last_event_time();
-Pkg_private Sel_owner_info  *xv_sel_find_selection_data();
-Pkg_private Sel_owner_info  *xv_sel_set_selection_data();
-
-static int DoConversion();
-static int OwnerHandleReply();
-static int SelLoseOwnership();
-static int sel_set_ownership(/* sel_owner */);
-static int (*OldErrorHandler)();
-static int SelOwnerErrorHandler();
-static int ValidatePropertyEvent();
-
-static void SelClean();
-static void HandleMultipleReply();
-static void ReplyTimestamp();
-static void SendIncrMessage();
-static void SetupPropInfo();
-static void OwnerProcessIncr();
-static void RegisterSelClient();
-
-static int SendIncr(Sel_owner_info  *seln);
-
-#ifdef __STDC__
+static int sel_set_ownership(Sel_owner_info *sel_owner);
+static int SelLoseOwnership(Sel_owner_info *sel_owner);
+static void SetupReplyEvent(XSelectionEvent *replyEvent, XSelectionRequestEvent *reqEvent);
+static void OwnerProcessIncr(Sel_owner_info *sel);
+static int  SelOwnerErrorHandler(Display *dpy, XErrorEvent *error);
+static void SelClean(Sel_owner_info *owner);
+static int OwnerHandleReply(Sel_owner_info *owner, XSelectionEvent *replyEvent);
+static void HandleMultipleReply(Sel_owner_info *seln);
+static int DoConversion(Sel_owner_info *selection, Atom target, Atom property, int multipleIndex);
+static void ReplyTimestamp(Sel_owner_info *owner, Atom *replyType, char **replyBuff, unsigned long *length, int *format);
 static int SendIncr(Sel_owner_info *seln);
-#else
-static int SendIncr();
-#endif
-
+static void SetupPropInfo(Sel_owner_info *sel);
+static void SendIncrMessage(Sel_owner_info *sel);
+static int ValidatePropertyEvent(Display *display, XEvent *xevent, char *args);
+static void RegisterSelClient(Sel_owner_info *owner, int flag);
 
 extern XContext  selCtx;
 extern XContext  propCtx;
 extern XContext  reqCtx;
 extern XContext  targetCtx;
 
+static int (*OldErrorHandler)(Display *dpy, XErrorEvent *error);
 
 /*ARGSUSED*/
 Pkg_private int
@@ -164,12 +150,12 @@ va_list	    valist;
       case SEL_LOSE_PROC:
 	return (Xv_opaque) sel_owner->lose_proc;
       case SEL_NEXT_ITEM:
-        arg = va_arg(valist, int);
+        arg = va_arg(valist, Attr_attribute);
 	ip = SEL_ITEM_PRIVATE((Selection_item)arg);
 	if (ip->next) {
 	    return (Xv_opaque) SEL_ITEM_PUBLIC(ip->next);
 	} else {
-	    return NULL;
+	    return (Xv_opaque)NULL;
 	}
       case SEL_OWN:
 	return (Xv_opaque) sel_owner->own;
@@ -307,7 +293,7 @@ Sel_owner_info *sel_owner;
     owner->time = xv_sel_cvt_timeval_to_xtime( time );
     lastEventTime = xv_sel_get_last_event_time( sel_owner->dpy, sel_owner->xid );
     
-    if ( owner->time == NULL || owner->time < lastEventTime ) { 
+    if ( owner->time == (Time)NULL || owner->time < lastEventTime ) { 
         owner->time = lastEventTime;
 	xv_set( sel_owner_public, 
 	       SEL_TIME, xv_sel_cvt_xtime_to_timeval( owner->time ), 

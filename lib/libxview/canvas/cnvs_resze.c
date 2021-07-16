@@ -10,13 +10,13 @@ static char     sccsid[] = "@(#)cnvs_resze.c 20.19 91/05/09";
  *	file for terms of the license.
  */
 
+#include <xview_private/cnvs_resze_.h>
+#include <xview_private/cnvs_scrol_.h>
 #include <xview_private/cnvs_impl.h>
 #include <xview/scrollbar.h>
 
-Pkg_private void            canvas_resize_paint_window();
-
-static void     canvas_set_paint_window_size();
-static void     canvas_view_maxsize();
+static void canvas_set_paint_window_size(Canvas_info *canvas, int width, int height);
+static void canvas_view_maxsize(Canvas_info *canvas, int *view_width, int *view_height);
 
 /*
  * resize the paint window to account for the new view window size.

@@ -43,7 +43,6 @@
 
 
 extern	char		*getenv();
-extern	unsigned int	FindModifierMask();
 extern	void		ReInitUserMenu();
 
 /*

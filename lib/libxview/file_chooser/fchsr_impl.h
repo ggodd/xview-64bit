@@ -6,6 +6,8 @@
  *	for terms of the license.
  */
 
+#ifndef FCHSR_IMPL_H
+#define FCHSR_IMPL_H
 
 #include <xview/xview.h>
 #include <xview/panel.h>
@@ -123,8 +125,5 @@ typedef struct {
 #define FC_PRIVATE(item) \
     	XV_PRIVATE(Fc_private, File_chooser_public, item)
 
+#endif
 
-
-Pkg_private void	file_chooser_position_objects();
-Pkg_private void	file_chooser_calc_min_size();
-Pkg_private void	file_chooser_calc_default_size();

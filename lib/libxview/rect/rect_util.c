@@ -14,15 +14,9 @@ static char     sccsid[] = "@(#)rect_util.c 20.13 93/06/28 Copyr 1984 Sun Micro"
  * Various rectangle utilities
  */
 
-#include <xview/rect.h>
+#include <xview_private/rect_util_.h>
 
 static int rect_nearest_edge(int minimum, int delta, int val);
-
-#ifdef __STDC__
-static int rect_nearest_edge(int minimum, int delta, int val);
-#else
-static int rect_nearest_edge();
-#endif
 
 /*
  * Compute the distance from rect to (x, y). If (x, y) is in rect, zero is

@@ -14,12 +14,7 @@ static char     sccsid[] = "@(#)term_data.c 1.16 93/06/28";
 /***********************************************************************/
 
 #include <sys/types.h>
-#include <xview_private/term_impl.h>
-
-Pkg_private int termsw_folio_init();
-Pkg_private Xv_opaque termsw_folio_set();
-Pkg_private Xv_opaque termsw_folio_get();
-Pkg_private int termsw_folio_destroy();
+#include <xview_private/termsw_.h>
 
 Xv_pkg          xv_termsw_pkg = {
     "Termsw",
@@ -33,10 +28,6 @@ Xv_pkg          xv_termsw_pkg = {
     NULL			/* no find proc */
 };
 
-Pkg_private int termsw_view_init();
-Pkg_private Xv_opaque termsw_view_set();
-Pkg_private Xv_opaque termsw_view_get();
-Pkg_private int termsw_view_destroy();
 Xv_pkg          xv_termsw_view_pkg = {
     "Termsw_view",
     (Attr_pkg) ATTR_PKG_TERMSW_VIEW,

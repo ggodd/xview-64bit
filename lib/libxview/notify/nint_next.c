@@ -14,7 +14,9 @@ static char     sccsid[] = "@(#)nint_next.c 20.12 93/06/28 Copyr 1985 Sun Micro"
  * Nint_next.c - Implement the nint_next_callout private interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/nint_next_.h>
+#include <xview_private/ntfy_debug_.h>
+#include <xview_private/ntfyprotec_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/nint.h>
 
@@ -40,7 +42,7 @@ nint_next_callout(nclient, type)
 	stack_cond->func_next + 1 > NTFY_FUNCS_MAX ||
 	stack_cond->type != type ||
 /* Alpha compatibility, mbuck@debian.org */
-#if defined(__alpha) || defined(_XV_API_BROKEN_64BIT)
+#if defined(__alpha) || defined(_XV_API_BROKEN_64BIT) || defined(__amd64__)
 	stack_cond->data.an_u_int != (unsigned long) nclient) {
 #else
 	stack_cond->data.an_u_int != (u_int) nclient) {

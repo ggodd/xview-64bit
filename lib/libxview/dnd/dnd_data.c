@@ -10,12 +10,7 @@ static char     sccsid[] = "@(#)dnd_data.c 1.4 93/06/28";
  *      file for terms of the license.
  */
 
-#include <xview_private/dndimpl.h>
-Pkg_private int dnd_init();
-Pkg_private Xv_opaque dnd_set_avlist();
-Pkg_private Xv_opaque dnd_get_attr();
-Pkg_private int dnd_destroy();
-
+#include <xview_private/dnd_pblc_.h>
 
 Xv_pkg		xv_dnd_pkg = {
     "Drag & Drop", ATTR_PKG_DND,

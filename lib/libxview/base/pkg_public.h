@@ -46,6 +46,20 @@ typedef struct {
     Xv_pkg		*pkg;   /* Always points to pkg chain for an object */
 } Xv_base;
 
+#include <xview/macros.h>
+
+#define xv_create(...) \
+    MACRO_DEF2(_xv_create, Xv_opaque, Xv_pkg*, __VA_ARGS__)
+    
+#define xv_find(...) \
+    MACRO_DEF2(_xv_find, Xv_opaque, Xv_pkg*, __VA_ARGS__)
+    
+#define xv_set(...) \
+    MACRO_DEF1(_xv_set, Xv_opaque, __VA_ARGS__)
+    
+#define xv_get(...) \
+    MACRO_DEF2(_xv_get, Xv_opaque, Attr_attribute, __VA_ARGS__)
+
 /*
  ***********************************************************************
  *				Globals
@@ -55,10 +69,10 @@ typedef struct {
 /*
  * PUBLIC General interface functions	
  */
-EXTERN_FUNCTION (Xv_object xv_create, (Xv_opaque owner, Xv_pkg *pkg, DOTDOTDOT));
-EXTERN_FUNCTION (Xv_object xv_find, (Xv_opaque owner, Xv_pkg *pkg, DOTDOTDOT));
-EXTERN_FUNCTION (Xv_opaque xv_set, (Xv_opaque object, DOTDOTDOT));
-EXTERN_FUNCTION (Xv_opaque xv_get, (Xv_opaque object, Attr_attribute attr, DOTDOTDOT));
+EXTERN_FUNCTION (Xv_object _xv_create, (Xv_opaque owner, Xv_pkg *pkg, DOTDOTDOT));
+EXTERN_FUNCTION (Xv_object _xv_find, (Xv_opaque owner, Xv_pkg *pkg, DOTDOTDOT));
+EXTERN_FUNCTION (Xv_opaque _xv_set, (Xv_opaque object, DOTDOTDOT));
+EXTERN_FUNCTION (Xv_opaque _xv_get, (Xv_opaque object, Attr_attribute attr, DOTDOTDOT));
 EXTERN_FUNCTION (int xv_destroy_safe, (Xv_object object));
 EXTERN_FUNCTION (int xv_destroy_check, (Xv_object object));
 EXTERN_FUNCTION (int xv_destroy, (Xv_object object));

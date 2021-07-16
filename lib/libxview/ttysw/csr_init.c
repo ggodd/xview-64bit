@@ -14,13 +14,16 @@ static char     sccsid[] = "@(#)csr_init.c 20.31 93/06/28";
  * Character screen initialization and cleanup routines.
  */
 
+#include <xview_private/csr_init_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/win_compat_.h>
+#include <xview_private/win_geom_.h>
 #include <xview_private/i18n_impl.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #include <sys/time.h>
 #include <signal.h>
 #include <pixrect/pixrect.h>
-#include <pixrect/pixfont.h>
 #include <xview/pkg.h>
 #include <xview/attrol.h>
 #include <xview/rect.h>

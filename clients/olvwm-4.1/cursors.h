@@ -5,7 +5,6 @@
 #ident "@(#)cursors.h	1.2 olvwm version 25 Nov 1992"
 #endif
 
-extern void InitCursors( /* Display *,  ScreenInfo * */ );
-extern void updateCursors( /* Display *, char * */ );
+void InitCursors(Display *dpy, ScreenInfo *scrInfo);
 
 #endif

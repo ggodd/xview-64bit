@@ -10,23 +10,30 @@ static char     sccsid[] = "@(#)cnvs_view.c 20.56 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview_private/cnvs_impl.h>
+#define xview_other_rl_funcs
+#include <xview_private/cnvs_view_.h>
+#include <xview_private/cnvs_input_.h>
+#include <xview_private/cnvs_scrol_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/win_damage_.h>
 #include <xview_private/win_keymap.h>
 #include <xview/scrollbar.h>
 #include <xview/rect.h>
 #include <xview/rectlist.h>
 
 #ifdef  OW_I18N
+#include <xview_private/cnvs_cb_.h>
 #include <xview_private/draw_impl.h>
 #include <xview/font.h>
-
-Pkg_private Notify_value	canvas_pew_event_proc();
-
 extern wchar_t	_xv_null_string_wc[];
-
 #endif /*OW_I18N*/
 
-static          canvas_view_create_paint_window();
+#ifdef OW_I18N
+static int canvas_view_create_paint_window(Canvas_view_info *view, Attr_avlist avlist);
+#else
+static int canvas_view_create_paint_window(Canvas_view_info *view);
+#endif /*OW_I18N*/
 
 /* ARGSUSED */
 Pkg_private int
@@ -150,8 +157,8 @@ canvas_paint_set(paint_public, avlist)
     Canvas_info    	*canvas;
 #endif /*OW_I18N*/
 
-    for (attr = (int)avlist[0]; attr;
-         avlist = attr_next(avlist), attr = (int)avlist[0]) {
+    for (attr = avlist[0]; attr;
+         avlist = attr_next(avlist), attr = avlist[0]) {
         switch (attr) {
 	    case WIN_CMS_CHANGE: 
 #ifndef OW_I18N
@@ -391,7 +398,7 @@ canvas_view_create_paint_window(view)
 #ifdef OW_I18N
     use_im = (Bool) xv_get(canvas_public, WIN_USE_IM);
 
-    for (attrs = avlist; (int)*attrs; attrs = attr_next(attrs)) {
+    for (attrs = avlist; *attrs; attrs = attr_next(attrs)) {
         switch ((int)attrs[0]) {
 
 	    case WIN_USE_IM:
@@ -438,7 +445,7 @@ canvas_view_create_paint_window(view)
 	canvas->paint_avlist = canvas->paint_end_avlist = NULL;
     }
 
-    if (view->paint_window == NULL) {
+    if (view->paint_window == (Xv_Window)NULL) {
 	return ((int) XV_ERROR);
     }
 

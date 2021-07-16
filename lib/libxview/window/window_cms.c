@@ -10,6 +10,9 @@ static char     sccsid[] = "@(#)window_cms.c 20.57 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/window_cms_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/xv_.h>
 #include <xview_private/i18n_impl.h>
 #include <xview/base.h>
 #include <xview/frame.h>
@@ -21,8 +24,6 @@ static char     sccsid[] = "@(#)window_cms.c 20.57 93/06/28";
 
 
 Attr_attribute  xv_cms_name_key = (Attr_attribute)NULL;
-void            window_set_cms();
-void		window_set_cmap_property();
 
 Xv_private void
 window_set_cms_name(win_public, new_name)

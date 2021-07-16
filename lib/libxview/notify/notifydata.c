@@ -15,6 +15,7 @@ static char     sccsid[] = "@(#)notifydata.c 20.12 93/06/28";
  * from ndet_itimer.c
  */
 
+#include <xview/pkg.h>
 #include <xview_private/ntfy.h>
 
 struct itimerval NOTIFY_NO_ITIMER = {{0, 0}, {0, 0}};

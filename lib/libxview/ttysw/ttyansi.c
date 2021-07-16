@@ -10,6 +10,15 @@ static char     sccsid[] = "@(#)ttyansi.c 20.43 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/ttyansi_.h>
+#include <xview_private/cim_change_.h>
+#include <xview_private/csr_change_.h>
+#include <xview_private/term_ntfy_.h>
+#include <xview_private/termsw_.h>
+#include <xview_private/tty_main_.h>
+#include <xview_private/txt_dbx_.h>
+#include <xview_private/txt_event_.h>
+#include <xview_private/txt_sel_.h>
 #ifdef OW_I18N
 #include <xview/xv_i18n.h>
 #endif
@@ -22,7 +31,6 @@ static char     sccsid[] = "@(#)ttyansi.c 20.43 93/06/28";
 #include <xview/ttysw.h>
 #include <xview/termsw.h>
 #include <xview/textsw.h>
-#include <xview_private/tty_impl.h>
 #include <xview_private/txt_impl.h>	/* BUG ALERT: Modularity violation */
 #include <xview_private/term_impl.h>
 #include <xview_private/ev.h>
@@ -32,18 +40,17 @@ static char     sccsid[] = "@(#)ttyansi.c 20.43 93/06/28";
 
 #include <xview/sel_attrs.h>
 
-#ifdef __STDC__
-static int send_input_to_textsw(Textsw textsw, CHAR *buf, long buf_len, Textsw_index end_transcript);
-static int ansi_lf(Ttysw_view_handle ttysw_view, CHAR *addr, int len);
-static int ansi_char(Ttysw_view_handle ttysw_view, CHAR *addr, int olen);
-#else
-static int send_input_to_textsw();
-static int ansi_lf();
-static int ansi_char();
-#endif
-
-char           *textsw_checkpoint_undo();
-Textsw_index    textsw_replace_i18n(), textsw_erase_i18n();
+static CHAR *from_pty_to_textsw(register Textsw textsw, register CHAR *cp, register CHAR *buf);
+static int local_replace_bytes(Textsw textsw, Textsw_index pty_insert, Textsw_index last_plus_one, register CHAR *buf, register long buf_len);
+static int send_input_to_textsw(Textsw textsw, register CHAR *buf, register long buf_len, Textsw_index end_transcript);
+static int erase_chars(Textsw textsw, Textsw_index pty_insert, Textsw_index end_span);
+static int replace_chars(Textsw textsw, Textsw_index start_span, Textsw_index end_span, CHAR *buf, long int buflen);
+static void adjust_insertion_point(Textsw textsw, int pty_index, int new_pty_index);
+static int do_backspace(Textsw textsw, CHAR *addr);
+static int get_end_of_line(Textsw textsw);
+static int do_linefeed(Textsw textsw);
+static int ansi_lf(Ttysw_view_handle ttysw_view, CHAR *addr, register int len);
+static int ansi_char(Ttysw_view_handle ttysw_view, register CHAR *addr, int olen);
 
 /*
  * jcb	-- remove continual cursor repaint in shelltool windows also known to
@@ -91,10 +98,6 @@ int             ttysw_right;	/* right column of window */
 int scroll_bottom = 0; /* to implement scroll region change */
 int pre_edit_rows_scrolled; /* updated in ansi_lf, used in ttysw callbacks */
 #endif
-
-static int send_input_to_textsw(Textsw textsw, CHAR *buf, long buf_len, Textsw_index end_transcript);
-static int ansi_lf(Ttysw_view_handle ttysw_view, CHAR *addr, int len);
-static int ansi_char(Ttysw_view_handle ttysw_view, CHAR *addr, int olen);
 
 /*
  * Interpret a string of characters of length <len>.  Stash and restore the
@@ -483,7 +486,6 @@ do_backspace(textsw, addr)
 {
     Textsw_index    pty_index;
     Textsw_index    pty_end;
-    Textsw_index    textsw_start_of_display_line();
     int             increment = 0;
     Textsw_index    expanded_size = 1;
 #define BUFSIZE 10
@@ -547,14 +549,14 @@ do_backspace(textsw, addr)
 #undef BUFSIZE
 }
 
-static
+static int
 get_end_of_line(textsw)
     Textsw          textsw;
 {
     int             pty_index;
     int             pty_end;
-    int             pattern_start;
-    int             pattern_end;
+    long             pattern_start;
+    long             pattern_end;
     CHAR            newline = (CHAR)'\n';
     Termsw_folio    termsw = TERMSW_FOLIO_FOR_VIEW(TERMSW_VIEW_PRIVATE_FROM_TEXTSW(textsw));
 
@@ -564,8 +566,8 @@ get_end_of_line(textsw)
     pty_index = textsw_find_mark_i18n(textsw, termsw->pty_mark);
     pattern_start = pty_index;
     if (pty_index == pty_end - termsw->pty_owes_newline
-        || textsw_find_i18n(textsw, (long *) (&pattern_start),
-			     (long *) (&pattern_end), &newline, 1, 0) == -1
+        || textsw_find_i18n(textsw, &pattern_start,
+			     &pattern_end, &newline, 1, 0) == -1
 	|| pattern_start >= pty_end - (int) termsw->pty_owes_newline
 	|| pattern_start < pty_index) {
 	pattern_start = pty_end - (int) termsw->pty_owes_newline;
@@ -585,7 +587,6 @@ do_linefeed(textsw)
     int             pty_index;
     int             pty_end;
     Textsw_index    line_start;
-    Textsw_index    textsw_start_of_display_line();
     CHAR            newline = (CHAR)'\n';
 #define BUFSIZE 2048
     CHAR            buf[2048];
@@ -803,7 +804,7 @@ ttysw_output_it(ttysw_view, addr, len0)
 		}
 		if (handle_escape_status) {
 		    handle_escape_status = 0;
-		    (void) ttysw_setopt((Xv_opaque) ttysw_view, TTYOPT_TEXT, 0);
+		    (void) ttysw_setopt((Ttysw_folio) ttysw_view, TTYOPT_TEXT, 0);
 		    return (0);
 		}
 		ac = 0;
@@ -856,7 +857,7 @@ ttysw_output_it(ttysw_view, addr, len0)
 		  case DEL:	/* ignored */
 		    break;
 		  case '\f':{	/* formfeed */
-			Textsw          view, textsw_first(), textsw_next();
+			Textsw          view;
 			int             pty_mark_shows;
 			int             pty_index =
 			textsw_find_mark_i18n(textsw, termsw->pty_mark);
@@ -956,7 +957,7 @@ ttysw_output_it(ttysw_view, addr, len0)
 			    addr += increment;
 			    len += increment;
 			} else if (increment < 0) {
-			    (void) ttysw_setopt((Xv_opaque) ttysw_view, TTYOPT_TEXT, 0);
+			    (void) ttysw_setopt((Ttysw_folio) ttysw_view, TTYOPT_TEXT, 0);
 			    return (0);
 			}
 			break;
@@ -964,7 +965,6 @@ ttysw_output_it(ttysw_view, addr, len0)
 		  case '\r':{
 			int             pty_index;
 			Textsw_index    line_start;
-			Textsw_index    textsw_start_of_display_line();
 
 			switch (*(addr + 1)) {
 			  case '\r':
@@ -1364,7 +1364,6 @@ ttysw_ansi_escape(ttysw_view_public, c, ac, av)
 		  case 6:
 		  case 8:
 		  case 9:{
-			int             ttysw_getboldstyle();
 			int             boldstyle = ttysw_getboldstyle();
 
 			if (boldstyle & TTYSW_BOLD_NONE)
@@ -1455,7 +1454,7 @@ ttysw_ansi_escape(ttysw_view_public, c, ac, av)
 			    reset_as_termsw = FALSE;
 			} else
 			    turn_on = TRUE;
-			(void) ttysw_setopt(ttysw_view,
+			(void) ttysw_setopt((Ttysw_folio)ttysw_view,
 					    av[i] & 0x00ffffff, turn_on);
 		    }
 		}
@@ -1491,7 +1490,7 @@ ttysw_ansi_escape(ttysw_view_public, c, ac, av)
 			termsw->ok_to_enable_scroll = FALSE;
 			break;	/* It is already a ttysw */
 		    }
-		    (void) ttysw_setopt(ttysw_view,
+		    (void) ttysw_setopt((Ttysw_folio)ttysw_view,
 					av[i] & 0x00ffffff, 0);
 
 		    if (termsw && (av[i] & 0x00ffffff) == TTYOPT_TEXT) {

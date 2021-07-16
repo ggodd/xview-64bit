@@ -15,19 +15,16 @@ static char     sccsid[] = "@(#)txt_dbx.c 20.26 93/06/28";
  * These routines are only supported for dbxtool use.
  */
 
-#include <xview/pkg.h>
+#include <xview_private/txt_dbx_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/ev_once_.h>
+#include <xview_private/ev_op_bdry_.h>
+#include <xview_private/txt_event_.h>
 #include <xview/attrol.h>
 #include <xview/font.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <pixrect/pixfont.h>
-
-Pkg_private Ev_mark_object ev_add_glyph();
-Pkg_private Ev_mark_object ev_add_glyph_on_line();
-Pkg_private void     ev_line_info();
-Pkg_private void ev_remove_glyph();
-Pkg_private Es_index ev_position_for_physical_line();
 
 Xv_public          Textsw
 textsw_first(any)
@@ -227,6 +224,7 @@ textsw_add_glyph(abstract, pos, pr, op, offset_x, offset_y, flags)
     Pixrect        *pr;
     int             op;
     int             offset_x, offset_y;
+    int flags;
 {
     Textsw_view_handle view = VIEW_ABS_TO_REP(abstract);
     Textsw_folio    folio = FOLIO_FOR_VIEW(view);
@@ -244,7 +242,7 @@ textsw_add_glyph(abstract, pos, pr, op, offset_x, offset_y, flags)
 
     /* Assume that TEXTSW_ flags == EV_ flags */
     mark = ev_add_glyph(folio->views, line_start, pos, pr, op,
-			offset_x, offset_y);
+			offset_x, offset_y, 0);
     return ((Textsw_mark) mark);
 }
 
@@ -306,7 +304,6 @@ textsw_start_of_display_line(abstract, pos)
     Textsw_index    pos;
 {
     register Textsw_view_handle view = VIEW_ABS_TO_REP(abstract);
-    Pkg_private Es_index ev_display_line_start();
 
     return ((Textsw_index) ev_display_line_start(view->e_view, pos));
 }

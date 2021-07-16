@@ -12,55 +12,52 @@ static char     sccsid[] = "@(#)file_chsr.c 1.60 93/06/28";
  */
 
 
+#include <xview_private/file_chsr_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/fc_layout_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/path_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_util_.h>
+#include <xview_private/getlogindr_.h>
+#include <xview_private/xv_casecmp_.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <xview/xview.h>
-#include <xview/defaults.h>
 #include <xview/panel.h>
 #include <xview/file_list.h>
 #include <xview/hist.h>
 #include <xview/path.h>
-#include <xview_private/fchsr_impl.h>
 #include <xview_private/i18n_impl.h>
 
+static void fc_end_create(Fc_private *private);
+static Notify_value fc_event_interposer(Notify_client client, Notify_event event, Notify_arg arg, Notify_event_type type);
+static void fc_goto_event_proc(Path_name path_name, Event *event);
+static History_list fc_default_history(Fc_private *private, Xv_server server);
+static void fc_create_ui(Fc_private *private);
+static void fc_open_notify(Panel_button_item item, Event *event);
+static void fc_save_notify(Panel_button_item item, Event *event);
+static void fc_cancel_notify(Panel_button_item item, Event *event);
+static int fc_cd_func(File_list list, char *path, struct stat *sbuf, File_list_op op);
+static void fc_goto_btn_event(Panel_button_item item, Event *event);
+static void fc_hist_notify(History_menu hm, char *label, char *value);
+static Panel_setting fc_goto_notify(Path_name item, Event *event, struct stat *sbuf);
+static int fc_list_notify(File_list item, char *dir, char *file, Xv_opaque client_data, Panel_list_op op, Event *event, int row);
+static void fc_update_dimming(Fc_private *private, int row);
+static void fc_item_inactive(Panel_item item, int state);
+static void fc_document_txt_event(Panel_text_item item, Event * event);
+static int fc_do_open(Fc_private *private, int row, char *dir, char *file, Xv_opaque client_data);
+static int fc_do_save(Fc_private *private, char *dir, char *file);
+static int fc_confirm_overwrite(Fc_private *private, char *path, char *file, struct stat *sbuf);
+static File_list_op fc_filter_func(char *path, File_list_row *row);
+static int fc_compare_func(File_list_row *row1, File_list_row *row2);
 
 /* private data key for internal objects */
 static Attr_attribute	FC_KEY = 0;
 
-
 /* default PANEL_EVENT_PROC for goto field. */
 static void		(* default_goto_event_handler)();
-
-
-static void		fc_end_create();
-static void		fc_create_ui();
-static Notify_value	fc_event_interposer();
-static void		fc_goto_event_proc();
-static void		fc_open_notify();
-static void		fc_save_notify();
-static void		fc_cancel_notify();
-static int		fc_cd_func();
-static void		fc_hist_notify();
-static Panel_setting	fc_goto_notify();
-static int		fc_list_notify();
-static int		fc_do_open();
-static int		fc_do_save();
-static File_list_op	fc_filter_func();
-static int		fc_compare_func();
-static History_list	fc_default_history();
-static void		fc_update_dimming();
-static void		fc_goto_btn_event();
-static void		fc_document_txt_event();
-static void		fc_item_inactive();
-static int		fc_confirm_overwrite();
-
-
-/* not really public, not really private, but useful none the less... */
-extern char *		xv_getlogindir();
-
-
-/*----------------------------------------------------------------------------*/
-
 
 /*
  * xv_create() method
@@ -106,7 +103,7 @@ file_chooser_init( owner, public, avlist)
      * Parse Create-Only Attributes
      */
     for (attrs=avlist; *attrs; attrs=attr_next(attrs)) {
-	switch ( (int) attrs[0] ) {
+	switch ( attrs[0] ) {
 	case FILE_CHOOSER_TYPE:
 	    ATTR_CONSUME(attrs[0]);
 	    private->type = (File_chooser_type) attrs[1];
@@ -166,7 +163,7 @@ file_chooser_set( public, avlist )
 
 
     for (attrs=avlist; *attrs; attrs=attr_next(attrs)) {
-	switch ( (int) attrs[0] ) {
+	switch ( attrs[0] ) {
 	case FILE_CHOOSER_UPDATE:
 	    ATTR_CONSUME(attrs[0]);
 	    if ( private->ui.list )
@@ -512,7 +509,7 @@ file_chooser_set( public, avlist )
 	     */
 
 	    /* Remove the extra space used by extension area */
-	    if ( ((int) attrs[1] == 0) && (private->exten_height != 0) ) {
+	    if ( (attrs[1] == 0) && (private->exten_height != 0) ) {
 		(void)xv_get(public, FRAME_MIN_SIZE, &width, &height);
 		xv_set(public, FRAME_MIN_SIZE, width, height - white_space, NULL);
 
@@ -520,7 +517,7 @@ file_chooser_set( public, avlist )
 		xv_set(public, XV_HEIGHT, height - white_space, NULL);
 	    } 
 	    	/* Add space needed for extension area */
-	    else  if ( ((int) attrs[1] > 0) && (private->exten_height == 0) ) {
+	    else  if ( (attrs[1] > 0) && (private->exten_height == 0) ) {
 		(void)xv_get(public, FRAME_MIN_SIZE, &width, &height);
 		xv_set(public, FRAME_MIN_SIZE, width, height + white_space, NULL);
 
@@ -743,7 +740,7 @@ file_chooser_get ( public, status, attr, args )
 {
     Fc_private *private = FC_PRIVATE(public);
 
-    switch ( (int) attr ) {
+    switch ( attr ) {
     case FILE_CHOOSER_DIRECTORY:
 	return xv_get(private->ui.list, FILE_LIST_DIRECTORY);
 
@@ -756,7 +753,7 @@ file_chooser_get ( public, status, attr, args )
 	return (Xv_opaque) private->type;
 
     case FILE_CHOOSER_CHILD: {
-	File_chooser_child child = va_arg(args, int);
+	File_chooser_child child = va_arg(args, Attr_attribute);
 
 	switch( child ) {
 	case FILE_CHOOSER_GOTO_MESSAGE_CHILD:
@@ -1058,7 +1055,6 @@ fc_goto_event_proc( path_name, event )
      Event *event;
 {
     Fc_private *private = (Fc_private *)xv_get(path_name, XV_KEY_DATA, (Attr_attribute)FC_KEY);
-    Pkg_private Panel_setting xv_path_name_notify_proc();
 
     if (event_action(event) == ACTION_DEFAULT_ACTION
 	&& event_meta_is_down(event)
@@ -1096,7 +1092,6 @@ fc_default_history( private, server )
      Xv_server server;
 {
 #define USER_DIR_DELIMITER	"\n"
-    extern char *	xv_strtok();
     History_list 	hl;
 
     hl = xv_find( server, HISTORY_LIST,
@@ -1784,7 +1779,7 @@ fc_update_dimming( private, row )
 
     if ( (private->type == FILE_CHOOSER_OPEN) 
 	&& ( (private->custom == FILE_CHOOSER_SELECT_ALL)
-	    || (private->custom == NULL)
+	    || (private->custom == (File_chooser_op)NULL)
 	    )
 	)
 	return;

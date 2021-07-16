@@ -11,15 +11,16 @@ static char     sccsid[] = "@(#)p_paint.c 20.26 89/11/30 Copyr 1984 Sun Micro";
  */
 
 #define xview_other_rl_funcs
-#include <xview_private/panel_impl.h>
+#include <xview_private/p_paint_.h>
+#include <xview_private/p_utl_.h>
+#include <xview_private/scrn_get_.h>
+#include <xview_private/win_damage_.h>
 #include <xview_private/draw_impl.h>
 #include <xview/rectlist.h>
 #include <xview/win.h>
 
-static void     panel_repaint_background();
-static void	panel_paint_item();
-Pkg_private void panel_redisplay_item();
-Xv_private void screen_adjust_gc_color();
+static void panel_repaint_background(register Panel_info *panel, Xv_Window pw, Rect *rect);
+static void panel_paint_item(register Item_info *ip);
 
 Pkg_private void
 panel_redisplay(panel_public, pw, repaint_area)
@@ -236,7 +237,6 @@ panel_repaint_background(panel, pw, rect)
 {
     Rectlist        rl, *current_rl;
     Rect            clip_rect;
-    extern Rectlist *win_get_damage();
 
     if (!rect_isnull(rect) && panel->repaint_proc != NULL) {
 

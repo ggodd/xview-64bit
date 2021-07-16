@@ -10,7 +10,7 @@ static char     sccsid[] = "@(#)fmcmd_dsty.c 1.19 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview_private/fm_impl.h>
+#include <xview_private/fmcmd_dsty_.h>
 #include <xview_private/frame_cmd.h>
 
 /* Destroy the frame struct */

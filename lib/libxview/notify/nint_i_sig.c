@@ -14,7 +14,10 @@ static char     sccsid[] = "@(#)nint_i_sig.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * Nint_i_sig.c - Implement the notify_interpose_signal_func interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/nint_i_sig_.h>
+#include <xview_private/ndet_sig_.h>
+#include <xview_private/nint_inter_.h>
+#include <xview_private/nint_stack_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/nint.h>
 
@@ -34,6 +37,6 @@ notify_interpose_signal_func(nclient, func, signal, mode)
     if (ndet_check_mode(mode, &type) || ndet_check_sig(signal) ||
 	(nint_alloc_stack() != NOTIFY_OK))
 	return (notify_errno);
-    return (nint_interpose_func(nclient, func, type, (NTFY_DATA) signal,
+    return (nint_interpose_func(nclient, func, type, (NTFY_DATA)(long)signal,
 				NTFY_USE_DATA));
 }

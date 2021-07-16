@@ -29,6 +29,7 @@
 #include <X11/Xresource.h>
 #include <X11/keysym.h>
 #include <X11/cursorfont.h>
+#include <X11/Intrinsic.h>
 
 #include "i18n.h"
 #include <olgx/olgx.h>
@@ -45,117 +46,102 @@
 #include "menu.h"
 #include "virtual.h"
 #include "error.h"
+#include "winframe.h"
+#include "evbind.h"
+#include "usermenu.h"
+#include "slots.h"
 
 /* static data */
 
 static Bool     updateWorkspaceBackground;
 static Bool     forceKeyRegrab;
 
-       void	ReInitAllUserMenus();
-
-/* converters */
-
-static Bool cvtWorkspaceStyle();
-static Bool cvtBeepStatus();
-static Bool cvtBoolean();
-static Bool cvtClickTimeout();
-static Bool cvtCursorFont();
-static Bool cvtFocusStyle();
-static Bool cvtFont();
+static Bool matchWorkspaceStyle(char *value, WorkspaceStyle *ret);
+static Bool matchFocusKeyword(char *value, Bool *ret);
+static Bool matchBeepKeyword(char *value, BeepStatus *ret);
+static Bool matchIconPlace(char *value, IconPreference *ret);
+static Bool matchMouselessKeyword(char *str, MouselessMode *ret);
+static Bool parseKeySpec(Display *dpy, char *str, unsigned int *modmask, KeyCode *keycode);
+static Bool cvtBoolean(Display *dpy, ResourceItem *item, char *string, void *addr);
 #ifdef OW_I18N_L4
-static Bool cvtFontSet();
+static Bool cvtFontSet(Display *dpy, ResourceItem *item, char *string, void *addr);
 #endif
-static Bool cvtIconLocation();
-static Bool cvtInteger();
-static Bool cvtKey();
-static Bool cvtMouseless();
-static Bool cvtString();
+static Bool cvtFont(Display *dpy, ResourceItem *item, char *string, void *addr);
+static Bool cvtCursorFont(Display *dpy, ResourceItem *item, char *string, void *addr);
 #ifdef OW_I18N_L4
-static Bool cvtWString();
+static Bool cvtWString(Display *dpy, ResourceItem *item, char *string, void *addr);
 #endif
-static Bool cvtStringList();
-static Bool cvtGridEnum();
-static Bool cvtImageType();
-static Bool cvtSortType();
-static Bool cvtNoop();
-
-/* internationalization stuff */
-
+static Bool cvtString(Display *dpy, ResourceItem *item, char *string, void *addr);
+#ifdef NOT
+static Bool cvtFloat(Display *dpy, ResourceItem *item, char *string, void *addr);
+#endif
+static Bool cvtInteger(Display *dpy, ResourceItem *item, char *string, void *addr);
+static Bool cvtWorkspaceStyle(Display *dpy, ResourceItem *item, char *string, void *addr);
+static Bool cvtClickTimeout(Display *dpy, ResourceItem *item, char *string, void *addr);
+static Bool cvtFocusStyle(Display *dpy, ResourceItem *item, char *string, void *addr);
+static Bool cvtBeepStatus(Display *dpy, ResourceItem *item, char *string, void *addr);
+static Bool cvtMouseless(Display *dpy, ResourceItem *item, char *string, void *addr);
+static Bool cvtIconLocation(Display *dpy, ResourceItem *item, char *string, void *addr);
+static Bool cvtKey(Display *dpy, ResourceItem *item, char *string, void *addr);
+static void buildStringList(char *str, List **pplist);
+static void *freeStringList(char *str, void *junk);
+static Bool cvtStringList(Display *dpy, ResourceItem *item, char *string, void *addr);
 #ifdef OW_I18N_L3
-
-static void GRVLCInit();
-static Bool cvtOLLC();
-static void setOLLCPosix();
-
-#endif /* OW_I18N_L3 */
-
-
-/* updaters */
-
-static void updButtonFont();
-static void updCursors();
-       void UpdFocusStyle();			/* yes, this one's global */
-static void updGlyphFont();
-static void updIconFont();
-static void updIconLocation();
-static void updMenuAccelerators();
-static void updMouseless();
-static void updString();
-static void updStringList();
-static void updSync();
-static void updTextFont();
-static void updTitleFont();
-static void updWindow();
-static void updWindowCacheSize();
-static void updWorkspaceStyle();
-static void updWorkspace();
-
-static void updForeground();
-static void updBackground();
-static void updBorder();
-static void updVirtualDesktop();
-static void updVirtualGeometry();
-static void updVirtualFont();
-static void updVirtualMap();
-static void updVirtualMapColor();
-static void updVirtualBgColor();
-static void updVirtualFgColor();
-static void updVirtualIconGeometry();
-static void updVirtualFontColor();
-static void updVirtualScale();
-static void updVirtualGridColor();
-static void updInputFocusColor();
-static void updVirtualDrawSticky();
-static void updIconSlots();
-
-extern void SetScreenVirtualForegroundColor();
-extern void SetScreenVirtualBackgroundColor();
-extern void SetScreenVirtualFontColor();
-extern void SetScreenVirtualGridColor();
-extern void SetScreenInputFocusColor();
-extern void UpdateScreenVirtualFont();
-extern void UpdateScreenVirtualMap();
-extern void UpdateScreenVirtualGeometry();
-extern void UpdateScreenVirtualDesktop();
-extern void UpdateScreenVirtualIconGeometry();
-extern void UpdateScreenVirtualScale();
-extern void UpdateScreenVirtualDrawSticky();
-extern void SetScreenVirtualPixmapColor();
-extern void SetScreenInputFocusColor();
-
-/* resource table */
-
-typedef struct _resourceitem {
-    char *instance;
-    char *class;
-    char *defaultString;
-    void *addr;
-    Bool (*converter)();
-    void (*updater)();
-    unsigned long flags;
-    XrmQuark instanceQ;
-    XrmQuark classQ;
-} ResourceItem;
+static Bool cvtOLLC(Display *dpy, ResourceItem *item, char *string, void *addr);
+#endif
+static void updString(Display *dpy, ResourceItem *item, char **cur, char **new);
+static void updStringList(Display *dpy, ResourceItem *item, List **cur, List **new);
+static void updWorkspaceStyle(Display *dpy, ResourceItem *item, WorkspaceStyle *cur, WorkspaceStyle *new);
+static void updWorkspace(Display *dpy, ResourceItem *item, char **cur, char **new);
+static void updWindow(Display *dpy, ResourceItem *item, char **cur, char **new);
+static void updForeground(Display *dpy, ResourceItem *item, char **cur, char **new);
+static void updBackground(Display *dpy, ResourceItem *item, char **cur, char **new);
+static void updBorder(Display *dpy, ResourceItem *item, char **cur, char **new);
+static void updSync(Display *dpy, ResourceItem *item, Bool *cur, Bool *new);
+#ifdef OW_I18N_L4
+static void updTitleFont(Display *dpy, ResourceItem *item, XFontSetInfo *cur, XFontSetInfo *new);
+static void updTextFont(Display *dpy, ResourceItem *item, XFontSetInfo *cur, XFontSetInfo *new);
+static void updButtonFont(Display *dpy, ResourceItem *item, XFontSetInfo *cur, XFontSetInfo *new);
+static void updIconFont(Display *dpy, ResourceItem *item, XFontSetInfo *cur, XFontSetInfo *new);
+#else
+static void updTitleFont(Display *dpy, ResourceItem *item, XFontStruct **cur, XFontStruct **new);
+static void updTextFont(Display *dpy, ResourceItem *item, XFontStruct **cur, XFontStruct **new);
+static void updButtonFont(Display *dpy, ResourceItem *item, XFontStruct **cur, XFontStruct **new);
+static void updIconFont(Display *dpy, ResourceItem *item, XFontStruct **cur, XFontStruct **new);
+#endif
+static void updGlyphFont(Display *dpy, ResourceItem *item, XFontStruct **cur, XFontStruct **new);
+static void updIconLocation(Display *dpy, ResourceItem *item, IconPreference *cur, IconPreference *new);
+static void updMouseless(Display *dpy, ResourceItem *item, MouselessMode *cur, MouselessMode *new);
+static void updMenuAccelerators(Display *dpy, ResourceItem *item, Bool *cur, Bool *new);
+static void updWindowCacheSize(Display *dpy, ResourceItem *item, int *cur, int *new);
+static void *unconfigureFocus(Client *cli);
+static void *reconfigureFocus(Client *cli);
+#ifdef OW_I18N_L3
+static void setOLLCPosix(void);
+static void GRVLCInit(void);
+#endif 
+static void setVirtualScreenAttribute(Display *dpy, FuncPtr f); 
+static void updVirtualFgColor(Display *dpy, ResourceItem *item, char **cur, char **new);
+static void updVirtualBgColor(Display *dpy, ResourceItem *item, char **cur, char **new);
+static void updVirtualFontColor(Display *dpy, ResourceItem *item, char **cur, char **new);
+static void updVirtualGridColor(Display *dpy, ResourceItem *item, char **cur, char **new);
+static void updInputFocusColor(Display *dpy, ResourceItem *item, char **cur, char **new);
+static void updVirtualFont(Display *dpy, ResourceItem *item, char **cur, char **new);
+static void updVirtualGeometry(Display *dpy, ResourceItem *item, char **cur, char **new);
+static void updVirtualMap(Display *dpy, ResourceItem *item, char **cur, char **new);
+static void updVirtualMapColor(Display *dpy, ResourceItem *item, char **cur, char **new);
+static void updVirtualDesktop(Display *dpy, ResourceItem *item, char **cur, char **new);
+static void updVirtualIconGeometry(Display *dpy, ResourceItem *item, char **cur, char **new);
+static void updVirtualScale(Display *dpy, ResourceItem *item, char **cur, char **new);
+static void updVirtualDrawSticky(Display *dpy, ResourceItem *item, char **cur, char **new);
+static Bool cvtGridEnum(Display *dpy, ResourceItem *item, char *value, VirtualGridType *ret);
+static Bool cvtSortType(Display *dpy, ResourceItem *item, char *value, SortType *ret);
+static Bool cvtImageType(Display *dpy, ResourceItem *item, char *value, ImageType *ret);
+#ifdef NOT
+static Bool cvtNoop(Display *dpy, ResourceItem *item, char *value, void *ret);
+#endif
+static void updCursors(Display *dpy, ResourceItem *item, char **cur, char **new);
+static void updIconSlots(Display *dpy, ResourceItem *item, char **cur, char **new);
 
 /* values for flags field */
  
@@ -1106,8 +1092,6 @@ cvtFontSet(dpy, item, string, addr)
     XFontSetInfo    *dest = addr;
     XFontSet        info;
     char            *locale;
-    XFontSet        loadQueryFontSet();
-    XFontSetExtents     *XExtentsOfFontSet();
 
     /* XXX - is this right? the locale may not have been set up properly */
     locale = setlocale(LC_CTYPE, NULL);
@@ -1581,7 +1565,7 @@ cvtOLLC(dpy, item, string, addr)
 #endif	/* OW_I18N_L3 */
 
 #if defined (DEBUG) && defined (OW_I18N_L3)
-dump_locale()
+void dump_locale()
 {
     fprintf(stderr, "  -> %5.5s %5.5s %5.5s %5.5s %5.5s\n",
 	    "basic", "dlang", "ilang", "numeric", "date");
@@ -1591,6 +1575,7 @@ dump_locale()
 	    GRV.lc_ilang.locale ? GRV.lc_ilang.locale : "(null)",
 	    GRV.lc_numeric.locale ? GRV.lc_numeric.locale : "(null)",
 	    GRV.lc_datefmt.locale ? GRV.lc_datefmt.locale : "(null)");
+}
 #endif
 
 

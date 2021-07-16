@@ -22,7 +22,7 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=	attr.h
-HDRSPRIVATE=	attr_impl.h
+HDRSPRIVATE= attr_impl.h attr_copy_.h  attr_cu_.h  attr_cust_.h	attr_.h  attr_util_.h
 
 DATA_OJS =
 

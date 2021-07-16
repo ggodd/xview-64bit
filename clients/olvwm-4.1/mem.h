@@ -14,17 +14,7 @@
 #ifndef _OLWM_MEM_H
 #define _OLWM_MEM_H
 
-extern void *MemAlloc();	/* malloc frontend */
-extern void *MemAllocN();	/* malloc frontend */
-extern void *MemCalloc();	/* calloc frontend */
-extern void MemFree();		/* free frontend */
-extern void *MemRealloc();	/* realloc frontend */
-
 #ifdef MEMDEBUG
-extern void *d_MemAlloc();
-extern void d_MemFree();
-extern void *d_MemRealloc();
-extern void *d_MemCalloc();
 
 #define MemAlloc(s)	d_MemAlloc((s), __FILE__, __LINE__, NULL)
 #define MemCalloc(n,s)	d_MemCalloc((n),(s), __FILE__, __LINE__)
@@ -50,5 +40,26 @@ extern int AcctTag;
 #define MemNewText(s)	MemNewString((char *)s)
 
 #endif /* OW_I18N_L4 */
+
+#ifdef MEMDEBUG
+void DumpExtant(void);
+#endif
+void *MemAllocN(unsigned int sz
+#ifdef MEMDEBUG
+, char *f, int l, char *k
+#endif
+);
+void *MemAlloc(unsigned int sz
+#ifdef MEMDEBUG
+, char *f, int l, char *k
+#endif
+);
+void *MemCalloc(unsigned int num, unsigned int sz
+#ifdef MEMDEBUG
+, char *f, int l
+#endif
+);
+void *MemRealloc(void *p, unsigned int sz);
+void MemFree(void *p);
 
 #endif /* _OLWM_MEM_H */

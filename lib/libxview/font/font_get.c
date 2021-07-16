@@ -10,20 +10,14 @@ static char     sccsid[] = "@(#)font_get.c 20.31 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/font_get_.h>
+#include <xview_private/font_.h>
+#include <xview_private/pf_text_.h>
 #include <stdio.h>
 #include <X11/Xlib.h>
 #include <xview/attr.h>
 #include <xview_private/font_impl.h>
 #include <xview_private/portable.h>
-
-/*
- * Externed functions
- */
-
-extern struct pr_size xv_pf_textwidth();
-#ifdef OW_I18N
-extern struct pr_size xv_pf_textwidth_wc();
-#endif /*OW_I18N*/
 
 /*
  * Private
@@ -115,7 +109,7 @@ font_get_attr(font_public, status, attr, args)
       case FONT_CHAR_WIDTH_WC:
         attr_is_char_width = TRUE;
       case FONT_CHAR_HEIGHT_WC:{
-            wchar_t         wc = (wchar_t) va_arg(args, int);
+            wchar_t         wc = (wchar_t) va_arg(args, Attr_attribute);
             wchar_t         wstr[2];
             struct pr_size  my_pf_size;
 
@@ -151,7 +145,7 @@ font_get_attr(font_public, status, attr, args)
 #endif
 	    struct pr_size  my_pf_size;
 	    if (string) {
-		my_pf_size = xv_pf_textwidth(strlen(string), font_public, string);
+		my_pf_size = xv_pf_textwidth(strlen(string), (Xv_font)font_public, string);
 		size->width = my_pf_size.x;
 		size->height = my_pf_size.y;
 		v = (Xv_opaque) size;
@@ -256,13 +250,13 @@ font_get_attr(font_public, status, attr, args)
       case FONT_CHAR_WIDTH:
 	attr_is_char_width = TRUE;
       case FONT_CHAR_HEIGHT:{
-	    char            font_char = (char) va_arg(args, int);
+	    char            font_char = (char) va_arg(args, Attr_attribute);
 	    char            font_char_array[2];
 	    struct pr_size  my_pf_size;
 
 	    font_char_array[0] = font_char;
 	    font_char_array[1] = (char) 0;
-	    my_pf_size = xv_pf_textwidth(1, font_public, font_char_array);
+	    my_pf_size = xv_pf_textwidth(1, (Xv_font)font_public, font_char_array);
 	    if (attr_is_char_width) {
 		v = (Xv_opaque) my_pf_size.x;
 	    } else

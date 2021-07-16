@@ -27,7 +27,44 @@ typedef struct _noticeBox {
 	int	boxY;		/* box origin (-1 =use default/centered) */
 } NoticeBox;
 
+typedef struct {
+	int		x;
+	int		y;
+	unsigned int	width;		/* space taken up by text */
+	unsigned int	fullWidth;	/* width including endcaps */
+	char		accelerator;	/* mouseless accelerator key */
+} noticeButtonDetails;
+
+typedef struct {
+	Display			*dpy;
+	ScreenInfo		*scrInfo;
+	NoticeBox		*noticeBox;
+	int			numStrings;
+	Text			**stringText;
+	Window			window;
+	unsigned int		buttonHeight;
+	unsigned int		fontHeight;
+	unsigned int		boxHeight;
+	unsigned int		boxWidth;
+	int			x;
+	int			y;
+	int			totalButtonWidth;
+	noticeButtonDetails	*buttonInfo;
+	int			buttonSelected;
+	int			buttonFocus;
+	int			buttonDown;
+	int			buttonDrawnDown;
+	void			(*noticeCallback)();
+	int			pointerX,pointerY;
+	Bool			ignoreExpose;
+	Bool			warped;
+} noticeBoxDetails;
+
 /* function declarations */
-extern int UseNoticeBox();
+noticeBoxDetails *CreateNoticeBox(Display *dpy, int screen, NoticeBox *noticeBox, void (*callback)());
+void DestroyNoticeBox(noticeBoxDetails *boxDetails);
+void ShowNoticeBox(Display *dpy, noticeBoxDetails *details);
+void UseNoticeBoxSync(Display *dpy, int screen, NoticeBox *noticeBox, void (*callback)());
+int UseNoticeBox(Display *dpy, int screen, NoticeBox *noticeBox );
 
 #endif /* _OLWM_NOTICE_H */

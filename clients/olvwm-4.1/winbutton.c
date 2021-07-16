@@ -31,9 +31,14 @@
 #include "globals.h"
 #include "menu.h"
 #include "events.h"
+#include "winbutton.h"
+#include "winframe.h"
+#include "usermenu.h"
+#include "client.h"
+#include "st.h"
+#include "info.h"
+#include "virtual.h"
 
-extern void FrameAllowEvents();
-extern Bool DoDefaultMenuAction();
 extern Atom AtomChangeState;
 
 /***************************************************************************
@@ -49,11 +54,21 @@ static Bool buttonActive = False;
 static ClassButton classButton;
 static SemanticAction currentAction = ACTION_NONE;
 
+static void doUnhilite(int act, MenuTrackMode mode, WinButton *winInfo);
+static void eventButtonPress(Display* dpy, XEvent *event, WinButton *winInfo);
+static void eventButtonRelease(Display* dpy, XEvent *event, WinButton *winInfo);
+static void eventMotionNotify(Display* dpy, XEvent *event, WinButton *winInfo);
+static int eventClientMessage(Display* dpy, XClientMessageEvent *ce, WinButton *winInfo);
+static int drawButton(Display* dpy, WinButton *winInfo);
+static int destroyButton(Display* dpy, WinButton *winInfo);
+static int focusButton(Display* dpy, WinButton *winInfo, Bool selected);
+static int heightfuncButton(WinButton *win, XConfigureRequestEvent *pxcre);
+static int widthfuncButton(WinButton *win, XConfigureRequestEvent *pxcre);
+
 /***************************************************************************
 * private functions
 ***************************************************************************/
 
-static int drawButton();
 
 static void 
 doUnhilite(act, mode, winInfo)
@@ -81,7 +96,7 @@ doUnhilite(act, mode, winInfo)
 /* 
  * eventButtonPress - handle button press events on the close button window.  
  */
-static int
+static void
 eventButtonPress(dpy, event, winInfo)
 Display	*dpy;
 XEvent	*event;
@@ -123,7 +138,7 @@ WinButton	*winInfo;
 	    olgx_draw_abbrev_button(gis, winInfo->core.self, 
 				    0, 0, OLGX_INVOKED);
 	    if (winFrame->core.client->wmDecors->menu_type != MENU_NONE)
-		ShowStandardMenuSync(winFrame, event, True, doUnhilite, winInfo);
+		ShowStandardMenuSync((WinGenericFrame *)winFrame, event, True, doUnhilite, winInfo);
 	    break;
 
 	default:
@@ -139,7 +154,7 @@ WinButton	*winInfo;
  * stop ignore events.  This is so that double-clicking on the button doesn't
  * close and then reopen the window (or perform the default action twice).
  */
-static int
+static void
 eventButtonRelease(dpy, event, winInfo)
 Display	*dpy;
 XEvent	*event;
@@ -169,7 +184,7 @@ WinButton	*winInfo;
         }
 
 	if (! winInfo->ignore) {
-	    if (!DoDefaultMenuAction(cli->framewin)) {
+	    if (!DoDefaultMenuAction((WinGenericFrame *)cli->framewin)) {
 		ClientOpenCloseToggle(cli,event->xbutton.time);
 	    }
 	    ce.type = ClientMessage;
@@ -187,7 +202,7 @@ WinButton	*winInfo;
 /* 
  * eventMotionNotify - handle motion notify events on the close button window.  
  */
-static int
+static void
 eventMotionNotify(dpy, event, winInfo)
 Display	*dpy;
 XEvent	*event;
@@ -386,7 +401,7 @@ int x,y;
 	w->core.self = win;
 	w->class = &classButton;
 	w->core.kind = WIN_WINBUTTON;
-	WinAddChild(par,w);
+	WinAddChild(par,(WinGeneric *)w);
 	w->core.children = NULL;
 	w->core.client = par->core.client;
 	w->core.x = x;	
@@ -399,9 +414,9 @@ int x,y;
 	w->ignore = False;
 
 	/* register the window */
-	WIInstallInfo(w);
+	WIInstallInfo((WinGeneric *)w);
 
-        MapWindow(w);
+        MapWindow((WinGeneric *)w);
 
 	return w;
 }
@@ -412,9 +427,9 @@ ButtonInit(dpy)
 Display *dpy;
 {
         classButton.core.kind = WIN_WINBUTTON;
-        classButton.core.xevents[ButtonPress] = eventButtonPress;
-        classButton.core.xevents[ButtonRelease] = eventButtonRelease;
-        classButton.core.xevents[MotionNotify] = eventMotionNotify;
+        classButton.core.xevents[ButtonPress] = (FuncPtr)eventButtonPress;
+        classButton.core.xevents[ButtonRelease] = (FuncPtr)eventButtonRelease;
+        classButton.core.xevents[MotionNotify] = (FuncPtr)eventMotionNotify;
         classButton.core.xevents[Expose] = WinEventExpose;
 	classButton.core.xevents[ClientMessage] = eventClientMessage;
         classButton.core.focusfunc = focusButton;

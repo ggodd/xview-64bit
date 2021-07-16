@@ -78,7 +78,4 @@ typedef enum {		/* values for server_atom_type */
 
 } Server_atom_type;
 
-
-extern Server_atom_type server_get_atom_type();
-
 #endif

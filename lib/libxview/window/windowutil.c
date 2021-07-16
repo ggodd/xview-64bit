@@ -9,6 +9,17 @@ static char     sccsid[] = "@(#)windowutil.c 20.102 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/windowutil_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/sel_agent_.h>
+#include <xview_private/sel_own_.h>
+#include <xview_private/sel_req_.h>
+#include <xview_private/win_bell_.h>
+#include <xview_private/windowlayt_.h>
+#include <xview_private/win_geom_.h>
+#include <xview_private/win_input_.h>
+#include <xview_private/win_treeop_.h>
+#include <xview_private/xv_.h>
 #ifdef _XV_DEBUG
 #include <xview_private/xv_debug.h>
 #endif
@@ -41,20 +52,13 @@ static char     sccsid[] = "@(#)windowutil.c 20.102 93/06/28";
 #define WIN_IS_FLAG(deaf, win) ((deaf) ? WIN_IS_DEAF(win) : WIN_IS_LOOP(win))
 
 
-extern void     print_request();
-Xv_private void win_get_cmdline_option();
-Xv_private void win_set_wm_command_prop();
 Xv_private char		*xv_app_name;
 Xv_private char		*xv_instance_app_name;
 
 /*
  * Static functions
  */
-static void     adjust_rect_obj();
-
-Xv_object input_readevent();
-Xv_object win_data();
-
+static void adjust_rect_obj(int num_elems, int this_sw, Window_rescale_rect_obj *rect_obj_list, int parent_width, int parent_height);
 
 void
 window_release_event_lock(window)
@@ -170,7 +174,7 @@ window_default_event_func(win_public, event, arg, type)
 	}
 #else
         if (event_action(event) == KBD_DONE)
-            check_lang_mode(NULL,NULL,NULL);
+            check_lang_mode((Xv_Server)NULL, NULL, NULL);
 #endif /* OW_I18N */
 	if (win->softkey_flag) {
 	    register Xv_Drawable_info 	*info;
@@ -616,7 +620,7 @@ window_get_rescale_state(window)
 }
 
 Xv_private void
-window_end_rescaling(window, state)
+window_end_rescaling(window)
     Xv_Window       window;
 {
     Window_info    *win = WIN_PRIVATE(window);
@@ -624,7 +628,7 @@ window_end_rescaling(window, state)
 }
 
 Xv_private void
-window_start_rescaling(window, state)
+window_start_rescaling(window)
     Xv_Window       window;
 {
     Window_info    *win = WIN_PRIVATE(window);
@@ -1078,7 +1082,7 @@ Xv_window	window;
 	     * WIN_CMDLINE set AND FRAME_CMD_LINE_* not used
 	     * Use old non-ICCCM compliant way of setting WM_COMMAND
 	     */
-            if ((int)appl_cmdline != -1) {
+            if ((int)(long)appl_cmdline != -1) {
                 int   len = 1000;
                 char *str = '\0';
         
@@ -1100,7 +1104,7 @@ Xv_window	window;
 	     * WIN_CMDLINE not set AND FRAME_CMD_LINE_* used
 	     * Use new ICCCM compliant way of setting WM_COMMAND
 	     */
-	    if ((int)appl_cmdline_argv != -1)  {
+	    if ((int)(long)appl_cmdline_argv != -1)  {
 		char	*argv[200];
                 win_set_wm_command_prop(window, argv, appl_cmdline_argv,
 						appl_cmdline_argc);

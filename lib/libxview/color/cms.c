@@ -4,6 +4,9 @@ static char     sccsid[] = "@(#)cms.c 1.17 91/03/18";
 #endif
 #endif
 
+#include <xview_private/cms_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/xv_.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -18,7 +21,7 @@ static char     sccsid[] = "@(#)cms.c 1.17 91/03/18";
  *      file for terms of the license.
  */
 
-static Xv_Colormap *cms_allocate_colormap();
+static Xv_Colormap *cms_allocate_colormap(Display *display, Cms_info *cms);
 
 /*
  *	cms_free_colors() frees all the colors in the colormap that 

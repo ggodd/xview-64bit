@@ -10,7 +10,10 @@ static char     sccsid[] = "@(#)text.c 20.31 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview/pkg.h>
+#include <xview_private/text_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/txt_once_.h>
+#include <xview_private/txt_menu_.h>
 #include <xview/attrol.h>
 #include <xview_private/primal.h>
 #include <xview_private/txt_impl.h>
@@ -19,16 +22,7 @@ static char     sccsid[] = "@(#)text.c 20.31 93/06/28";
 #include <xview/window.h>
 #include <xview/text.h>
 
-Pkg_private Textsw_folio textsw_init_internal();
-
-Pkg_private int textsw_init();
-Pkg_private Xv_opaque textsw_get();
-Pkg_private Xv_opaque textsw_set();
-Pkg_private int textsw_folio_destroy();
-
 /* Pkg_private */ int	text_notice_key;
-
-
 
 Pkg_private int
 textsw_init(parent, textsw_public, avlist)
@@ -64,7 +58,7 @@ textsw_init(parent, textsw_public, avlist)
     textsw_object->private_data = (Xv_opaque) folio;
     folio->public_self = textsw_public;
 
-    folio = textsw_init_internal(folio, status, textsw_default_notify, avlist);
+    folio = textsw_init_internal(folio, status, textsw_default_notify, (Textsw_attribute *)avlist);
 
     /*
      * BUG: Note the folio is not really initialized until the first view is

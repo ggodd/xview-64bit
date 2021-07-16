@@ -144,11 +144,19 @@ EXTERN_FUNCTION (void scrollbar_paint, (Scrollbar sb));
  */
 EXTERN_FUNCTION (int scrollbar_width_for_scale, (Window_rescale_state scale));
  
+#include <xview/macros.h>
+
+#define scrollbar_create(...) \
+    MACRO_DEF1(_scrollbar_create, Attr_attribute, __VA_ARGS__)
+
+#define scrollbar_set(...) \
+    MACRO_DEF1(_scrollbar_set, Scrollbar, __VA_ARGS__)
+
 /*
  * For SunView 1 Compatibility
  */
-EXTERN_FUNCTION (Scrollbar scrollbar_create, (Attr_attribute attr1, DOTDOTDOT));
-EXTERN_FUNCTION (int scrollbar_set, (Scrollbar sb, DOTDOTDOT));
+EXTERN_FUNCTION (Scrollbar _scrollbar_create, (Attr_attribute attr1, DOTDOTDOT));
+EXTERN_FUNCTION (int _scrollbar_set, (Scrollbar sb, DOTDOTDOT));
 EXTERN_FUNCTION (Xv_opaque scrollbar_get, (Scrollbar sb, Attr_attribute attr));
 EXTERN_FUNCTION (int scrollbar_destroy, (Scrollbar sb));
 EXTERN_FUNCTION (void scrollbar_scroll_to, (Scrollbar sb, unsigned long new_start));

@@ -13,6 +13,7 @@ static char     sccsid[] = "@(#)es_cp_file.c 20.33 93/06/28";
 /*
  * Routines to copy a file.  Stolen from cp.c, then modified.
  */
+#include <xview_private/es_cp_file_.h>
 #include <stdio.h>
 #include <sys/param.h>
 #include <sys/stat.h>

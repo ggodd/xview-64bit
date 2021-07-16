@@ -35,6 +35,8 @@ static char     sccsid[] = "@(#)tty_newtxt.c 1.45 93/06/28";
 
 
 /* mbuck@debian.org */
+#include <xview_private/tty_newtxt_.h>
+#include <xview_private/csr_change_.h>
 #if 1
 #include <X11/Xlibint.h>
 #endif
@@ -44,7 +46,6 @@ static char     sccsid[] = "@(#)tty_newtxt.c 1.45 93/06/28";
 #include <pixrect/pixfont.h>
 #include <xview/xv_xrect.h>
 #include <xview_private/i18n_impl.h>
-#include <xview_private/tty_impl.h>
 #include <xview/font.h>
 
 #define	BADVAL		-1
@@ -52,11 +53,11 @@ static char     sccsid[] = "@(#)tty_newtxt.c 1.45 93/06/28";
 
 #define	convert_op(op)	XlatOp[(op) >> PIX_OP_SHIFT]
 
-#ifdef OW_I18N
-extern void      XwcDrawString(), XwcDrawImageString();
-#endif
-extern int      XDrawImageString(), XDrawString();
-extern Xv_xrectlist *screen_get_clip_rects();
+static GC create_GC(Display *display, Drawable drawable, int foreground, int background, int function);
+static GC *get_gc_list(Xv_Drawable_info *info);
+static void setup_font(Xv_opaque window, Xv_opaque pixfont);
+static void setup_GC(Display *display, Xv_Drawable_info *info, GC gc, int pix_op);
+static void firsttime_init(void);
 
 typedef struct tty_gc_list {
     int depth;
@@ -182,7 +183,7 @@ setup_font(window, pixfont)
     font = (Font) xv_get(pixfont, XV_XID);
 
     /* it should always be valid, but be careful */
-    if (font != NULL) {
+    if (font != (Font)NULL) {
 	gc_list = get_gc_list(info);
 	
 	XSetFont(display, gc_list[DEFAULT_GC], font);

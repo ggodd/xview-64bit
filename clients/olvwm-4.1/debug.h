@@ -1,5 +1,5 @@
 #ifdef IDENT
-#ident  "@(#)debug.h	1.4    93/06/28 SMI"
+#ident  "@(#)debug.h 1.4    93/06/28 SMI"
 #endif
  
 /*
@@ -14,7 +14,7 @@
 #ifndef _OLWM_DEBUG_H
 #define _OLWM_DEBUG_H
 
-extern void DebugEvent();
-extern void DebugWindow();
+void DebugEvent(XEvent *ep, char *str);
+void DebugWindow(WinGeneric *win);
 
 #endif /* _OLWM_DEBUG_H */

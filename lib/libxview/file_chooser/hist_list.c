@@ -11,6 +11,9 @@ static char     sccsid[] = "@(#)hist_list.c 1.10 93/06/28";
  */
 
 
+#include <xview_private/hist_list_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/xv_.h>
 #include <stdio.h>
 #include <xview/xview.h>
 #include <xview/panel.h>
@@ -19,19 +22,16 @@ static char     sccsid[] = "@(#)hist_list.c 1.10 93/06/28";
 #include <xview_private/i18n_impl.h>
 
 
-static void	populate_menu();
-static void	add_fixed_entry();
-static void	add_rolling_entry();
-static void	remove_last_entry();
-static int	is_duplicate_entry();
-
+static int is_duplicate_entry(History_list_private *private, char *string);
+static void add_fixed_entry(History_list_private *private, char *labe, char *value);
+static void add_rolling_entry(History_list_private *private, char *label, char *value);
+static void remove_last_entry(struct hist_entry **last);
+static void populate_menu(History_list_private *private, Menu menu);
 
 /*
  * Used with xv_find().
  */
 static struct history_list *	global_list = (struct history_list *)NULL;
-
-
 
 /*
  * xv_create() method
@@ -92,7 +92,7 @@ hist_list_set( public, avlist )
     Attr_avlist attrs;
 
     for (attrs=avlist; *attrs; attrs=attr_next(attrs)) {
-	switch ( (int) attrs[0] ) {
+	switch (attrs[0]) {
 
 #ifdef OW_I18N
 	case HISTORY_ADD_ROLLING_ENTRY_WCS: 
@@ -257,7 +257,7 @@ hist_list_get( public, status, attr, args )
 {
     History_list_private *private = HIST_LIST_PRIVATE(public);
 
-    switch ( (int) attr ) {
+    switch ( attr ) {
     case HISTORY_ROLLING_MAXIMUM:
 	return (Xv_opaque) private->roll_max;
 
@@ -277,8 +277,8 @@ hist_list_get( public, status, attr, args )
     case HISTORY_LABEL:
     case HISTORY_VALUE: {
 	struct hist_entry *entry;
-	History_space space = va_arg(args, int);
-	int row = va_arg(args, int);
+	History_space space = va_arg(args, Attr_attribute);
+	int row = va_arg(args, Attr_attribute);
 	int ii;
 
 	if ( space == HISTORY_FIXED ) {
@@ -308,8 +308,8 @@ hist_list_get( public, status, attr, args )
     case HISTORY_LABEL_WCS:
     case HISTORY_VALUE_WCS: {
 	struct hist_entry *entry;
-	History_space space = va_arg(args, int);
-	int row = va_arg(args, int);
+	History_space space = va_arg(args, Attr_attribute);
+	int row = va_arg(args, Attr_attribute);
 	int ii;
 
 	if ( space == HISTORY_FIXED ) {

@@ -26,6 +26,13 @@
 
 static st_table *groupHashTable;
 
+static unsigned int groupFindList(List **plist, Client *cli, List ***retlist, unsigned int retval);
+static unsigned int groupFindCli(Group *group, Client *cli, List ***ppList);
+static int groupCompare(register char *g1, register char *g2);
+static int groupHash(register char *g1, register int modulus);
+static void groupInsert(Group *group);
+static Bool groupDelete(GroupID grpid);
+
 /***************************************************************************
 * Local functions
 ***************************************************************************/
@@ -109,7 +116,7 @@ static void
 groupInsert(group)
 Group *group;
 {
-	st_insert(groupHashTable, (int)group->groupid, (char *)group);
+	st_insert(groupHashTable, (char*)group->groupid, (char *)group);
 }
 
 /* groupDelete -- remove a group structure from the lookup table
@@ -122,7 +129,7 @@ GroupID grpid;
 	GroupID tmpGrp = grpid;
 	GroupID *tmpGrpPtr = &tmpGrp;
 
-	return st_delete(groupHashTable, (char *)tmpGrpPtr, (char *)&oldGrp);
+	return st_delete(groupHashTable, (char **)tmpGrpPtr, (char **)&oldGrp);
 }
 
 /***************************************************************************
@@ -187,7 +194,7 @@ GroupID group;
 {
 	Group *tmp = NULL;
 
-	st_lookup(groupHashTable, group, &tmp);
+	st_lookup(groupHashTable, (char*)group, (char**)&tmp);
 	return tmp;
 }
 

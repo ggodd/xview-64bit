@@ -22,7 +22,8 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=     openmenu.h
-HDRSPRIVATE=    omi_impl.h om_impl.h
+HDRSPRIVATE=    omi_impl.h om_impl.h om_compat_.h om_get_.h omi_.h om_set_.h \
+                om_public_.h om_render_.h
 
 DATA_OBJS = om_data.o
 TEXT_OBJS =\

@@ -10,27 +10,10 @@ static char     sccsid[] = "@(#)sel_data.c 1.6 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview/sel_pkg.h>
-
-Pkg_private int sel_init();
-Pkg_private Xv_opaque sel_set_avlist();
-Pkg_private Xv_opaque sel_get_attr();
-Pkg_private int sel_destroy();
-
-Pkg_private int sel_owner_init();
-Pkg_private Xv_opaque sel_owner_set_avlist();
-Pkg_private Xv_opaque sel_owner_get_attr();
-Pkg_private int sel_owner_destroy();
-
-Pkg_private int sel_req_init();
-Pkg_private Xv_opaque sel_req_set_avlist();
-Pkg_private Xv_opaque sel_req_get_attr();
-Pkg_private int sel_req_destroy();
-
-Pkg_private int sel_item_init();
-Pkg_private Xv_opaque sel_item_set_avlist();
-Pkg_private Xv_opaque sel_item_get_attr();
-Pkg_private int sel_item_destroy();
+#include <xview_private/selection_.h>
+#include <xview_private/sel_item_.h>
+#include <xview_private/sel_own_.h>
+#include <xview_private/sel_req_.h>
 
 Xv_pkg xv_sel_pkg = {
     "Selection",

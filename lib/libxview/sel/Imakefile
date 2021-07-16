@@ -22,8 +22,9 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=     seln.h sel_attrs.h sel_svc.h seln.h sel_compat.h selection.h
-HDRSPRIVATE=    seln_impl.h
-
+HDRSPRIVATE=    seln_impl.h sel_agent_.h sel_appl_.h sel_clnt_.h sel_common_.h \
+                sel_compat_.h seln_.h sel_policy_.h
+                
 DATA_OBJS = seln_data.o
 
 TEXT_OBJS =\

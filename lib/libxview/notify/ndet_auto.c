@@ -13,6 +13,13 @@ static char     sccsid[] = "@(#)ndet_auto.c 20.21 93/06/28 Copyr 1985 Sun Micro"
 /*
  * Ndet_loop.c - Notification loop.
  */
+#include <xview_private/ndet_auto_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/ndet_loop_.h>
+#include <xview_private/ndisdispch_.h>
+#include <xview_private/ntfy_cond_.h>
+#include <xview_private/ntfy_debug_.h>
+#include <xview_private/sys_select_.h>
 #include <sys/types.h>
 #include <xview_private/i18n_impl.h>
 #include <xview_private/portable.h>
@@ -66,7 +73,6 @@ ndet_auto_sig_send(client, condition, context)
     register NTFY_CONDITION *condition;
     NTFY_ENUM_DATA  context;
 {
-    NTFY_ENUM       ndet_auto_sigchld(), ndet_auto_sigterm();
     register NDET_ENUM_SEND *enum_send = (NDET_ENUM_SEND *) context;
 
     ntfy_assert(condition->type == NTFY_SYNC_SIGNAL, 1
@@ -147,7 +153,6 @@ ndet_auto_sig_send(client, condition, context)
 	}
       case SIGCHLD:{
 	    NTFY_WAIT3_DATA wd;
-	    NTFY_ENUM       ndet_wait_send();
 
 	    enum_send->wait3 = &wd;
 	    /* Look for as many children as have changed state */

@@ -17,8 +17,6 @@
  *
  */
 
-#include "events.h"
-
 /* constants */
 
 #define NOBUTTON	-1	/* no button is active */
@@ -208,78 +206,6 @@ typedef struct _defaults {
 #endif
 
 /*
- *	 External functions
- */
-void SetMenuDefault();
-Menu *NewNamedMenu();
-Bool AppendMenuItem();
-Menu *CreateMenu();
-Menu *GetEnabledMenu();
-MenuInfo *MenuInfoCreate();
-void ShowStandardMenu();
-void ShowStandardMenuSync();
-void SetClickCallback();
-
-extern void InitMenus();
-extern MenuCache *InitScreenMenus( /* Display *dpy, ScreenInfo *scrInfo */ );
-extern void MenuCreate( /* dpy, menu */ );
-extern void MenuShow( /* dpy, WinGeneric, menu, event */ );
-extern void SetButton( /* dpy, menu, bindex, Bool */ );
-extern void ExecButtonAction( /* dpy, winInfo, menu, btn, Bool */ );
-extern void DrawMenu( /* dpy, menu */ );
-extern int  PointInRect( /* x, y, rx, ry, rw, rh */ );
-
-
-/*
- * generically useful region code that happens to live in menu.c
- */
-
-void InitRegions();
-void EmptyRegion();
-void RectRegion();
-void AppendExposeDamage();
-void MakeExposeDamage();
-
-
-/*
- *	WinMenu Functions (from winmenu.c)
- */
-extern struct _winmenu *
-MakeMenu( /* Display *dpy, 
-	     WinRoot *winInfo */ 
-	 );
-extern void
-MapMenuWindow(/* Display *dpy, 
-		 WinMenu *winInfo, 
-		 MenuInfo *menuInfo */ 
-	      );
-extern void
-UnmapMenuWindow(/* Display *dpy, 
-		   WinMenu *winInfo, 
-		   MenuInfo *menuInfo */ 
-		);
-
-
-int MenuEventExpose();
-int MenuEventDrawMenu();
-
-SemanticAction MenuMouseAction(/*Display *dpy,
-				 XEvent *pevent,
-				 long mask*/
-			      );
-
-
-/*
- *	WinPinMenu Functions (from winpinmenu.c)
- */
-extern struct _winpinmenu *
-MakePinMenu(/* Display *dpy, 
-	       WinRoot *winInfo, 
-	       MenuInfo *menuInfo */ 
-	    );
-
-
-/*
  * macros for setting menu items
  */
 
@@ -329,5 +255,53 @@ typedef struct _comblabel {
 
 #define eventTime(e)    ((e)->type == MotionNotify ? (e)->xmotion.time \
 						   : (e)->xbutton.time )
+
+#ifdef notdef
+void UpdDefaultPtr(MenuInfo *mInfo, int index);
+XrmDatabase CreateDB(void);
+FillDefaultsList(XrmDatabase defaultsDB, DefaultsP DefaultsPtr);
+void ApplyMenuDefaults(Display *dpy, MenuCache *menuCache);
+void SaveMenuDefaults(void);
+#endif
+void SetClickMode(Bool flclick);
+void SetClickCallback(void (*proc)(), void *data);
+void ExecButtonAction(Display *dpy, WinGeneric *winInfo, MenuInfo *menuInfo, int btn);
+void DrawMenuWithHints(Display *dpy, MenuInfo *mInfo);
+void SetMenuRedrawHints(Display *dpy, XExposeEvent *ee, MenuInfo *mInfo);
+void DrawMenu(Display *dpy, MenuInfo *mInfo);
+void SetButton(Display *dpy, MenuInfo *menuInfo, int idx, Bool highlight, Bool flsetdefault);
+Bool StartMenuGrabs(Display *dpy, WinGeneric *winInfo);
+void MenuMakeFirst(MenuInfo *mInfo, void (*sfunc)(), void *sinfo);
+void MenuShowSync(Display *dpy, WinGeneric *winInfo, Menu *menu, XEvent *pevent, void (*sfunc)(), void *sinfo, Bool flkbd, Bool flbutton);
+void MenuShow(Display *dpy, WinGeneric *winInfo, Menu *menu, XEvent *pevent);
+int PointInRect(int x, int y, int rx, int ry, int rw, int rh);
+MenuInfo *MenuInfoCreate(MenuCache *menuCache, WinGeneric *winInfo, Menu *menu, int depth, int slot);
+void MenuInfoDestroy(MenuInfo *menuInfo);
+MenuInfo *FindMenuInfo(WinGeneric *winInfo, Menu *menu);
+void DestroyWindowMenuInfo(Display *dpy, ScreenInfo *scrInfo);
+void CreateUserMenuInfo(Display *dpy, ScreenInfo *scrInfo);
+void DestroyUserMenuInfo(Display *dpy, ScreenInfo *scrInfo);
+void ReplaceChars(char *buff, char *sstr, char rc);
+Bool MenuHandleKeyEvent(Display *dpy, XEvent *pevent, WinGeneric *win, WinGeneric *closure);
+int MenuTrack(Display *dpy, XEvent *pevent, WinGeneric *win, WinGeneric *closure);
+SemanticAction MenuMouseAction(Display *dpy, XEvent *pevent, long mask);
+void DrawLocCursor(Display *dpy, MenuInfo *mInfo, int bindex, Bool fldraw);
+void SetMenuDefault(Menu *pmenu, int def);
+Menu *NewNamedMenu(Text *name, Bool flpin, char *help);
+Bool AppendMenuItem(Menu *pmenu, Button *pitem);
+void SetMenuHier(Menu *pmenu, int itemno, Menu *phier);
+void _ToggleEnabled(Menu *pmenu, int itemno, Bool flenabled);
+void _ToggleItem(Menu *pmenu, int itemno, int which);
+void _ToggleVisible(Menu *pmenu, int itemno, int visible);
+void _SetMenuTitle(Menu *pmenu, Text *s);
+void _DirtyMenu(Menu *pmenu);
+Menu *CreateMenu(Text *name, Button **barray, int ctbuttons, Bool flpin, char *help);
+MenuCache *InitScreenMenus(Display *dpy, ScreenInfo *scrInfo);
+Bool DoDefaultMenuAction(WinGenericFrame *win);
+void InitRegions(void);
+void EmptyRegion(Region r);
+void RectRegion(Region r, int x, int y, unsigned int w, unsigned int h);
+void AppendExposeDamage(Region *pr, XExposeEvent *ee);
+void MakeExposeDamage(Region *pr, XExposeEvent *ee);
 
 #endif

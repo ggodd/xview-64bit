@@ -8,6 +8,13 @@ static char     sccsid[] = "@(#)fm_cmdline.c 20.46 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/fm_cmdline_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/font_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/icon_load_.h>
+#include <xview_private/windowutil_.h>
+#include <xview_private/xv_.h>
 #include <sys/types.h>
 #include <ctype.h>
 #include <pixrect/pixrect.h>
@@ -20,19 +27,16 @@ static char     sccsid[] = "@(#)fm_cmdline.c 20.46 93/06/28";
 #include <xview/pkg.h>
 #include <xview/attrol.h>
 #include <xview/icon.h>
-#include <xview/defaults.h>
 #include <xview/win_screen.h>
 #include <xview_private/draw_impl.h>
 #include <xview_private/fm_impl.h>
 #include <xview_private/i18n_impl.h>
 #include <X11/Xutil.h>
 
-extern Pixrect *icon_load_mpr();
-static int frame_parse_color();
-Xv_private char *xv_font_regular();
-Xv_private char *xv_font_bold();
-Xv_private char *xv_font_monospace();
-Xv_private char *xv_font_scale();
+
+static int frame_parse_color(Frame frame, char *colorname, XColor *xcolor);
+
+extern int frame_notify_count;
 
 /*
  * Convert command line frame defaults into attributes. Apply the attributes
@@ -443,7 +447,7 @@ frame_set_icon_cmdline_options(frame_public)
     }
 
     /* null terminate attr list */
-    *defaults = NULL;
+    *defaults = (Attr_attribute)NULL;
 
     /* Do a frame set if there are frame attrs */
     if (defaults_array[0])

@@ -19,27 +19,22 @@ static char     sccsid[] = "@(#)ow_set.c 1.49 91/05/23";
  *
  */
 
-#include <xview_private/ow_impl.h>
+#include <xview_private/ow_set_.h>
+#include <xview_private/attr_.h>
 #include <xview_private/draw_impl.h>
+#include <xview_private/openwin_.h>
+#include <xview_private/ow_resize_.h>
+#include <xview_private/ow_view_.h>
+#include <xview_private/sb_pos_.h>
+#include <xview_private/window_set_.h>
+#include <xview_private/xv_.h>
 #include <xview/font.h>
 
-Xv_private scrollbar_minimum_size();
-
-/*
- * Package private functions
- */
-Pkg_private Xv_opaque openwin_set();
-
-/*
- * Module private functions
- */
-static Xv_opaque ow_parse_split_attrs();
-static Xv_opaque ow_set_scrollbar();
-static void      ow_append_view_attrs();
-static void      ow_set_width();
-static void      ow_set_height();
-
-Attr_avlist attr_copy_avlist();
+static Xv_opaque ow_parse_split_attrs(Xv_openwin_info *owin, Attr_avlist avlist);
+static Xv_opaque ow_set_scrollbar(Xv_openwin_info *owin, Scrollbar sb, Scrollbar_setting  direction);
+static void ow_append_view_attrs(Xv_openwin_info *owin, Attr_avlist argv);
+static void ow_set_width(Xv_openwin_info *owin, int ncols);
+static void ow_set_height(Xv_openwin_info *owin, int nrows);
 
 /*-------------------Function Definitions-------------------*/
 
@@ -91,7 +86,7 @@ openwin_set(owin_public, avlist)
 	    break;
 
 	  case WIN_VERTICAL_SCROLLBAR:
-	    if ((Scrollbar) avlist[1] != NULL) {
+	    if ((Scrollbar) avlist[1] != (Scrollbar)NULL) {
 		STATUS_SET(owin, adjust_vertical);
 	    } else {
 		STATUS_RESET(owin, adjust_vertical);
@@ -103,7 +98,7 @@ openwin_set(owin_public, avlist)
 	    }
 	    break;
 	  case WIN_HORIZONTAL_SCROLLBAR:
-	    if ((Scrollbar) avlist[1] != NULL) {
+	    if ((Scrollbar) avlist[1] != (Scrollbar)NULL) {
 		STATUS_SET(owin, adjust_horizontal);
 	    } else {
 		STATUS_RESET(owin, adjust_horizontal);
@@ -206,7 +201,6 @@ openwin_set(owin_public, avlist)
 	  case WIN_BACKGROUND_COLOR:
 	  case WIN_COLOR_INFO:
 	    {
-		extern unsigned int window_set_avlist();
 		Xv_opaque   defaults_array[ATTR_STANDARD_SIZE];
 		
 		if (STATUS(owin, paint_bg)) {
@@ -276,7 +270,7 @@ ow_parse_split_attrs(owin, avlist)
     Openwin_attribute attr;
     Openwin_split_direction split_direction = OPENWIN_SPLIT_HORIZONTAL;
     Openwin_view_info *view;
-    Xv_Window       split_view = NULL;
+    Xv_Window       split_view = (Xv_Window)NULL;
     int             split_position = 0;
     int             split_viewstart = OPENWIN_SPLIT_NEWVIEW_IN_PLACE;
     Rect            r;
@@ -315,7 +309,7 @@ ow_parse_split_attrs(owin, avlist)
     /* do data validation */
 
     /* see if a window was passed to be split and if it is valid */
-    if (split_view == NULL || openwin_viewdata_for_view(split_view, &view) != XV_OK) {
+    if (split_view == (Xv_Window)NULL || openwin_viewdata_for_view(split_view, &view) != XV_OK) {
 	/* error invalid view */
 	return (XV_ERROR);
     }
@@ -376,10 +370,10 @@ ow_set_scrollbar(owin, sb, direction)
     Xv_opaque       sb_notify_client;
 
     /* give the vertical scrollbar to the first view */
-    if (sb != NULL) {
+    if (sb != (Scrollbar)NULL) {
 	/* if we already have a scrollbar report an error */
 	while (view != NULL) {
-	    if (openwin_sb(view, direction) != NULL) {
+	    if (openwin_sb(view, direction) != (Scrollbar)NULL) {
 		/* FATAL ERROR */
 		return ((Xv_opaque) XV_ERROR);
 	    }
@@ -417,7 +411,7 @@ ow_set_scrollbar(owin, sb, direction)
 	       0);
 
 	sb_notify_client = xv_get(sb, SCROLLBAR_NOTIFY_CLIENT);
-	if (sb_notify_client == NULL ||
+	if (sb_notify_client == (Xv_opaque)NULL ||
 	    sb_notify_client == OPENWIN_PUBLIC(owin)) {
 	    xv_set(sb,
 		   SCROLLBAR_NOTIFY_CLIENT, owin->views->view,
@@ -438,8 +432,8 @@ ow_set_scrollbar(owin, sb, direction)
 	/* for each view unset as having sb and adjust view */
 	for (view = owin->views; view != NULL; view = view->next_view) {
 	    sb = openwin_sb(view, direction);
-	    openwin_set_sb(view, direction, NULL);
-	    if (sb != NULL) {
+	    openwin_set_sb(view, direction, (Scrollbar)NULL);
+	    if (sb != (Scrollbar)NULL) {
 		xv_destroy(sb);
 	    }
 	}

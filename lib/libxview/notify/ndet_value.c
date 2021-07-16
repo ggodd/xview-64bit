@@ -14,7 +14,12 @@ static char     sccsid[] = "@(#)ndet_value.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * Ndet_value.c - Implement the notify_itimer_value interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndet_value_.h>
+#include <xview_private/ndetitimer_.h>
+#include <xview_private/ntfyclient_.h>
+#include <xview_private/ntfy_cond_.h>
+#include <xview_private/ntfy_debug_.h>
+#include <xview_private/ntfyprotec_.h>
 #include <xview_private/ndet.h>
 
 extern          Notify_error

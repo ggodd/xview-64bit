@@ -49,7 +49,11 @@ GETTEXT.O		=
 HDRSPUBLIC=     cms_grays.h cms_mono.h cmsrainbow.h cms_rgb.h sun.h \
                 window_hs.h expandname.h xv_c_types.h attrol.h db.h \
 		xv_c_types.h xv_i18n.h xv_version.h xview.h
-HDRSPRIVATE=    bitmask.h hashfn.h i18n_impl.h portable.h ${GETTEXT.H}
+HDRSPRIVATE=    bitmask.h hashfn.h i18n_impl.h portable.h ${GETTEXT.H} \
+        bitmask_.h db_conv_.h getlogindr_.h quark_.h xv_casecmp_.h \
+        expandpath_.h xv_deaf_.h xv_util_.h demorandom_.h drop_.h \
+        expandname_.h gettext_.h hashfn_.h setlocale_.h windowloop_.h \
+        xv_icccm_.h xv_win_lp_.h
 
 DATA_OBJS =
 

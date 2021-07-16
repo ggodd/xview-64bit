@@ -13,10 +13,25 @@ static char     sccsid[] = "@(#)fm_data.c 1.17 93/06/28";
  * Frame packages are in this module. Changes made for shared libraries.
  */
 
-#include <xview_private/fm_impl.h>
-#include <xview_private/frame_help.h>
-#include <xview_private/frame_cmd.h>
-#include <xview_private/frame_base.h>
+#include <xview_private/frame_init_.h>
+#include <xview_private/frame_base_.h>
+#include <xview_private/frame_cmd_.h>
+#include <xview_private/frame_help_.h>
+#include <xview_private/fmbs_dsty_.h>
+#include <xview_private/fmbs_get_.h>
+#include <xview_private/fmbs_set_.h>
+#include <xview_private/fmcmd_dsty_.h>
+#include <xview_private/fmcmd_get_.h>
+#include <xview_private/fmcmd_set_.h>
+#include <xview_private/fmhlp_dsty_.h>
+#include <xview_private/fmhlp_get_.h>
+#include <xview_private/fmhlp_set_.h>
+#include <xview_private/fm_destroy_.h>
+#include <xview_private/fm_get_.h>
+#include <xview_private/fm_set_.h>
+/*#include <xview_private/frame_help_.h>
+#include <xview_private/frame_cmd_.h>
+#include <xview_private/frame_base_.h>*/
 
 #ifndef NULL
 #define NULL 0

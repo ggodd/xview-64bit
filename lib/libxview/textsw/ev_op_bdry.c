@@ -17,18 +17,20 @@ static char     sccsid[] = "@(#)ev_op_bdry.c 20.18 93/06/28";
  * change the pixel painting operations used by the rendering. Note that a
  * particular position may occur in multiple fingers.
  */
-#include <xview/pkg.h>
+#include <xview_private/ev_op_bdry_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/ev_edit_.h>
+#include <xview_private/ev_once_.h>
+#include <xview_private/finger_tbl_.h>
 #include <xview/attrol.h>
 #include <xview_private/primal.h>
-#include <xview_private/ev_impl.h>
 
-Pkg_private Es_index ev_position_for_physical_line();
-
-Pkg_private void ev_clear_from_margins();
-static Ev_finger_handle ev_insert_finger();
-static Ev_mark_object last_generated_id;
+static Ev_finger_handle ev_insert_finger(register Ev_finger_table *fingers, Es_index pos, opaque_t client_data, unsigned before, register Ev_mark id_handle);
 static int ev_find_finger_internal(Ev_finger_table *fingers, Ev_mark mark);
-static void ev_remove_finger_internal(Ev_finger_table *fingers, int i);
+static void ev_remove_finger_internal(register Ev_finger_table *fingers, int i);
+static void ev_clear_margins(register Ev_handle view, register Es_index pos, register int lt_index, register Rect *rect);
+
+static Ev_mark_object last_generated_id;
 
 #define FORALL(index_var)						\
 	for (index_var = 0; index_var < fingers->last_plus_one; index_var++)
@@ -171,7 +173,7 @@ ev_add_op_bdry(op_bdry, pos, type, mark)
     Op_bdry_handle  bdry;
 
     bdry = (Op_bdry_handle)
-	ev_add_finger(op_bdry, pos, (opaque_t) type, mark);
+	ev_add_finger(op_bdry, pos, (opaque_t)(long)type, mark);
     bdry->more_info = (opaque_t) NULL;
     return (bdry);
 }
@@ -324,7 +326,6 @@ ev_add_glyph(chain, line_start, pos, pr, op, offset_x, offset_y, flags)
 	 * Force pos > line_start so that ev_display_internal will have an
 	 * EI_OP_EV_OVERLAY show up in its range.info.
 	 */
-	Pkg_private struct ei_process_result ev_ei_process();
 	struct ei_process_result ei_process_result;
 	pos++;
 	ei_process_result =
@@ -429,7 +430,6 @@ ev_clear_margins(view, pos, lt_index, rect)
  * the rect from it, else construct the rect for the line containing pos.
  */
 {
-    Pkg_private Rect ev_rect_for_line();
     Rect            dummy_rect;
 
     if (rect == 0) {

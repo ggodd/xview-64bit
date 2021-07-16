@@ -9,9 +9,12 @@ static char     sccsid[] = "@(#)panel_data.c 1.17 93/06/28";
  *	pending in the U.S. and foreign countries. See LEGAL NOTICE 
  *	file for terms of the license.
  */
-#include <xview_private/panel_impl.h>
-Pkg_private int panel_init();
-Pkg_private int panel_destroy();
+#include <xview_private/panel_.h>
+#include <xview_private/p_gauge_.h>
+#include <xview_private/p_get_.h>
+#include <xview_private/p_set_.h>
+#include <xview_private/p_slider_.h>
+#include <xview_private/p_view_.h>
 
 Xv_pkg          xv_panel_pkg = {
     "Panel", ATTR_PKG_PANEL,
@@ -35,8 +38,6 @@ Xv_pkg          xv_scrollable_panel_pkg = {
 };
 
 
-Pkg_private int panel_view_init();
-
 Xv_pkg          xv_panel_view_pkg = {
     "Panel", ATTR_PKG_PANEL,
     sizeof(Xv_panel),
@@ -48,11 +49,6 @@ Xv_pkg          xv_panel_view_pkg = {
     NULL			/* no find proc */
 };
 
-Pkg_private int gauge_init();
-Pkg_private Xv_opaque gauge_set_avlist();
-Pkg_private Xv_opaque gauge_get_attr();
-Pkg_private int gauge_destroy();
-
 Xv_pkg          xv_panel_gauge_pkg = {
     "Slider Item", ATTR_PKG_PANEL,
     sizeof(Xv_panel_gauge),
@@ -63,12 +59,6 @@ Xv_pkg          xv_panel_gauge_pkg = {
     gauge_destroy,
     NULL			/* no find proc */
 };
-
-
-Pkg_private int slider_init();
-Pkg_private Xv_opaque slider_set_avlist();
-Pkg_private Xv_opaque slider_get_attr();
-Pkg_private int slider_destroy();
 
 Xv_pkg          xv_panel_slider_pkg = {
     "Slider Item", ATTR_PKG_PANEL,

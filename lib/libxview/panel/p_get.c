@@ -11,17 +11,15 @@ static char     sccsid[] = "@(#)p_get.c 20.38 93/06/28";
  */
 
 
-#include <xview_private/panel_impl.h>
+#include <xview_private/p_get_.h>
 #include <xview/font.h>
 #include <xview/scrollbar.h>
-
-static int      shrink_to_fit();
-static int	panel_shrink_margin();
 
 #define MAX_NEGATIVE_SHRINK 2000
 #define SHRINK_MARGIN       4
 
-static panel_shrink_margin(Panel_info *panel);
+static int shrink_to_fit(register Panel_info *panel, int do_width, register int excess);
+static int panel_shrink_margin(register Panel_info *panel);
 
 /*ARGSUSED*/
 Pkg_private     Xv_opaque
@@ -134,12 +132,12 @@ panel_get_attr(panel_public, status, attr, valist)
 	return (Xv_opaque) panel->no_redisplay_item;
 
       case WIN_FIT_WIDTH:
-        arg = va_arg(valist, int);
+        arg = va_arg(valist, Attr_attribute);
 	return (Xv_opaque) shrink_to_fit(panel, TRUE,
 	    arg ? arg : panel_shrink_margin(panel));
 
       case WIN_FIT_HEIGHT:
-        arg = va_arg(valist, int);
+        arg = va_arg(valist, Attr_attribute);
 	return (Xv_opaque) shrink_to_fit(panel, FALSE,
 	    arg ? arg : panel_shrink_margin(panel));
 

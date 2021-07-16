@@ -10,15 +10,16 @@ static char     sccsid[] = "@(#)windowcmpt.c 20.23 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview_private/windowimpl.h>
-
+#include <xview_private/windowcmpt_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/attr_cu_.h>
 
 /* VARARGS2 */
 Xv_Window
 #ifdef ANSI_FUNC_PROTO
-window_create(Xv_Window parent_public, Xv_pkg *pkg, ...)
+_window_create(Xv_Window parent_public, Xv_pkg *pkg, ...)
 #else
-window_create(parent_public, pkg, va_alist)
+_window_create(parent_public, pkg, va_alist)
     Xv_Window       parent_public;
     Xv_pkg         *pkg;
 va_dcl
@@ -38,9 +39,9 @@ va_dcl
 /* VARARGS1 */
 int
 #ifdef ANSI_FUNC_PROTO
-window_set(Xv_Window win_public, ...)
+_window_set(Xv_Window win_public, ...)
 #else
-window_set(win_public, va_alist)
+_window_set(win_public, va_alist)
     Xv_Window       win_public;
 va_dcl
 #endif
@@ -90,7 +91,7 @@ window_scan_and_convert_to_pixels(win_public, avlist)
     register Window_info *win = WIN_PRIVATE(win_public);
     register Attr_avlist attrs;
 
-    for (attrs = avlist; (int)*attrs; attrs = attr_next(attrs)) {
+    for (attrs = avlist; *attrs; attrs = attr_next(attrs)) {
 	switch ((Window_attribute) attrs[0]) {
 	  case WIN_FONT:
 	    if (attrs[1]) {

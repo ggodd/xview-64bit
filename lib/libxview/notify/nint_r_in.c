@@ -14,7 +14,8 @@ static char     sccsid[] = "@(#)nint_r_in.c 20.12 93/06/28 Copyr 1985 Sun Micro"
  * Nint_r_in.c - Implement the notify_remove_input_func interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/nint_r_in_.h>
+#include <xview_private/nint_r_fd_.h>
 #include <xview_private/nint.h>
 
 extern          Notify_error

@@ -14,6 +14,8 @@ static char     sccsid[] = "@(#)cim_change.c 20.19 93/06/28";
  * Character image manipulation (except size change) routines.
  */
 
+#include <xview_private/cim_change_.h>
+#include <xview_private/csr_change_.h>
 #include <xview_private/i18n_impl.h>
 #include <sys/types.h>
 #include <string.h>
@@ -21,13 +23,10 @@ static char     sccsid[] = "@(#)cim_change.c 20.19 93/06/28";
 #include <xview_private/ttyansi.h>
 #include <xview_private/charimage.h>
 #include <xview_private/charscreen.h>
-#include <xview_private/tty_impl.h>
+
+static void reverse(int a, int b);
 
 char            boldify;
-
-/* static */ void ttysw_roll();
-static void reverse();
-/* static */ void ttysw_swap();
 
 #define JF
 
@@ -64,6 +63,7 @@ ttysw_bold_mode()
 }
 
 /* NOT USED */
+void
 ttysw_nobold_mode()
 {
     boldify &= ~MODE_BOLD;
@@ -76,6 +76,7 @@ ttysw_underscore_mode()
 }
 
 /* NOT USED */
+void 
 ttysw_nounderscore_mode()
 {
     boldify &= ~MODE_UNDERSCORE;
@@ -88,6 +89,7 @@ ttysw_inverse_mode()
 }
 
 /* NOT USED */
+void 
 ttysw_noinverse_mode()
 {
     boldify &= ~MODE_INVERT;

@@ -16,6 +16,9 @@ static char     sccsid[] = "@(#)expandname.c 20.24 93/06/28";
  * free_namelist:  Free a dynamic struct namelist allocated by xv_expand_name.
  */
 
+#include <xview_private/expandname_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/xv_.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -50,12 +53,9 @@ static char     sccsid[] = "@(#)expandname.c 20.24 93/06/28";
 #else
 char           *getenv();
 #endif
-struct namelist *xv_mk_0list();
-struct namelist *xv_mk_1list();
 
-struct namelist *makelist();
 
-static int xv_anyof();
+static int xv_anyof(register char *s1, register char *s2);
 
 static char    *Default_Shell = "/bin/sh";
 
@@ -70,7 +70,7 @@ xv_expand_name(name)
     char            cmdbuf[BUFSIZ];
     register int    pid, length;
     register char  *Shell;
-    int             status, pivec[2];
+    int             status, pivec[2], result;
     char           *echo = "echo ";
     char           *trimchars = "\t \n";
 
@@ -103,10 +103,10 @@ xv_expand_name(name)
 	    Shell = Default_Shell;
 	(void) close(pivec[0]);
 	(void) close(1);
-	(void) dup(pivec[1]);
+	result = dup(pivec[1]);
 	(void) close(pivec[1]);
 	(void) close(2);
-	execl(Shell, Shell, "-c", cmdbuf, 0);
+	execl(Shell, Shell, "-c", cmdbuf, NULL);
 	_exit(1);
     }
     if (pid == -1) {
@@ -127,7 +127,7 @@ xv_expand_name(name)
 	length += status;
     }
     (void) close(pivec[0]);
-#ifndef SVR4
+#ifdef SVR4
     while (wait((union wait *) & status) != pid);
 #else /* SVR4 */
     while (wait( & status) != pid);

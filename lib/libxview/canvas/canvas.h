@@ -45,7 +45,7 @@
 
 #define	CANVAS_EACH_PAINT_WINDOW(canvas, pw)	\
    {int _pw_cnt = 0; \
-   while (((pw) = (Xv_Window) xv_get((canvas), CANVAS_NTH_PAINT_WINDOW, _pw_cnt++)) != NULL) { \
+   while (((pw) = (Xv_Window) xv_get((canvas), CANVAS_NTH_PAINT_WINDOW, _pw_cnt++)) != (Xv_Window)NULL) { \
 
 #define	CANVAS_END_EACH	}}
 

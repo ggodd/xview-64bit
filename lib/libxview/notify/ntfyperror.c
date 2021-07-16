@@ -14,10 +14,11 @@ static char     sccsid[] = "@(#)ntfyperror.c 20.19 93/06/28 Copyr 1985 Sun Micro
  * Ntfy_perror.c - Notify_perror implementation.
  */
 
+#include <xview_private/ntfyperror_.h>
+#include <xview_private/gettext_.h>
 #include <stdio.h>
 #include <xview_private/i18n_impl.h>
 #include <xview/xv_error.h>
-#include <xview_private/ntfy.h>
 
 extern void
 notify_perror(str)

@@ -121,48 +121,4 @@ struct openwin_info_struct {
  */
 extern	Attr_attribute openwin_view_context_key;
 
-/*
- * Package private function declarations:
- */
-
-/* openwin.c */
-Pkg_private int openwin_init();
-Pkg_private int openwin_destroy();
- 
-/* ow_get.c */
-Pkg_private Xv_opaque openwin_get();
-
-/* ow_set.c */
-Pkg_private Xv_opaque openwin_set();
-
-/* ow_evt.c */
-Pkg_private Notify_value openwin_event();
-Pkg_private Notify_value openwin_view_event();
-
-/* ow_resize.c */
-Pkg_private int	 openwin_adjust_views();
-Pkg_private void openwin_adjust_view();
-Pkg_private void openwin_place_scrollbar();
-
-/* ow_paint.c */
-Pkg_private void openwin_clear_damage();
-
-#ifdef SELECTABLE_VIEWS
-/* openwin_seln.c */
-extern void	 openwin_seln_function();
-extern Xv_opaque openwin_seln_reply();
-extern void	 openwin_select();
-extern void	 openwin_select_view();
-#endif /* SELECTABLE_VIEWS */
-
-/* openwin_view.c */
-extern	void				openwin_create_initial_view();
-extern	void				openwin_destroy_views();
-extern	int				openwin_count_views();
-extern Openwin_view_info *openwin_nth_view();
-extern	int				openwin_viewdata_for_view();
-extern	void				openwin_split_view();
-extern	int				openwin_fill_view_gap();
-extern	void				openwin_copy_scrollbar();
-
 #endif	/* __openwin_impl_h */

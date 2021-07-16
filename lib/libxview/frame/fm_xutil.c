@@ -20,5 +20,5 @@ frame_setwmhints(display, w, wmhints)
     XWMHints       *wmhints;
 {
     XChangeProperty(display, w, XA_WM_HINTS, XA_WM_HINTS, 32,
-		    PropModeReplace, (unsigned char *) wmhints, 9);
+		    PropModeReplace, (unsigned char *) wmhints, sizeof(XWMHints));
 }

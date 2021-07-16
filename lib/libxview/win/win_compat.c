@@ -14,6 +14,8 @@ static char     sccsid[] = "@(#)win_compat.c% 20.23 93/06/28";
  * Win_compat.c: SunView 1.X compatibility routines.
  */
 
+#include <xview_private/win_compat_.h>
+#include <xview_private/gettext_.h>
 #include <xview_private/i18n_impl.h>
 #include <xview/pkg.h>
 #include <xview/window.h>

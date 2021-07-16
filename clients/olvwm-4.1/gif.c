@@ -64,17 +64,13 @@ struct {
 	int     disposal;
 } Gif89 = { -1, -1, -1, 0 };
 
-#ifdef __STDC__
-static int DoExtension(FILE *fd, int label);
-static XImage* ReadImage(Display *dpy, FILE *fd, int len, int height, XColor *cmap, int interlace, int ignore);
 static int ReadColorMap(FILE *fd, int number, XColor *buffer);
-static int GetDataBlock(FILE *fd, unsigned char  *buf);
-#else
-static int DoExtension();
-static XImage* ReadImage();
-static int ReadColorMap();
-static int GetDataBlock();
-#endif
+static int DoExtension(FILE *fd, int label);
+static int GetDataBlock(FILE *fd, unsigned char *buf);
+static int GetCode(FILE *fd, int code_size, int flag);
+static int LWZReadByte(FILE *fd, int flag, int input_code_size);
+static XImage* ReadImage(Display *dpy, FILE *fd, int len, int height, XColor *cmap, int interlace, int ignore);
+
 
 XImage *ReadGIF(dpy, fd, pNcolors, pColors)
 Display *dpy;

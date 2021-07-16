@@ -19,9 +19,11 @@
  * if you're not on System V.
  */
 
+#include <unistd.h>
 #include <sys/types.h>
 #include <signal.h>
 #include <sys/time.h>
+#include "usleep.h"
 
 void olwm_do_nothing() { }
 

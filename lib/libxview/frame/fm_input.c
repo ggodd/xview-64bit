@@ -10,13 +10,20 @@ static char     sccsid[] = "@(#)fm_input.c 20.59 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/fm_input_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/help_.h>
+#include <xview_private/fm_display_.h>
+#include <xview_private/fm_rescale_.h>
+#include <xview_private/frame_base_.h>
+#include <xview_private/frame_sw_.h>
+#include <xview_private/win_geom_.h>
 #include <xview_private/fm_impl.h>
 #include <xview_private/draw_impl.h>
 #include <xview/notice.h>
 #include <xview/sel_svc.h>
 
-static int frame_set_focus();
-
+static int frame_set_focus(Xv_Window sw);
 
 /* ARGSUSED */
 Pkg_private     Notify_value
@@ -363,6 +370,7 @@ frame_set_accept_default_focus(frame_public, flag)
 #if 1
     Frame frame_public;
 #endif
+    int flag;
 {
     Frame_class_info *frame = FRAME_CLASS_PRIVATE(frame_public);
 

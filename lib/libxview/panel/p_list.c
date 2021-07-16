@@ -10,6 +10,17 @@ static char     sccsid[] = "@(#)p_list.c 1.142 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/p_list_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/pf_text_.h>
+#include <xview_private/p_list2_.h>
+#include <xview_private/p_paint_.h>
+#include <xview_private/p_utl_.h>
+#include <xview_private/scrn_get_.h>
+#include <xview_private/win_bell_.h>
+#include <xview_private/win_input_.h>
+#include <xview_private/xv_.h>
 #include <ctype.h>
 #include <string.h>
 #include <X11/X.h>
@@ -46,73 +57,55 @@ static char     sccsid[] = "@(#)p_list.c 1.142 93/06/28";
 #define RETURN '\r'
 #define TAB '\t'
 
+static void panel_list_handle_event(Panel_item item_public, Event *event);
+static void panel_list_paint(Panel_item item_public);
+static void panel_list_resize(Panel_item item_public);
+static void panel_list_remove(Panel_item item_public);
+static void panel_list_layout(Panel_item item_public, Rect *deltas);
+static void show_focus_win(Panel_item item_public);
+static void hide_focus_win(Panel_item item_public);
+static void accept_change(Panel_item text_item, Row_info *edit_row);
+static void accept_insert(Panel_list_info *dp, Row_info *row);
+static Panel_setting change_done(Panel_item text_item, Event *event);
+static Xv_opaque change_proc(Menu menu, Menu_item menu_item); 
+static int check_for_duplicate(Panel_list_info *dp, CHAR *string);
+static Xv_opaque clear_all_choices(Menu menu, Menu_item menu_item); 
+static void compute_dimensions(Item_info *ip, Panel_list_info *dp);
+static Xv_opaque delete_proc(Menu menu, Menu_item menu_item); 
+static Xv_opaque enter_edit_mode(Menu menu, Menu_item menu_item); 
+static Xv_opaque enter_read_mode(Menu menu, Menu_item menu_item); 
+static Row_info *find_or_create_nth_row(Panel_list_info *dp, int which_row, int create);
+static Row_info *gimme_the_next_row(Panel_list_info *dp, Row_info *prev);
+static Row_info *create_next_row(Panel_list_info *dp, Row_info *prev);
+static int fit_list_box_to_rows(Panel_list_info *dp);
+static int get_row_rect(Panel_list_info *dp, Row_info *row, Rect *rect);
+static void handle_menu_event(Panel_list_info *dp, Event *event);
+static Panel_setting insert_done(Panel_item text_item, Event *event);
+static Xv_opaque insert_proc(Menu menu, Menu_item menu_item);
+static Xv_opaque locate_next_choice(Menu menu, Menu_item menu_item); 
+static void make_row_visible(Panel_list_info *dp, int desired_row_nbr);
+static Row_info *next_row(Panel_list_info *dp, Row_info *row, int n);
+static void paint_list_box(Panel_list_info *dp);
+static void paint_list_box_border(Panel_list_info *dp); 
+static void paint_row(Panel_list_info *dp, Row_info *row);
+static void paint_title_box(Panel_list_info *dp);
+static void panel_list_create_displayarea(Panel_list_info *dp);
+static void panel_list_delete_row(Panel_list_info *dp, Row_info *node, int repaint);
+static Row_info *panel_list_insert_row(Panel_list_info *dp, int which_row, int show, int repaint);
+static int row_visible(Panel_list_info *dp, int desired_row_nbr); 
+static void set_current_row(Panel_list_info *dp, Row_info *event_row, Event *event);
+static void set_edit_row(Panel_list_info *dp, Row_info *event_row, int toggle, Event *event);
+static void set_row_display_str_length(Panel_list_info *dp, Row_info *row);
+static void set_row_font(Panel_list_info *dp, Row_info *row, Xv_Font font);
+static void set_row_glyph(Panel_list_info *dp, Row_info *row, Pixrect *glyph_pr);
+static void set_row_mask_glyph(Panel_list_info *dp, Row_info *row, Pixrect *glyph_pr);
+static void show_feedback(Panel_list_info *dp, Row_info *row, Event *event);
+static void list_menu_done_proc(Menu menu, Xv_opaque result);
+static int is_dbl_click(Panel_list_info *dp, Row_info *row, Event *event);
 
 #ifdef OW_I18N
-Xv_public struct pr_size  xv_pf_textwidth_wc();
 extern	  wchar_t	 _xv_null_string_wc[];
-#else
-Xv_public struct pr_size  xv_pf_textwidth();
 #endif /* OW_I18N */
-
-Xv_private void	    screen_adjust_gc_color();
-Xv_private void	    win_set_no_focus();
-
-/* XView functions */
-Pkg_private int panel_list_init();
-Pkg_private Xv_opaque panel_list_set_avlist();
-Pkg_private Xv_opaque panel_list_get_attr();
-Pkg_private int panel_list_destroy();
-Pkg_private void panel_list_row_inactive_set();
-Pkg_private int panel_list_row_inactive_get();
-
-/* Panel Item Operations */
-static void         panel_list_handle_event();
-static void	    panel_list_paint();
-static void	    panel_list_resize();
-static void	    panel_list_remove();
-static void	    panel_list_layout();
-static void	    show_focus_win();
-static void	    hide_focus_win();
-
-/* Local functions */
-static void	    accept_change();
-static void	    accept_insert();
-static Panel_setting change_done();
-static Xv_opaque    change_proc();
-static int	    check_for_duplicate();
-static Xv_opaque    clear_all_choices();
-static void	    compute_dimensions();
-static Xv_opaque    delete_proc();
-static Xv_opaque    enter_edit_mode();
-static Xv_opaque    enter_read_mode();
-static Row_info	   *find_or_create_nth_row();
-static Row_info	   *create_next_row();
-static Row_info	   *gimme_the_next_row();
-static int	    fit_list_box_to_rows();
-static int	    get_row_rect();
-static void	    handle_menu_event();
-static Panel_setting insert_done();
-static Xv_opaque    insert_proc();
-static Xv_opaque    locate_next_choice();
-static void	    make_row_visible();
-static Row_info	   *next_row();
-static void	    paint_list_box();
-static void	    paint_list_box_border();
-static void	    paint_row();
-static void	    paint_title_box();
-static void	    panel_list_create_displayarea();
-static void         panel_list_delete_row();
-static Row_info	   *panel_list_insert_row();
-static int	    row_visible();
-static void	    set_current_row();
-static void	    set_edit_row();
-static void	    set_row_display_str_length();
-static void	    set_row_font();
-static void	    set_row_glyph();
-static void	    set_row_mask_glyph();
-static void	    show_feedback();
-static void	    list_menu_done_proc();
-static int	    is_dbl_click();
 
 static Panel_ops ops = {
     panel_list_handle_event,		/* handle_event() */
@@ -507,10 +500,10 @@ panel_list_set_avlist(panel_list_public, avlist)
 		    break;
 		if ((Panel_list_mode) avlist[1] == PANEL_LIST_READ &&
 		    dp->edit_mode)
-		    enter_read_mode(dp->read_menu, NULL);
+		    enter_read_mode(dp->read_menu, (Menu_item)NULL);
 		else if ((Panel_list_mode) avlist[1] == PANEL_LIST_EDIT &&
 		    !dp->edit_mode)
-		    enter_edit_mode(dp->edit_menu, NULL);
+		    enter_edit_mode(dp->edit_menu, (Menu_item)NULL);
 		break;
 		
 	  case PANEL_LIST_SELECT:
@@ -1243,7 +1236,7 @@ panel_list_get_attr(panel_list_public, status, which_attr, valist)
       case PANEL_ITEM_NTH_WINDOW:
 /* Alpha compatibility, mbuck@debian.org */
 #if 1
-	if (va_arg(valist, int) == 0)
+	if (va_arg(valist, Attr_attribute) == 0)
 #else
 	if (*(int *) valist == 0)
 #endif
@@ -1275,7 +1268,7 @@ panel_list_get_attr(panel_list_public, status, which_attr, valist)
       case PANEL_LIST_SELECTED:
 /* Alpha compatibility, mbuck@debian.org */
 #if 1
-	row = va_arg(valist, int);
+	row = va_arg(valist, Attr_attribute);
 #else
 	row = *(int *) valist;
 #endif
@@ -1292,7 +1285,7 @@ panel_list_get_attr(panel_list_public, status, which_attr, valist)
       case PANEL_LIST_NEXT_SELECTED:
 /* Alpha compatibility, mbuck@debian.org */
 #if 1
-	row = va_arg(valist, int);
+	row = va_arg(valist, Attr_attribute);
 #else
 	row = *(int *) valist;
 #endif
@@ -1308,7 +1301,7 @@ panel_list_get_attr(panel_list_public, status, which_attr, valist)
       case PANEL_LIST_CLIENT_DATA:
 /* Alpha compatibility, mbuck@debian.org */
 #if 1
-	row = va_arg(valist, int);
+	row = va_arg(valist, Attr_attribute);
 #else
 	row = *(int *) valist;
 #endif
@@ -1321,7 +1314,7 @@ panel_list_get_attr(panel_list_public, status, which_attr, valist)
 #endif
 /* Alpha compatibility, mbuck@debian.org */
 #if 1
-	row = va_arg(valist, int);
+	row = va_arg(valist, Attr_attribute);
 #else
 	row = *(int *) valist;
 #endif
@@ -1341,7 +1334,7 @@ panel_list_get_attr(panel_list_public, status, which_attr, valist)
       case PANEL_LIST_GLYPH:
 /* Alpha compatibility, mbuck@debian.org */
 #if 1
-	row = va_arg(valist, int);
+	row = va_arg(valist, Attr_attribute);
 #else
 	row = *(int *) valist;
 #endif
@@ -1362,7 +1355,7 @@ panel_list_get_attr(panel_list_public, status, which_attr, valist)
       case PANEL_LIST_FONT:
 /* Alpha compatibility, mbuck@debian.org */
 #if 1
-	row = va_arg(valist, int);
+	row = va_arg(valist, Attr_attribute);
 #else
 	row = *(int *) valist;
 #endif
@@ -1391,7 +1384,7 @@ panel_list_get_attr(panel_list_public, status, which_attr, valist)
     case PANEL_LIST_INACTIVE:
 /* Alpha compatibility, mbuck@debian.org */
 #if 1
-	row = va_arg(valist, int);
+	row = va_arg(valist, Attr_attribute);
 #else
 	row = *(int *) valist;
 #endif
@@ -1411,7 +1404,7 @@ panel_list_get_attr(panel_list_public, status, which_attr, valist)
 	int count;
 	int ii;
 
-	row = va_arg(valist, int);
+	row = va_arg(valist, Attr_attribute);
 #ifdef OW_I18N
 	/*
 	 * DEPEND_ON_OFFSET_ALIGMENT: Most of the CPU will not make
@@ -1421,7 +1414,7 @@ panel_list_get_attr(panel_list_public, status, which_attr, valist)
 	 */
 #endif
 	entry = va_arg(valist, Panel_list_row_values *);
-	count = va_arg(valist, int);
+	count = va_arg(valist, Attr_attribute);
 	node = find_or_create_nth_row(dp, row, FALSE);
 
 	for(ii=0; ii<count; ++ii) {
@@ -1451,7 +1444,7 @@ panel_list_get_attr(panel_list_public, status, which_attr, valist)
     case PANEL_LIST_EXTENSION_DATA:
 /* Alpha compatibility, mbuck@debian.org */
 #if 1
-	row = va_arg(valist, int);
+	row = va_arg(valist, Attr_attribute);
 #else
 	row = *(int *) valist;
 #endif

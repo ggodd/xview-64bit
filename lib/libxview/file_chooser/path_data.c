@@ -16,13 +16,7 @@ static char     sccsid[] = "@(#)path_data.c 1.4 93/06/28";
  */
 
 #include <xview/xview.h>
-#include <xview/panel.h>
-#include <xview_private/path_impl.h>
-
-extern int 		path_init_avlist();
-extern Xv_opaque	path_set_avlist();
-extern Xv_opaque	path_get_attr();
-extern int 		path_destroy_private();
+#include <xview_private/path_.h>
 
 Xv_pkg path_pkg = {
     "Path_name",

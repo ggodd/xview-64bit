@@ -13,10 +13,21 @@ static char     sccsid[] = "@(#)txt_again.c 20.43 93/06/28";
 /*
  * AGAIN action recorder and interpreter for text subwindows.
  */
-#include <xview/pkg.h>
+#include <xview_private/txt_again_.h>
+#include <xview_private/txt_caret_.h>
+#include <xview_private/txt_edit_.h>
+#include <xview_private/txt_e_menu_.h>
+#include <xview_private/txt_field_.h>
+#include <xview_private/txt_filter_.h>
+#include <xview_private/txt_find_.h>
+#include <xview_private/txt_getkey_.h>
+#include <xview_private/txt_input_.h>
+#include <xview_private/txt_sel_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/ev_edit_.h>
 #include <xview/attrol.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <xview_private/txt_18impl.h>
 #if defined SVR4 || defined __linux__
@@ -25,10 +36,30 @@ static char     sccsid[] = "@(#)txt_again.c 20.43 93/06/28";
 #include <ctype.h>
 #endif /* SVR4 */
 
-Pkg_private Es_index textsw_do_input();
-Pkg_private Es_index textsw_do_pending_delete();
-
-static int textsw_string_min_free(string_t *ptr_to_string, int min_free_desired);
+static int textsw_string_append(string_t *ptr_to_string, CHAR *buffer, int buffer_length);
+static int textsw_string_min_free(register string_t *ptr_to_string, int min_free_desired);
+#ifdef __linux__
+static int textsw_printf(string_t *ptr_to_string, char *fmt, ...);
+#else 
+#ifndef SVR4
+static int textsw_printf(string_t *ptr_to_string, char *fmt, ...);
+#else 
+static int textsw_printf(string_t *ptr_to_string, char *fmt, ...);
+#endif 
+#endif 
+static void textsw_record_buf(register string_t *again, CHAR *buffer, int buffer_length);
+#ifdef OW_I18N 
+static int my_wstoi(CHAR *num_string);
+#endif 
+#ifdef __linux__
+static int textsw_scanf(string_t *ptr_to_string, char *fmt, ...);
+#else 
+static int textsw_scanf(string_t *ptr_to_string, char *fmt, ...);
+#endif 
+static int textsw_next_is_delimiter(string_t *again);
+static Es_handle textsw_pieces_for_replay(register string_t *again);
+static int textsw_text_for_replay(register string_t *again, register CHAR **ptr_to_buffer);
+static CHAR *token_index(CHAR *string, register CHAR *token);
 
 string_t        null_string = {0, 0, 0};
 
@@ -85,12 +116,6 @@ char           *text_tokens[] = {
 #ifdef OW_I18N
 #define		    MB_STR_BUFFER_LEN		100
 static char	    mb_str[MB_STR_BUFFER_LEN];
-#endif
-
-#ifdef __STDC__
-static int textsw_string_min_free(string_t *ptr_to_string, int min_free_desired);
-#else
-static int textsw_string_min_free();
 #endif
 
 Pkg_private int
@@ -196,11 +221,11 @@ textsw_string_min_free(ptr_to_string, min_free_desired)
 
 static int
 #ifdef ANSI_FUNC_PROTO
-textsw_printf(register string_t *ptr_to_string, register char  *fmt, ...)
+textsw_printf(string_t *ptr_to_string, char  *fmt, ...)
 #else
 textsw_printf(ptr_to_string, fmt, va_alist)
-    register string_t *ptr_to_string;
-    register char  *fmt;
+    string_t *ptr_to_string;
+    char  *fmt;
 va_dcl
 #endif
 {
@@ -626,7 +651,7 @@ textsw_record_piece_insert(textsw, pieces)
     textsw->again_insert_length = 0;
     if (textsw_string_min_free(again, 25) != TRUE)
 	return;			/* Cannot guarantee enough space */
-    (void) textsw_printf(again, "%s %s %d\n",
+    (void) textsw_printf(again, "%s %s %ld\n",
 			 cmd_tokens[ord(INSERT_TOKEN)],
 			 text_tokens[PIECES_TOKEN], pieces);
 }
@@ -663,11 +688,11 @@ textsw_record_trash_insert(textsw)
 
 static int
 #ifdef ANSI_FUNC_PROTO
-textsw_scanf(register string_t *ptr_to_string, register char  *fmt, ...)
+textsw_scanf(string_t *ptr_to_string, char  *fmt, ...)
 #else
 textsw_scanf(ptr_to_string, fmt, va_alist)
-    register string_t *ptr_to_string;
-    register char  *fmt;
+    string_t *ptr_to_string;
+    char  *fmt;
 va_dcl
 #endif
 {
@@ -676,6 +701,7 @@ va_dcl
     int             result;
     char *f, *sp;
     int c, *ip;
+    long *lp;
 
     VA_START(args, fmt);
     sbase = (char *)TXTSW_STRING_BASE(ptr_to_string);
@@ -718,6 +744,25 @@ va_dcl
           while (isxdigit(*sbase))
             ++sbase;
           break;
+        case 'l':
+          ++f;
+          switch(*f) {
+          case 'd':
+            lp = va_arg(args, long *);
+            if (isdigit(*sbase)) {
+              ++result;
+              *lp = atol(sbase);
+              while (isdigit(*sbase))
+                ++sbase;
+            }
+            break;
+          case 'x':
+            lp = va_arg(args, long *);
+            result += sscanf(sbase, "%lx", lp);
+            while (isxdigit(*sbase))
+              ++sbase;
+            break;
+          }
         default:
           break;
         }
@@ -848,7 +893,7 @@ textsw_pieces_for_replay(again)
     int             count;
     Es_handle       pieces = (Es_handle) NULL;
 
-    count = textsw_scanf(again, "%d", &pieces);
+    count = textsw_scanf(again, "%ld", &pieces);
     CHECK_ERROR(count != 1 || pieces == (Es_handle) NULL);
     CHECK_ERROR(*TXTSW_STRING_BASE(again)++ != '\n');
 Again_Error:
@@ -967,7 +1012,7 @@ textsw_get_recorded_x(view)
     int             found_it_already = FALSE;
 
     if (!TXTSW_DO_AGAIN(folio))
-	return;
+	return result;
     again = &folio->again[0];
     if (TXTSW_STRING_IS_NULL(again)) {
 	return (result);
@@ -1031,8 +1076,6 @@ textsw_do_again(view, x, y)
     int             x, y;
 {
 #define CHECK_ERROR(test)	if AN_ERROR(test) goto Again_Error;
-    Pkg_private int ev_get_selection();
-    Pkg_private void textsw_move_caret();
     register Textsw_folio textsw = FOLIO_FOR_VIEW(view);
     register string_t *again;
     CHAR           *buffer = NULL, *saved_base;
@@ -1142,7 +1185,6 @@ textsw_do_again(view, x, y)
 	    }
 
 	  case EXTRAS_TOKEN:{
-		Pkg_private char **textsw_string_to_argv();
 		char          **filter_argv;
 
 		CHECK_ERROR(textsw_next_is_delimiter(again) == 0);

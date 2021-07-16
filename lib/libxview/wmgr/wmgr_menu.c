@@ -10,6 +10,9 @@ static char     sccsid[] = "@(#)wmgr_menu.c 20.42 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/wmgr_menu_.h>
+#include <xview_private/win_treeop_.h>
+#include <xview_private/xv_.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -32,13 +35,7 @@ static char     sccsid[] = "@(#)wmgr_menu.c 20.42 93/06/28";
 #define _OTHER_WIN_ENV_FUNCTIONS
 #include <xview/win_env.h>
 
-static void     wmgr_top_bottom();
-
-#ifdef __STDC__
-Pkg_private int wmgr_constructargs(char *args[], char *programname, char *otherargs, int maxargcount);
-#else
-Pkg_private int wmgr_constructargs();
-#endif
+static void wmgr_top_bottom(Frame frame, int link);
 
 Xv_public void
 wmgr_open(frame_public)

@@ -10,12 +10,10 @@ static char     sccsid[] = "@(#)p_view.c 20.31 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview_private/panel_impl.h>
-#include <xview/defaults.h>
+#include <xview_private/p_view_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/p_event_.h>
 #include <xview/notify.h>
-
-
-Pkg_private int panel_view_init();
 
 
 /*ARGSUSED*/
@@ -34,7 +32,7 @@ panel_view_init(parent, view_public, avlist)
     } else
 	pw = parent;
     screen = (Xv_Screen) xv_get(pw, XV_SCREEN);
-    if (pw != NULL) {
+    if (pw != (Xv_Window)NULL) {
 	(void) xv_set(pw,
 		      WIN_RETAINED,
 		      ((int) xv_get(screen, SCREEN_RETAIN_WINDOWS)),

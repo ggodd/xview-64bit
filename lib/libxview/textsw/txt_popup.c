@@ -14,8 +14,16 @@ static char     sccsid[] = "@(#)txt_popup.c 1.54 93/06/28";
  * Text subwindow menu creation and support.
  */
 
+#include <xview_private/txt_popup_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/txt_incl_.h>
+#include <xview_private/txt_line_.h>
+#include <xview_private/txt_load_.h>
+#include <xview_private/txt_match_.h>
+#include <xview_private/txt_search_.h>
+#include <xview_private/txt_selsvc_.h>
+#include <xview_private/win_geom_.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <xview_private/txt_18impl.h>
 #include <sys/time.h>
@@ -102,23 +110,11 @@ Panel_item      include_panel_items[MAX_FILE_PANEL_ITEMS];
 Panel_item      search_panel_items[MAX_SEARCH_PANEL_ITEMS];
 Panel_item      match_panel_items[MAX_MATCH_PANEL_ITEMS];
 Panel_item      sel_line_panel_items[MAX_SEL_LINE_PANEL_ITEMS];
-Pkg_private int open_cmd_proc();
-Pkg_private int include_cmd_proc();
-Pkg_private int save_cmd_proc();
 
-Panel textsw_create_match_panel();
-Panel textsw_create_search_panel();
-Panel textsw_create_sel_line_panel();
-
-#ifdef __STDC__
+static Notify_value textsw_popup_destroy_func(Notify_client client, Destroy_status status);
+static void add_exten_item(File_chooser fc);
 static void show_dot_files_proc(Panel_choice_item item, int value, Event *event);
 static int fc_exten_func(File_chooser fc, Rect *frame_rect, Rect *exten_rect, int left_edge, int right_edge, int max_height);
-static void add_exten_item(File_chooser fc);
-#else
-static void show_dot_files_proc();
-static int fc_exten_func();
-static void add_exten_item();
-#endif
 
 static Notify_value
 textsw_popup_destroy_func(client, status)

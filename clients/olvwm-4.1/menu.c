@@ -34,6 +34,7 @@
 #include <X11/Xatom.h>
 #include <X11/Xresource.h>
 #include <X11/keysym.h>
+#include <X11/Intrinsic.h>
 
 #include "i18n.h"
 #include <olgx/olgx.h>
@@ -48,8 +49,15 @@
 #include "menu.h"
 #include "globals.h"
 #include "error.h"
-
-extern unsigned int FindModifierMask();
+#include "client.h"
+#include "winpinmenu.h"
+#include "wincolor.h"
+#include "winmenu.h"
+#include "helpcmd.h"
+#include "evbind.h"
+#include "kbdfuncs.h"
+#include "usermenu.h"
+#include "helpsend.h"
 
 /* Locals */
 static XEvent lastPress;
@@ -86,40 +94,15 @@ static int  topMenu = 0;	/* Next free menuInfoTable slot. */
 Bool flDoSetDefault;
 
 /********************************************************************************/
-static void calcmenusize();
-static void recalcCachedMenu();
-
-static void (*syncFunc) ();
 static void *syncInfo;
-       MenuInfo *FindMenuInfo();
-       void MenuInfoDestroy();
-static ButtonInfo *buttonInfoCreate();
-static void showMenu();
-static Bool menuHandleUpDownMotion();
-static Bool menuHandlePress();
-static void menuHandleMotion();
-static Bool menuHandleRelease();
-static MenuInfo *menuSearch();
-static MenuLocation checkMenuEvent();
-static void menuHide();
-static void unmapChildren();
-static void activateButton();
-static void setMenuPin();
-static void activateSubMenu();
-static void drawButton();
-static void drawRevButton();
-static Bool isClick();
-static Bool isEnabled();
-static void calcbuttonpositions();
-
-int MenuTrack();
-void DrawLocCursor();
+static void (*syncFunc) ();
 
 #ifdef notdef
 /* Defaulting stuff */
 extern DefaultsP DefaultsPtr;	/* defined in usermenu.c */
 
-
+static void makeRMName_class(char *name, char *class, char *Name);
+static int ApplyDefaults(DefaultsP DefPtr, MenuInfo *mInfo);
 
 /* REMIND:
  * the resource stuff for saving defaults is not implemented;
@@ -147,8 +130,6 @@ CreateDB()
 {
     char       *path;
     char        filename[80];
-    extern char *getenv();
-    extern XrmDatabase XrmGetFileDataBase();
 
     if ((path = getenv("OLWMRC")) != NULL)
 	return XrmGetFileDatabase(path);
@@ -271,12 +252,12 @@ ApplyMenuDefaults(dpy, menuCache)
  * Save defaults for next invocation of wm. Should be called from cleanup()
  * functions when exiting wm.
  */
+void
 SaveMenuDefaults()
 {
     char       *path;
     char        filename[80];
     FILE       *fd;
-    extern char *getenv();
     DefaultsP   curr, temp;
     char        name[80], class[80];
     /* open a file for writing, overwriting existing file */
@@ -308,6 +289,50 @@ SaveMenuDefaults()
 
 #endif
 
+struct brotherVisitInfo {
+    Menu *menu;
+    int newdef;
+};
+
+static Text *menuTitle(MenuInfo *mInfo);
+static void _bringPinnedMenuToTop(Client *cli, MenuInfo *mInfo);
+static void drawMenuPushpin(Display *dpy, MenuInfo *menuInfo);
+static int findMaxDepth(MenuCache *menuCache);
+static void calcbuttonpositions(WinGeneric *wi, ButtonInfo *bi, MenuInfo *mi);
+static void establishAccelerator(ButtonInfo *bInfo, KeyBinding *binding);
+static ButtonInfo *buttonInfoCreate(MenuCache *menuCache, WinGeneric *winInfo, MenuInfo *menuInfo);
+static void buttonInfoDestroy(ButtonInfo *bi);
+static int buttonTextWidth(Text *t);
+static void calcmenusize(MenuInfo *menuInfo, WinGeneric *winInfo, Menu *menu);
+static void updateButtonInfo(WinGeneric *wi, MenuInfo *mi);
+static void recalcCachedMenu(WinGeneric *win, Menu *menu);
+static void showMenu(Display *dpy, MenuInfo *menuInfo, int x, int y, Bool flusedefault);
+static void _setdefault(Client *cli, struct brotherVisitInfo *bfi);
+static void setBrothersDefault(Display *dpy, MenuInfo *mInfo, int new);
+static void handleMenuKeyPress(Display *dpy, XEvent *pevent);
+static Bool keyEventToItem(Display *dpy, XKeyEvent *xke);
+static void menuHelpCommand(Display *dpy, XKeyEvent *xke, void *closure);
+static void getMenuDim(MenuInfo *mInfo, XRectangle *prect);
+static Bool inMenuDent(MenuInfo *mInfo, int bindex, XEvent *pevent);
+static Bool menuHandlePress(Display *dpy, XEvent *pevent);
+static void menuHandleMotion(Display *dpy, XEvent *pevent);
+static Bool isEnabled(MenuInfo *mInfo, int item);
+static Bool alldisabled(MenuInfo *mInfo);
+static int nextItem(MenuInfo *mInfo, int item);
+static int prevItem(MenuInfo *mInfo, int item);
+static Bool menuHandleUpDownMotion(Display *dpy, XEvent *pevent, MenuInfo *mInfo);
+static Bool menuHandleRelease(Display *dpy, XEvent *pevent);
+static MenuInfo *menuSearch(XEvent *event);
+static MenuLocation checkMenuEvent(Display *dpy, MenuInfo *menuInfo, XEvent *pevent, int *bindex);
+static void menuHide(Display *dpy, WinGeneric *winInfo, Bool fldoit);
+static void unmapChildren(Display *dpy, MenuInfo *mInfo);
+static void activateButton(Display *dpy, MenuInfo *mInfo, int idx, Bool flsetdefault);
+static void setMenuPin(Display *dpy, MenuInfo *mInfo, Bool state, int flsetdefault);
+static void activateSubMenu(Display *dpy, MenuInfo *mInfo, int bindex, int x);
+static void drawCommonButton(Display *dpy, MenuInfo *menuInfo, int idx, Bool fDefault, Bool fInverse);
+static void drawButton(Display *dpy, MenuInfo *menuInfo, int idx, Bool fDefault);
+static void drawRevButton(Display *dpy, MenuInfo *menuInfo, int idx);
+static Bool isClick(XEvent *e1, XEvent *e2);
 
 /*
  * whether the menu has a title or not is dependant on
@@ -394,7 +419,7 @@ ExecButtonAction(dpy, winInfo, menuInfo, btn)
 	if (btn == PINBUTTON) {
 	    /* pin the menu if we're allowed */
 	    if (isEnabled(menuInfo, PINBUTTON)) {
-	        (void) MakePinMenu(dpy, winInfo, menuInfo);
+	        (void) MakePinMenu(dpy, (WinGeneric *)winInfo, menuInfo);
 	    } else {
 		/*
 		 * That menu is already pinned somewhere; bring
@@ -754,7 +779,7 @@ MenuShowSync(dpy, winInfo, menu, pevent, sfunc, sinfo, flkbd, flbutton)
     if (prevColorFocusWindow == NULL && ColorFocusLocked(menuInfo->menuWin))
 	prevColorFocusWindow = ColorFocusWindow(menuInfo->menuWin);
 
-    InstallColormap(dpy, menuInfo->menuWin->core.client->scrInfo->rootwin);
+    InstallColormap(dpy, (WinGeneric *)menuInfo->menuWin->core.client->scrInfo->rootwin);
 
     switch (pevent->type) {
       case ButtonPress:
@@ -1008,7 +1033,7 @@ establishAccelerator(bInfo, binding)
     Text *modsep;
     Text *temp;
 
-    buf[0] = (Text) NULL;
+    buf[0] = (Text)0;
     modsep = GetText("-");
 
     /* If the accelerator is a letter key, force it to upper case. */
@@ -1581,7 +1606,7 @@ CreateUserMenuInfo(dpy, scrInfo)
 	    MemRealloc(scrInfo->menuCache->menuWinList, maxDepth * sizeof(struct _winmenu *));
 
 	for (i = scrInfo->menuCache->maxDepth; i < maxDepth; i++) {
-	    scrInfo->menuCache->menuWinList[i] = MakeMenu(dpy, scrInfo->rootwin);
+	    scrInfo->menuCache->menuWinList[i] = MakeMenu(dpy, (WinGeneric *)scrInfo->rootwin);
 	}
 	scrInfo->menuCache->maxDepth = maxDepth;
     }
@@ -1665,7 +1690,7 @@ showMenu(dpy, menuInfo, x, y, flusedefault)
     menuInfo->ignoreNextExpose = True;
     menuInfo->action = ACTION_MENU;
 
-    MapMenuWindow(dpy, menuInfo->menuWin, menuInfo);
+    MapMenuWindow(dpy, (WinMenu *)menuInfo->menuWin, menuInfo);
 
     /*
      * Initialize menu brought up using keyboard. Draw the location cursor and
@@ -1678,11 +1703,6 @@ showMenu(dpy, menuInfo, x, y, flusedefault)
 	menuInfo->litButton = menuInfo->menu->buttonDefault;
     }
 }
-
-struct brotherVisitInfo {
-    Menu *menu;
-    int newdef;
-};
 
 static void
 _setdefault(cli, bfi)
@@ -1861,7 +1881,7 @@ menuHelpCommand(dpy, xke, closure)
     void *closure;
 {
     int bindex;
-    MenuInfo *mInfo = menuSearch(xke);
+    MenuInfo *mInfo = menuSearch((XEvent *)xke);
     int status = checkMenuEvent(dpy, mInfo, (XEvent *) xke, &bindex);
     char helpbuff[255];
     char *helpstring;
@@ -1966,7 +1986,7 @@ MenuHandleKeyEvent(dpy, pevent, win, closure)
 	}
 	else {
 	    mInfo = menuInfoTable[topMenu - 1];
-	    UnmapMenuWindow(dpy, mInfo->menuWin);
+	    UnmapMenuWindow(dpy, (WinMenu *)mInfo->menuWin);
 	    --topMenu;
 	    mInfo = menuInfoTable[topMenu - 1];
 	    mInfo->childActive = False;
@@ -1989,7 +2009,7 @@ MenuHandleKeyEvent(dpy, pevent, win, closure)
 	break;
       case ACTION_NONE:
 	if (! keyEventToItem(dpy, (XKeyEvent *) pevent))
-	    KeyBeep(dpy, pevent);
+	    KeyBeep(dpy, (XKeyEvent *)pevent);
 	break;
       case ACTION_HELP:
 	menuHelpCommand(dpy, (XKeyEvent *) pevent, closure);
@@ -2854,7 +2874,7 @@ menuHide(dpy, winInfo, fldoit)
 	WinGeneric *menuWin = mi->menuWin;
 
 	if (menuWin->core.kind == WIN_MENU)
-	    UnmapMenuWindow(dpy, menuWin);
+	    UnmapMenuWindow(dpy, (WinMenu *)menuWin);
 	else {
 	    DrawLocCursor(dpy, mi, mi->litButton, False);
 	    SetButton(dpy, mi, mi->litButton, False, False);
@@ -2876,7 +2896,7 @@ menuHide(dpy, winInfo, fldoit)
 
     if (fldoit) {
 	if (mInfo->pinIn && isEnabled(mInfo, PINBUTTON)) {
-	    (void) MakePinMenu(dpy, winInfo, mInfo);
+	    (void) MakePinMenu(dpy, (WinGeneric *)winInfo, mInfo);
 	} else {
 	    if (item != NOBUTTON && mInfo)
 		ExecButtonAction(dpy, winInfo, mInfo, item);
@@ -2897,7 +2917,7 @@ unmapChildren(dpy, mInfo)
 
     i = topMenu - 1;
     while (i >= 0 && menuInfoTable[i]->menu != mInfo->menu) {
-	UnmapMenuWindow(dpy, menuInfoTable[i]->menuWin);
+	UnmapMenuWindow(dpy, (WinMenu *)menuInfoTable[i]->menuWin);
 	--i;
     }
     topMenu = i + 1;
@@ -3429,7 +3449,7 @@ InitScreenMenus(dpy, scrInfo)
     menuCache->menuWinList = MemAlloc(maxDepth * sizeof(struct _winmenu *));
 
     for (index = 0; index < maxDepth; index++)
-	menuCache->menuWinList[index] = MakeMenu(dpy, scrInfo->rootwin);
+	menuCache->menuWinList[index] = MakeMenu(dpy, (WinGeneric *)scrInfo->rootwin);
 
     menuCache->maxDepth = maxDepth;
 

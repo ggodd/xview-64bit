@@ -10,6 +10,16 @@ static char     sccsid[] = "@(#)tty_mapkey.c 20.41 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/tty_mapkey_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/getlogindr_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/help_.h>
+#include <xview_private/ttyansi_.h>
+#include <xview_private/tty_main_.h>
+#include <xview_private/ttyselect_.h>
+#include <xview_private/win_compat_.h>
+#include <xview_private/win_cntral_.h>
 #include <stdio.h>
 #include <ctype.h>
 #if defined SVR4 || defined __linux__ 
@@ -22,7 +32,6 @@ static char     sccsid[] = "@(#)tty_mapkey.c 20.41 93/06/28";
 #include <xview_private/i18n_impl.h>
 #include <xview_private/portable.h>
 #include <xview_private/win_keymap.h>
-#include <xview/defaults.h>
 #include <xview/sel_svc.h>
 #include <xview/win_input.h>
 #include <xview/ttysw.h>
@@ -33,24 +42,12 @@ static char     sccsid[] = "@(#)tty_mapkey.c 20.41 93/06/28";
 #include <xview/notify.h>
 #undef _NOTIFY_MIN_SYMBOLS
 
-extern Notify_error win_post_event();
-extern char    *getenv();
-extern char    *strcat();
-
-/* static routines	 */
-
-static char    *str_index(),
-               *savestr(),
-               *tdecode();
-
-static void     ttysw_add_caps();
-static void     ttysw_remove_caps();
-static void     ttysw_arrow_keys_to_string();
-/* static */ void ttysw_doset();
-/* static */ int ttysw_mapkey();
-/* static */ int ttysw_strtokey();
-
-
+static char *savestr(char *s);
+static char *tdecode(register char *src, char *dst);
+static char *str_index(char *domain, char *pat);
+static void ttysw_add_caps(char *label, char *label_ptr);
+static void ttysw_remove_caps(char *label, char *label_ptr);
+static void ttysw_arrow_keys_to_string(unsigned xv_id, char *str);
 
 /*
  * Read rc file.
@@ -60,7 +57,6 @@ ttysw_readrc(ttysw)
     struct ttysubwindow *ttysw;
 {
     char           *p;
-    extern char    *xv_getlogindir();
     char            rc[1025];
     FILE           *fp;
     char            line[1025], *av[4];
@@ -253,7 +249,7 @@ ttysw_domap(ttysw, ie)
       case ACTION_MORE_TEXT_HELP:
       case ACTION_INPUT_FOCUS_HELP:
 	if (win_inputposevent(ie))
-	    xv_help_show(TTY_PUBLIC(ttysw), xv_get(TTY_PUBLIC(ttysw), XV_HELP_DATA),
+	    xv_help_show(TTY_PUBLIC(ttysw), (char*)xv_get(TTY_PUBLIC(ttysw), XV_HELP_DATA),
 			 ie);
 	return TTY_DONE;
 
@@ -344,7 +340,7 @@ ttysw_strtokey(s)
 		(void) sprintf(dummy,
 			       XV_MSG(".ttyswrc error: %s cannot be mapped"),
 			       s);
-		xv_error(NULL,
+		xv_error(0,
 			 ERROR_STRING, dummy,
 			 ERROR_PKG, TTY,
 			 0);
@@ -369,7 +365,7 @@ savestr(s)
 
     p = malloc((unsigned) (strlen(s) + 1));
     if (p == (char *) NULL) {
-	xv_error(NULL,
+	xv_error(0,
 		 ERROR_LAYER, ERROR_SYSTEM,
 		 ERROR_STRING, 
 		 XV_MSG("while saving key strings"),

@@ -23,6 +23,7 @@
 #include <olgx/olgx.h>
 
 #include "win.h"
+#include "olwm.h"
 
 /*
  *	Index's into GC array of ScreenInfo struct
@@ -168,104 +169,51 @@ typedef struct _screeninfo {
  *      Global functions from screen.c
  */
 
-#if defined(__STDC__)
-
-extern	void		CreateAutoRootMenu(Display *dpy);
-extern	void		CreateAutoRootMenuScreen(Display *dpy, ScreenInfo *si);
-extern	void		CreateScreenUserMenuInfo(Display *dpy);
-extern	void		CreateScreenWindowMenuInfo(Display *dpy);
-extern  void            DestroyScreens(Display *dpy);
-extern	void		DestroyScreenUserMenuInfo(Display *dpy);
-extern	void		DestroyScreenWindowMenuInfo(Display *dpy);
-extern  ScreenInfo      *GetFirstScrInfo(void);
-extern  ScreenInfo      *GetScrInfoOfScreen(int screen);
-extern  ScreenInfo      *GetScrInfoOfRoot(Window root);
-extern  void            InitScreens(Display *dpy);
-extern	void		ReparentScreens(Display *dpy);
-extern  void            SetWorkspaceBackground(Display *dpy);
-extern  void            SetWindowColor(Display *dpy);
-extern  void            SetForegroundColor(Display *dpy);
-extern  void            SetBackgroundColor(Display *dpy);
-extern  void            SetBorderColor(Display *dpy);
-extern  void            SetTitleFont(Display *dpy);
-extern  void            SetTextFont(Display *dpy);
-extern  void            SetButtonFont(Display *dpy);
-extern  void            SetIconFont(Display *dpy);
-extern  void            SetGlyphFont(Display *dpy);
-extern  void            SetIconLocation(Display *dpy);
-extern  Window          ScreenCreateWindow(ScreenInfo*, Window,
-					   int, int, int, int, unsigned long,
-					   XSetWindowAttributes*);
-extern  void            ScreenDestroyWindow(ScreenInfo*, Window);
-extern  void            ScreenUpdateWinCacheSize(Display *dpy);
-extern	void		SetScreenInputFocusColor(Display *dpy, ScreenInfo *scrInfo);
-extern	void		SetScreenVirtualBackgroundColor(Display *dpy, ScreenInfo *scrInfo);
-extern	void		SetScreenVirtualFontColor(Display *dpy, ScreenInfo *scrInfo);
-extern	void		SetScreenVirtualForegroundColor(Display *dpy, ScreenInfo *scrInfo);
-extern	void		SetScreenVirtualGridColor(Display *dpy, ScreenInfo *scrInfo);
-extern	void		SetScreenVirtualIconColor(Display *dpy, ScreenInfo *scrInfo);
-extern	void		SetScreenVirtualPixmapColor(Display *dpy, ScreenInfo *scrInfo);
-extern	void		UpdateScreenVirtualBackgroundColor(Display *dpy, ScreenInfo *scrInfo);
-extern	void		UpdateScreenVirtualDesktop(Display *dpy, ScreenInfo *scrInfo);
-extern	void		UpdateScreenVirtualDrawSticky(Display *dpy, ScreenInfo *scrInfo);
-extern	void		UpdateScreenVirtualFontColor(Display *dpy, ScreenInfo *scrInfo);
-extern	void		UpdateScreenVirtualForegroundColor(Display *dpy, ScreenInfo *scrInfo);
-extern	void		UpdateScreenVirtualGridColor(Display *dpy, ScreenInfo *scrInfo);
-extern	void		UpdateScreenVirtualIconGeometry(Display *dpy, ScreenInfo *scrInfo);
-extern	void		UpdateScreenVirtualScale(Display *dpy, ScreenInfo *scrInfo);
-extern	void		UpdateScreenVirtualFont(Display *dpy, ScreenInfo *scrInfo);
-extern	void		UpdateScreenVirtualGeometry(Display *dpy, ScreenInfo *scrInfo);
-extern	void		UpdateScreenVirtualMap(Display *dpy, ScreenInfo *scrInfo);
-extern	void		UpdateScreenVirtualPixmapColor(Display *dpy, ScreenInfo *scrInfo);
-
-#else
-
-extern	void		CreateAutoRootMenu();
-extern	void		CreateAutoRootMenuScreen();
-extern	void		CreateScreenUserMenuInfo();
-extern	void		CreateScreenWindowMenuInfo();
-extern  void            DestroyScreens();
-extern	void		DestroyScreenUserMenuInfo();
-extern	void		DestroyScreenWindowMenuInfo();
-extern  ScreenInfo      *GetFirstScrInfo();
-extern  ScreenInfo      *GetScrInfoOfScreen();
-extern  ScreenInfo      *GetScrInfoOfRoot();
-extern  void            InitScreens();
-extern	void		ReparentScreens();
-extern  void            SetWorkspaceBackground();
-extern  void            SetWindowColor();
-extern  void            SetForegroundColor();
-extern  void            SetBackgroundColor();
-extern  void            SetBorderColor();
-extern  void            SetTitleFont();
-extern  void            SetTextFont();
-extern  void            SetButtonFont();
-extern  void            SetIconFont();
-extern  void            SetGlyphFont();
-extern  void            SetIconLocation();
-extern  Window          ScreenCreateWindow();
-extern  void            ScreenDestroyWindow();
-extern  void            ScreenUpdateWinCacheSize();
-extern	void		SetScreenInputFocusColor();
-extern	void		SetScreenVirtualBackgroundColor();
-extern	void		SetScreenVirtualFontColor();
-extern	void		SetScreenVirtualForegroundColor();
-extern	void		SetScreenVirtualGridColor();
-extern	void		SetScreenVirtualIconColor();
-extern	void		SetScreenVirtualPixmapColor();
-extern	void		UpdateScreenVirtualBackgroundColor();
-extern	void		UpdateScreenVirtualDesktop();
-extern	void		UpdateScreenVirtualDrawSticky();
-extern	void		UpdateScreenVirtualFontColor();
-extern	void		UpdateScreenVirtualForegroundColor();
-extern	void		UpdateScreenVirtualGridColor();
-extern	void		UpdateScreenVirtualIconGeometry();
-extern	void		UpdateScreenVirtualScale();
-extern	void		UpdateScreenVirtualFont();
-extern	void		UpdateScreenVirtualGeometry();
-extern	void		UpdateScreenVirtualMap();
-extern	void		UpdateScreenVirtualPixmapColor();
-#endif /* STDC */
+void SetScreenVirtualForegroundColor(Display* dpy, ScreenInfo *scrInfo);
+void SetScreenVirtualBackgroundColor(Display* dpy, ScreenInfo *scrInfo);
+void SetScreenVirtualPixmapColor(Display* dpy, ScreenInfo *scrInfo);
+void SetScreenVirtualFontColor(Display* dpy, ScreenInfo *scrInfo);
+void SetScreenVirtualGridColor(Display* dpy, ScreenInfo *scrInfo);
+void SetScreenVirtualIconColor(Display* dpy, ScreenInfo *scrInfo);
+void SetScreenInputFocusColor(Display* dpy, ScreenInfo *scrInfo);
+void UpdateScreenVirtualForegroundColor(Display* dpy, ScreenInfo *scrInfo);
+void UpdateScreenVirtualBackgroundColor(Display* dpy, ScreenInfo *scrInfo);
+void UpdateScreenVirtualFontColor(Display* dpy, ScreenInfo *scrInfo);
+void UpdateScreenVirtualGridColor(Display* dpy, ScreenInfo *scrInfo);
+void UpdateScreenVirtualDesktop(Display* dpy, ScreenInfo *scrInfo);
+void UpdateScreenVirtualIconGeometry(Display* dpy, ScreenInfo *scrInfo);
+void UpdateScreenVirtualDrawSticky(Display* dpy, ScreenInfo *scrInfo);
+void UpdateScreenVirtualScale(Display* dpy, ScreenInfo *scrInfo);
+void UpdateScreenVirtualFont(Display* dpy, ScreenInfo *scrInfo);
+void UpdateScreenVirtualGeometry(Display* dpy, ScreenInfo *scrInfo);
+void UpdateScreenVirtualMap(Display* dpy, ScreenInfo *scrInfo);
+void UpdateScreenVirtualPixmapColor(Display* dpy, ScreenInfo *scrInfo);
+void InitScreens(Display *dpy);
+void DestroyScreens(Display *dpy);
+ScreenInfo *GetScrInfoOfScreen(int screenno);
+ScreenInfo *GetScrInfoOfRoot(Window root);
+ScreenInfo *GetFirstScrInfo(void);
+void SetWorkspaceBackground(Display* dpy);
+void SetWindowColor(Display* dpy);
+void SetForegroundColor(Display* dpy);
+void SetBackgroundColor(Display* dpy);
+void SetBorderColor(Display* dpy);
+void SetTitleFont(Display* dpy);
+void SetTextFont(Display* dpy);
+void SetButtonFont(Display* dpy);
+void SetIconFont(Display* dpy);
+void SetGlyphFont(Display* dpy);
+void SetIconLocation(Display* dpy);
+void ReparentScreens(Display* dpy);
+void CreateScreenWindowMenuInfo(Display* dpy);
+void DestroyScreenWindowMenuInfo(Display* dpy);
+void CreateScreenUserMenuInfo(Display* dpy);
+void DestroyScreenUserMenuInfo(Display* dpy);
+Window ScreenCreateWindow(ScreenInfo *scrInfo, Window parent, int x, int y, int w, int h, unsigned long attrmask, XSetWindowAttributes *attr);
+void ScreenDestroyWindow(ScreenInfo *scrInfo, Window win);
+void ScreenUpdateWinCacheSize(Display* dpy);
+void CreateAutoRootMenuScreen(Display* dpy, ScreenInfo *si);
+void CreateAutoRootMenu(Display* dpy);
  
 #endif  /* _OLWM_SCREEN_H */
 

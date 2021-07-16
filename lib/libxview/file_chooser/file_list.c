@@ -11,6 +11,11 @@ static char     sccsid[] = "@(#)file_list.c 1.30 93/06/28";
  *	for terms of the license.
  */
 
+#include <xview_private/file_list_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_casecmp_.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <dirent.h>
@@ -31,26 +36,27 @@ static char     sccsid[] = "@(#)file_list.c 1.30 93/06/28";
 #include <images/fl_doc.xbm>
 
 
-static int		can_change_to_dir();
-static int		flist_load_dir();
-static File_list_row *	flist_next_row();
-static void		flist_update_list();
-static void		flist_compile_regex();
-static int		go_up_one_directory();
-static int		go_down_one_directory();
-static int		flist_list_notify();
-static int		validate_new_directory();
-static void		flist_new_dir();
-
-#if defined(__STDC__) || defined(__cplusplus) || defined(c_plusplus)
-static void	flist_error(File_list_private *private, char *format, ...);
-static int	flist_match_regex(char *s, File_list_private *private);
-#else
-static void	flist_error();
-static int	flist_match_regex();
-#endif
-
-static int flist_match_regex( char *s, File_list_private *private );
+static void flist_error(File_list_private *private, char *format, ...);
+static int flist_load_dir(File_list_private *private, char *directory);
+static File_list_row *flist_next_row(File_list_row **rows, int row_num);
+static void flist_update_list(File_list_private *private, File_list_row rows[], int num_rows);
+#ifndef __linux__
+#ifdef SVR4
+static int sed, nbra, circf;
+static char *loc1, *loc2, *locs;
+#endif 
+static void flist_compile_regex(File_list_private *private);
+static int flist_match_regex(char *s, File_list_private *private);
+#else 
+static void flist_compile_regex(File_list_private *private);
+static int flist_match_regex(char *s, File_list_private *private);
+#endif 
+static int flist_list_notify(Panel_item item, char *entry_name, Xv_opaque client_data, Panel_list_op op, Event *event, int row);
+static int can_change_to_dir(File_list_private *private, char *path);
+static int go_up_one_directory(File_list_private *private);
+static int go_down_one_directory(File_list_private *private, char *name);
+static int validate_new_directory(File_list_private *private, char *new);
+static void flist_new_dir(File_list_private *private, char *new);
 
 /*
  * xv_create() method
@@ -151,7 +157,7 @@ file_list_set ( public, avlist )
 
 
     for (attrs=avlist; *attrs; attrs=attr_next(attrs)) {
-	switch ( (int) attrs[0] ) {
+	switch ( attrs[0] ) {
 #ifdef OW_I18N
 	case FILE_LIST_DIRECTORY_WCS:
 #endif
@@ -424,7 +430,7 @@ file_list_get( public, status, attr, valist )
 {
     File_list_private *private = FILE_LIST_PRIVATE(public);
 
-    switch ( (int) attr ) {
+    switch ( attr ) {
     case FILE_LIST_ROW_TYPE:
 	return xv_get( FILE_LIST_PUBLIC(private),
 		      PANEL_LIST_EXTENSION_DATA, 
@@ -432,7 +438,7 @@ file_list_get( public, status, attr, valist )
 #if 1
 		      va_arg(valist, int *)
 #else
-		      va_arg(valist, int)
+		      va_arg(valist, Attr_attribute)
 #endif
 		      );
 
@@ -615,6 +621,7 @@ flist_load_dir( private, directory )
     static File_list_row *rows = NULL; /* array of row entries */
     char *cwd = (char *)NULL;
     int cd_status = XV_OK;
+    int result;
 
 #ifdef OW_I18N
     wchar_t *	dir_wcs = (wchar_t *)NULL;
@@ -686,7 +693,7 @@ flist_load_dir( private, directory )
      * traversing the path name you give it, so
      */
     cwd = getcwd(NULL, MAXPATHLEN);
-    chdir( private->directory );
+    result = chdir( private->directory );
 
 
 
@@ -999,7 +1006,7 @@ flist_load_dir( private, directory )
      * Jump back to working directory to avoid side effects
      */
     if ( cwd ) {
-	chdir( cwd );
+	result = chdir( cwd );
 	xv_free( cwd );
     }
 
@@ -1098,7 +1105,7 @@ flist_update_list( private, rows, num_rows )
 	    attrs[1] = (Attr_attribute) start_at;
 	    attrs[2] = (Attr_attribute) row_vals;
 	    attrs[3] = (Attr_attribute) num;
-	    attrs[4] = NULL;
+	    attrs[4] = (Attr_attribute)NULL;
 	    (void) (* plist_set)(public, (Attr_avlist) attrs);
 	    start_at += FLIST_INSERT_ROWS;
 	    num = 0;
@@ -1117,7 +1124,7 @@ flist_update_list( private, rows, num_rows )
 	attrs[0] = PANEL_LIST_DELETE_ROWS;
 	attrs[1] = (Attr_attribute) num_rows;
 	attrs[2] = (Attr_attribute) (rows_in_list - num_rows);
-	attrs[3] = NULL;
+	attrs[3] = (Attr_attribute)NULL;
 	(void) (* plist_set)(public, (Attr_avlist) attrs);
     }
 
@@ -1128,7 +1135,7 @@ flist_update_list( private, rows, num_rows )
     if ( private->f.show_dir ) {
 	attrs[0] = PANEL_LIST_TITLE;
 	attrs[1] = (Attr_attribute) private->directory;
-	attrs[2] = NULL;
+	attrs[2] = (Attr_attribute)NULL;
 	(void) (* plist_set)(public, (Attr_avlist) attrs);
     }
 
@@ -1181,9 +1188,6 @@ flist_update_list( private, rows, num_rows )
 #ifdef SVR4
 static int	sed, nbra, circf;
 static char	*loc1, *loc2, *locs;
-static int 	advance();
-static char	*compile();
-static int 	step();
 #endif /* SVR4 */
 
 

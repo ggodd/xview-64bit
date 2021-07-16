@@ -14,8 +14,20 @@ static char     sccsid[] = "@(#)txt_edit.c 20.58 93/06/28";
  * Programming interface to editing facilities of text subwindows.
  */
 
+#include <xview_private/txt_edit_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/ev_edit_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/txt_again_.h>
+#include <xview_private/txt_attr_.h>
+#include <xview_private/txt_caret_.h>
+#include <xview_private/txt_event_.h>
+#include <xview_private/txt_file_.h>
+#include <xview_private/txt_getkey_.h>
+#include <xview_private/txt_sel_.h>
+#include <xview_private/txt_selsvc_.h>
+#include <xview_private/txt_scroll_.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <xview_private/txt_18impl.h>
 #include <xview/pkg.h>
@@ -35,15 +47,9 @@ Xv_private_data char *xv_shell_prompt;
 extern char *xv_shell_prompt;
 #endif
 
-Pkg_private void     textsw_notify_replaced();
-Pkg_private Seln_rank textsw_acquire_seln();
-Pkg_private Textsw_index textsw_replace();
-
-#ifdef __STDC__
-Pkg_private Es_index ev_input_after(Ev_chain views, Es_index old_insert_pos, Es_index old_length);
-#else
-Pkg_private Es_index ev_input_after();
-#endif
+#ifdef OW_I18N
+static CHAR *memchr_wcs(CHAR *buf, char c, long int buf_len);
+#endif 
 
 Pkg_private     Es_handle
 textsw_esh_for_span(view, first, last_plus_one, to_recycle)
@@ -801,9 +807,6 @@ textsw_replace(abstract, first, last_plus_one, buf, buf_len)
     CHAR           *buf;
     long int        buf_len;
 {
-    extern void     textsw_remove_mark_internal();
-    pkg_private     Ev_mark_object
-                    textsw_add_mark_internal();
     Ev_mark_object  saved_insert_mark;
     Es_index        saved_insert, temp;
     Textsw_view_handle view = VIEW_ABS_TO_REP(abstract);
@@ -877,9 +880,6 @@ textsw_replace_bytes(abstract, first, last_plus_one, buf, buf_len)
     char           *buf;
     long int        buf_len;
 {
-    extern void     textsw_remove_mark_internal();
-    pkg_private     Ev_mark_object
-                    textsw_add_mark_internal();
     Ev_mark_object  saved_insert_mark;
     Es_index        saved_insert, temp;
     Textsw_view_handle view = VIEW_ABS_TO_REP(abstract);

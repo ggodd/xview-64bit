@@ -7,13 +7,17 @@
  * OPEN LOOK object drawing package Sun Microsystems, Inc.,
  */
 
+#include <olgx_private/ol_init_.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
 #include <X11/Xlib.h>
-#include "olgx_impl.h"
-#include "busy.h"
-#include "grey.h"
+#include <olgx_private/busy.h>
+#include <olgx_private/grey.h>
+
+#ifdef OW_I18N
+static Graphics_info *olgx_real_main_initialize(Bool fs_or_not, Display *dpy, int screen, unsigned int depth, int d_flag, XFontStruct *glyphfont_struct, Olgx_font_or_fs utextfont, unsigned long pixvals[], Pixmap stipple_pixmaps[]);
+#endif
 
 /*
  * olgx_real_main_initialize() Mallocs a ginfos struct,initilaises it

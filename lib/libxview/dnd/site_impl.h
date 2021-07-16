@@ -76,9 +76,4 @@ typedef struct dnd_site_info {
 	unsigned int	 num_regions;
 } Dnd_site_info; 
 
-Pkg_private int		dnd_site_init();
-Pkg_private Xv_opaque	dnd_site_set_avlist();
-Pkg_private Xv_opaque	dnd_site_get_attr();
-Pkg_private int		dnd_site_destroy();
-
 #endif /* ~xview_site_impl_DEFINED */

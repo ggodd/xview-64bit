@@ -22,7 +22,7 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=	
-HDRSPRIVATE=	filter.h	
+HDRSPRIVATE= filter.h filter_.h
 
 DATA_OBJS =
 

@@ -10,6 +10,7 @@ static char     sccsid[] = "@(#)p_list2.c 1.2 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/p_list2_.h>
 #include <xview/panel.h>
 
 /*

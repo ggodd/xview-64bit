@@ -48,6 +48,11 @@ typedef struct {
     char       *k;	
 }           Mem;
 
+static int memCompare(char *g1, char *g2);
+static int memHash(int g1, int modulus);
+static void insertAcctInfo(void *p, unsigned int s, char *f, int l, char *k);
+static enum st_retval dodump(void *key, Mem *rec);
+
 static int
 memCompare(g1, g2)
     char       *g1, *g2;

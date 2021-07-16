@@ -12,14 +12,15 @@ static char     sccsid[] = "@(#)site_pblc.c 1.13 93/06/28";
 
 /* SUPPRESS 560 */
 
+#include <xview_private/site_pblc_.h>
+#include <xview_private/site_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/windowdrop_.h>
 #include <X11/Xatom.h>
 #include <xview/xview.h>
 #include <xview_private/site_impl.h>
 #include <xview_private/portable.h>
-
-Xv_private Xv_opaque 	DndDropAreaOps();
-Xv_private Xv_Window    win_get_top_level();
-extern void 		DndSizeOfSite();
 
 /*ARGSUSED*/
 Pkg_private int
@@ -64,22 +65,22 @@ dnd_site_set_avlist(site_public, avlist)
     register Dnd_site_info	*site = DND_SITE_PRIVATE(site_public);
     register Attr_avlist	 attrs;
 
-    for (attrs = avlist; (int)*attrs; attrs = attr_next(attrs)) {
-        switch ((int)attrs[0]) {
+    for (attrs = avlist; *attrs; attrs = attr_next(attrs)) {
+        switch (attrs[0]) {
 #ifdef WINDOW_SITES
 	  case DROP_SITE_TYPE:
-	      if (DND_WINDOW_SITE == (int)attrs[1])
+	      if (DND_WINDOW_SITE == attrs[1])
 		  status_set(site, is_window_region);
 	      else
 		  status_reset(site, is_window_region);
 	      break;
 #endif /* WINDOW_SITES */
 	  case DROP_SITE_ID:
-	      site->site_id = (long)attrs[1];
+	      site->site_id = attrs[1];
 	      status_set(site, site_id_set);
 	      break;
 	  case DROP_SITE_DEFAULT:
-	      if ((int)attrs[1])
+	      if (attrs[1])
 		  site->event_mask |= DND_DEFAULT_SITE;
 	      else
 		  site->event_mask ^= DND_DEFAULT_SITE;
@@ -168,7 +169,7 @@ dnd_site_get_attr(site_public, error, attr, args)
     Dnd_site_info	*site = DND_SITE_PRIVATE(site_public);
     Xv_opaque		 value;
 
-    switch ((int)attr) {
+    switch (attr) {
 #ifdef WINDOW_SITES
 	case DROP_SITE_TYPE:
 	   if (status(site, is_window_region))
@@ -192,16 +193,16 @@ dnd_site_get_attr(site_public, error, attr, args)
            break;
         case DROP_SITE_REGION:
 	   if (status(site, is_window_region))
-               value = (Xv_opaque)DndDropAreaOps(site, Dnd_Get_Window, NULL);
+               value = (Xv_opaque)DndDropAreaOps(site, Dnd_Get_Window, (Xv_opaque)NULL);
 	   else
-               value = (Xv_opaque)DndDropAreaOps(site, Dnd_Get_Rect, NULL);
+               value = (Xv_opaque)DndDropAreaOps(site, Dnd_Get_Rect, (Xv_opaque)NULL);
 	   if (value == XV_ERROR) *error = XV_ERROR;
            break;
         case DROP_SITE_REGION_PTR:
 	   if (status(site, is_window_region))
-               value = (Xv_opaque)DndDropAreaOps(site, Dnd_Get_Window_Ptr,NULL);
+               value = (Xv_opaque)DndDropAreaOps(site, Dnd_Get_Window_Ptr, (Xv_opaque)NULL);
 	   else
-               value = (Xv_opaque)DndDropAreaOps(site, Dnd_Get_Rect_Ptr, NULL);
+               value = (Xv_opaque)DndDropAreaOps(site, Dnd_Get_Rect_Ptr, (Xv_opaque)NULL);
 	   if (value == XV_ERROR) *error = XV_ERROR;
            break;
         default:
@@ -226,9 +227,9 @@ dnd_site_destroy(site_public, state)
         xv_set(win_get_top_level(site->owner), WIN_DELETE_DROP_INTEREST,
 						  DND_SITE_PUBLIC(site), 0);
 	if (status(site, is_window_region))
-            (void)DndDropAreaOps(site, Dnd_Delete_All_Windows, NULL);
+            (void)DndDropAreaOps(site, Dnd_Delete_All_Windows, (Xv_opaque)NULL);
 	else
-            (void)DndDropAreaOps(site, Dnd_Delete_All_Rects, NULL);
+            (void)DndDropAreaOps(site, Dnd_Delete_All_Rects, (Xv_opaque)NULL);
 	xv_free(site);
     }
 

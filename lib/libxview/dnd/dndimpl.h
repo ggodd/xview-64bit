@@ -32,7 +32,7 @@ static char     sccsid[] = "@(#)dndimpl.h 1.15 93/06/28";
 
 #define DND_NO_SITE	-1
 
-#define SUN_DND_TRANSIENT_TEMPLATE	"_SUN_DRAGDROP_TRANSIENT_%d_%d"
+#define SUN_DND_TRANSIENT_TEMPLATE	"_SUN_DRAGDROP_TRANSIENT_%ld_%d"
 
 		/* Index into atom array */
 #define TRIGGER			0
@@ -107,9 +107,5 @@ typedef struct dnd_info {
     int                  screenNumber;
 } Dnd_info; 
 
-Pkg_private int		dnd_init();
-Pkg_private Xv_opaque	dnd_set_avlist();
-Pkg_private Xv_opaque	dnd_get_attr();
-Pkg_private int		dnd_destroy();
 
 #endif /* ~xview_dndimpl_DEFINED */

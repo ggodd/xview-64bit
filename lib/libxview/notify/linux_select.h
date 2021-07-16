@@ -10,8 +10,8 @@
 #include <sys/types.h>
 #include <sys/time.h>
 
-int linux_select(int width, fd_set *readfds, fd_set *writefds,
-                 fd_set *exceptfds, struct timeval *timeout);
+int linux_select(int width, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *utimeout);
+
 #ifndef __GLIBC__
 int sys_fcntl(int fildes, int cmd, int arg);
 int sys_read(int fildes, char * buf, off_t cnt);

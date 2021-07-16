@@ -15,7 +15,9 @@ static char     sccsid[] = "@(#)ndet_g_fd.c 20.12 93/06/28 Copyr 1985 Sun Micro"
  * that are shared among NTFY_INPUT, NTFY_OUTPUT and NTFY_EXCEPTION.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndet_g_fd_.h>
+#include <xview_private/ndetgetfnc_.h>
+#include <xview_private/ndet_fd_.h>
 #include <xview_private/ndet.h>
 
 extern          Notify_func
@@ -27,5 +29,5 @@ ndet_get_fd_func(nclient, fd, type)
     /* Check arguments */
     if (ndet_check_fd(fd))
 	return (NOTIFY_FUNC_NULL);
-    return (ndet_get_func(nclient, type, (NTFY_DATA) fd, NTFY_USE_DATA));
+    return (ndet_get_func(nclient, type, (NTFY_DATA)(long)fd, NTFY_USE_DATA));
 }

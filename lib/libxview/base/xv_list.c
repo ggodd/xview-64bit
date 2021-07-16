@@ -10,6 +10,7 @@ static char     sccsid[] = "@(#)xv_list.c 20.13 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/xv_list_.h>
 #include <xview_private/xv_list.h>
 
 Xv_private void

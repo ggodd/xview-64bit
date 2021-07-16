@@ -17,6 +17,7 @@ static char     sccsid[] = "@(#)tty_data.c 20.17 93/06/28";
 
 #include <sys/types.h>
 #include <sys/time.h>
+#include <xview_private/tty_.h>
 #include <xview_private/term_impl.h>
 #undef CTRL
 #include <xview_private/ttyansi.h>
@@ -31,12 +32,6 @@ int		tty_has_new_bufmod;			/* used to defeat 5.0
 
 struct timeval  ttysw_bell_tv = {0, 100000};	/* 1/10 second */
 
-Pkg_private int tty_folio_init();
-Pkg_private Xv_opaque ttysw_folio_set();
-Pkg_private Xv_opaque ttysw_folio_get();
-Pkg_private int ttysw_folio_destroy();
-
-
 
 Xv_pkg          xv_tty_pkg = {
     "Tty",
@@ -50,10 +45,6 @@ Xv_pkg          xv_tty_pkg = {
     NULL			/* no find proc */
 };
 
-Pkg_private int tty_view_init();
-Pkg_private Xv_opaque ttysw_view_set();
-Pkg_private Xv_opaque ttysw_view_get();
-Pkg_private int ttysw_view_destroy();
 Xv_pkg          xv_tty_view_pkg = {
     "Tty_view",
     (Attr_pkg) ATTR_PKG_TTY_VIEW,

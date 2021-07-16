@@ -26,6 +26,7 @@
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/keysym.h>
+#include <X11/Intrinsic.h>
 
 #include "i18n.h"
 #include <olgx/olgx.h>
@@ -40,6 +41,10 @@
 #include "client.h"
 #include "selection.h"
 #include "evbind.h"
+#include "wingframe.h"
+#include "wincolor.h"
+#include "st.h"
+#include "info.h"
 
 /***************************************************************************
 * private data
@@ -66,7 +71,6 @@ static	SemanticAction	currentAction = ACTION_NONE;
 * forward-declared functions
 ***************************************************************************/
 
-extern void ClientSetCurrent();
 
 /***************************************************************************
 * static functions
@@ -278,7 +282,7 @@ int x,y,w,h;
  * GFrameEventButtonRelease -- a button has been released
  *
  */
-int
+void
 GFrameEventButtonRelease(dpy, event, frameInfo)
 Display *dpy;
 XEvent  *event;
@@ -349,7 +353,7 @@ WinGenericFrame *frameInfo;
 /*
  * GFrameEventMotionNotify -- a button is down and the pointer is moving
  */
-int
+void
 GFrameEventMotionNotify(dpy, event, frameInfo)
 Display *dpy;
 XEvent  *event;
@@ -489,7 +493,7 @@ WinGenericFrame *frameInfo;
     switch (event->xcrossing.detail) {
     case NotifyInferior:
     case NotifyNonlinear:
-	ColorWindowCrossing(dpy, event, cli->scrInfo->rootwin);
+	ColorWindowCrossing(dpy, event, (WinGeneric *)cli->scrInfo->rootwin);
 	break;
     }
 }
@@ -513,7 +517,7 @@ GFrameEventFocus(dpy, event, frameInfo)
     case NotifyWhileGrabbed:
 	if (event->xfocus.detail <= NotifyNonlinearVirtual) {
 	    if (event->type == FocusIn)
-		WinCallFocus(frameInfo, True);
+		WinCallFocus((WinGeneric *)frameInfo, True);
 	    else {
 	        Client	*cli;
 
@@ -530,9 +534,9 @@ GFrameEventFocus(dpy, event, frameInfo)
 		 * autoraise.  There's got to be a better way . . .
 	         */
 	        if (cli->framewin)
-	            WinCallFocus(cli->framewin, False);
+	            WinCallFocus((WinGeneric *)cli->framewin, False);
 	        if (cli->iconwin)
-	            WinCallFocus(cli->iconwin, False);
+	            WinCallFocus((WinGeneric *)cli->iconwin, False);
 	    }
 	}
 	break;

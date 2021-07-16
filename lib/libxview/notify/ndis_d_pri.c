@@ -13,7 +13,7 @@ static char     sccsid[] = "@(#)ndis_d_pri.c 20.16 93/06/28 Copyr 1985 Sun Micro
 /*
  * Ndis_d_pri.c - Default prioritizer for dispatcher.
  */
-#include <xview_private/ntfy.h>
+#include <xview_private/ndis_d_pri_.h>
 #include <xview_private/ndis.h>
 #include <signal.h>
 #ifdef __linux__
@@ -25,8 +25,8 @@ static char     sccsid[] = "@(#)ndis_d_pri.c 20.16 93/06/28 Copyr 1985 Sun Micro
 
 typedef enum notify_error (*Notify_error_func) ();
 
-static void     ndis_send_ascending_sig();
-static void     ndis_send_ascending_fd();
+static void ndis_send_ascending_fd(Notify_client nclient, register int nbits, fd_set *bits_ptr, Notify_error_func func);
+static void ndis_send_ascending_sig(Notify_client nclient, register int nbits, register sigset_t *bits_ptr, Notify_error_func func);
 
 pkg_private     Notify_value
 ndis_default_prioritizer(nclient, nfd, ibits_ptr, obits_ptr, ebits_ptr,
@@ -113,7 +113,7 @@ ndis_send_ascending_fd(nclient, nbits, bits_ptr, func)
     fd_set         *bits_ptr;
     Notify_error_func func;
 {
-    register        fd, i, byteNum;
+    register int fd, i, byteNum;
     unsigned long   byte;
 
     /* Send fd (by ascending numbers) */
@@ -140,7 +140,7 @@ ndis_send_ascending_sig(nclient, nbits, bits_ptr, func)
     register sigset_t    *bits_ptr;
     Notify_error_func func;
 {
-    register        sig;
+    register int sig;
 
     /* Send func (by ascending numbers) */
     for (sig = 1; sig < nbits; sig++) {

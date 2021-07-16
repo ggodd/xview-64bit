@@ -10,6 +10,13 @@ static char     sccsid[] = "@(#)fmbs_set.c 1.44 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/fmbs_set_.h>
+#include <xview_private/fm_display_.h>
+#include <xview_private/fm_rescale_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/wmgr_decor_.h>
+#include <xview_private/screen_.h>
 #include <X11/Xlib.h>
 #include <xview_private/fm_impl.h>
 #include <xview_private/frame_base.h>
@@ -191,7 +198,7 @@ frame_base_set_avlist(frame_public, avlist)
 	 * If yes, set string count to 0
 	 * Otherwise, save passed strings 
 	 */
-	if ((int)cmd_line == -1)  {
+	if ((int)(long)cmd_line == -1)  {
 	    frame->cmd_line_strings_count = 0;
 	    frame->cmd_line_strings = (char **)-1;
 	}

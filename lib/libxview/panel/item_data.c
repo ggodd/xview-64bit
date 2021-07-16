@@ -10,10 +10,9 @@ static char     sccsid[] = "@(#)item_data.c 1.15 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview_private/panel_impl.h>
-Pkg_private int item_init();
-Pkg_private int item_destroy();
-
+#include <xview_private/item_.h>
+#include <xview_private/item_get_.h>
+#include <xview_private/item_set_.h>
 
 Xv_pkg          xv_panel_item_pkg = {
     "Item", ATTR_PKG_PANEL,

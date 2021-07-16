@@ -14,7 +14,10 @@ static char     sccsid[] = "@(#)ntfy_node.c 20.16 93/06/28 Copyr 1985 Sun Micro"
  * Ntfy_node.c - Storage management for the notifier.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ntfy_node_.h>
+#include <xview_private/ntfy_debug_.h>
+#include <xview_private/ntfyprotec_.h>
+#include <xview_private/xv_.h>
 
 pkg_private_data int ntfy_nodes_avail = 0;	/* Count of nodes in
 						 * ntfy_node_free */

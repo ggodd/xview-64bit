@@ -24,16 +24,9 @@ static char     sccsid[] = "@(#)sb_get.c 1.35 93/06/28";
  * Include files:
  */
 
-#include <xview_private/sb_impl.h>
+#include <xview_private/sb_get_.h>
+#include <xview_private/sb_.h>
 #include <xview_private/portable.h>
-
-
-
-/*
- * Declaration of Functions Defined in This File (in order):
- */
-
-Pkg_private Xv_opaque scrollbar_get_internal();
 
 /******************************************************************/
 

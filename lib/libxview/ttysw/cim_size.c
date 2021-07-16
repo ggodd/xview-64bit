@@ -14,6 +14,11 @@ static char     sccsid[] = "@(#)cim_size.c 20.32 93/06/28";
  * Character image initialization, destruction and size changing routines
  */
 
+#include <xview_private/cim_size_.h>
+#include <xview_private/csr_init_.h>
+#include <xview_private/csr_change_.h>
+#include <xview_private/tty_main_.h>
+#include <xview_private/ttyansi_.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/signal.h>
@@ -30,7 +35,6 @@ static char     sccsid[] = "@(#)cim_size.c 20.32 93/06/28";
 #include <xview/pkg.h>
 #include <xview/attrol.h>
 #include <xview_private/i18n_impl.h>
-#include <xview_private/tty_impl.h>
 #include <xview_private/ttyansi.h>
 #include <xview_private/charimage.h>
 #include <xview_private/charscreen.h>
@@ -57,7 +61,6 @@ xv_tty_imageinit(ttysw, window)
     Ttysw          *ttysw;
     Xv_object       window;
 {
-    void            xv_tty_imagealloc();
     int             maximagewidth, maximageheight;
 
     if (wininit(window, &maximagewidth, &maximageheight) == 0)
@@ -156,19 +159,19 @@ xv_tty_free_image_and_mode()
 {
 
     if (lines_ptr) {
-        cfree((CHAR *) (lines_ptr));
+        free((CHAR *) (lines_ptr));
 	lines_ptr = NULL;
     }
     if (image) {
-        cfree((CHAR **) image);
+        free((CHAR **) image);
 	image = NULL;
     }
     if (mode_ptr) {
-	cfree((char *) (mode_ptr));
+	free((char *) (mode_ptr));
 	mode_ptr = NULL;
     }
     if (screenmode) {
-	cfree((char **) screenmode);
+	free((char **) screenmode);
 	screenmode = NULL;
     }
 }

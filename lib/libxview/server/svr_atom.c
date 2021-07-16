@@ -11,17 +11,15 @@ static char     sccsid[] = "@(#)svr_atom.c 1.7 93/06/28";
  *      file for terms of the license. 
  */
 
+#include <xview_private/svr_atom_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_list_.h>
 #include <xview/xview.h>
 #include <X11/Xutil.h>
 #include <X11/Xresource.h>
-#include <xview_private/svr_impl.h>
 #include <xview/server.h>
 
-#ifdef __STDC__
 static void update_atom_list(Server_info *server, Atom atom);
-#else
-static void update_atom_list();
-#endif
 
 Xv_private Atom 
 server_intern_atom(server, atomName)
@@ -30,6 +28,7 @@ server_intern_atom(server, atomName)
 {
     XrmQuark     	 quark;
     Atom	 	 atom;
+    XPointer data;
 
 		/* Convert the string into a quark.
 		 * The atomName is copied and never freed.  This is acceptable
@@ -39,7 +38,7 @@ server_intern_atom(server, atomName)
 
 		/* See if we have an atom for this quark already */
     if (XFindContext(server->xdisplay, server->atom_mgr[ATOM],
-		     (XContext)quark, (caddr_t *)&atom) == XCNOENT) {
+		     (XContext)quark, &data) == XCNOENT) {
 
 	atom = XInternAtom(server->xdisplay, atomName, False);
 
@@ -49,7 +48,7 @@ server_intern_atom(server, atomName)
 			 */
 			/* Support lookup by atom name */
 	(void)XSaveContext(server->xdisplay, server->atom_mgr[ATOM],
-			   (XContext)quark, (caddr_t) atom);
+			   (XContext)quark, (XPointer)atom);
 
 			/* Support lookup by atom value */
 	(void)XSaveContext(server->xdisplay, server->atom_mgr[NAME],
@@ -58,6 +57,8 @@ server_intern_atom(server, atomName)
 	update_atom_list(server, atom);
 
     }
+    else
+        atom = (Atom)data;
     return ((Atom)atom);
 }
 

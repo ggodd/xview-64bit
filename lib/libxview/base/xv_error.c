@@ -10,9 +10,13 @@ static char     sccsid[] = "@(#)xv_error.c 1.36 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/xv_error_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/gettext_.h>
 #include <stdio.h>
 #include <xview/pkg_public.h>
 #include <X11/Xlib.h>
+#include <xview_private/gen_impl.h>
 #include <xview_private/i18n_impl.h>
 #include <xview_private/portable.h>
 
@@ -71,7 +75,7 @@ xv_error_format(object, avlist)
 	    break;
 	  case ERROR_BAD_VALUE:
 	    sprintf(buf, 
-		XV_MSG("bad value (0x%x) for attribute %s"), 
+		XV_MSG("bad value (0x%lx) for attribute %s"), 
 		attrs[1],
 		attr_name(attrs[2]));
 	    break;
@@ -152,7 +156,7 @@ xv_error_format(object, avlist)
     if (!object)
 	sprintf(msg, "%s %s:", layer_name, severity);
     else
-	sprintf(msg, XV_MSG("%s %s: Object 0x%x,"), 
+	sprintf(msg, XV_MSG("%s %s: Object 0x%lx,"), 
 		layer_name, severity, object);
     if (layer_msg[0]) {
 	strcat(msg, " ");
@@ -215,9 +219,9 @@ xv_error_default(object, avlist)
 
 Xv_public int
 #ifdef ANSI_FUNC_PROTO
-xv_error(Xv_object object, ...)
+_xv_error(Xv_object object, ...)
 #else
-xv_error(object, va_alist)
+_xv_error(object, va_alist)
     Xv_object object;
 va_dcl
 #endif

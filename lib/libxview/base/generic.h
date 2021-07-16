@@ -113,7 +113,7 @@ typedef enum {
 	/* FIXME:
 	 * XV_KEY_DATA is really ATTR_INT + ATTR_OPAQUE
 	 */
-#if defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT)
+#if defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT) || defined(__amd64__)
 	XV_KEY_DATA		= GENERIC_ATTR(ATTR_OPAQUE_PAIR, 64),
 #else
 	XV_KEY_DATA		= GENERIC_ATTR(ATTR_INT_PAIR,	 64),
@@ -255,7 +255,7 @@ typedef struct {
 
 typedef enum {
 /* Alpha compatibility, mbuck@debian.org */
-#if defined(__alpha) || defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT)
+#if defined(__alpha) || defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT)  || defined(__amd64__)
     XV_INIT_ARGS             = XV_ATTR(ATTR_OPAQUE_PAIR,       	4),
     XV_INIT_ARGC_PTR_ARGV    = XV_ATTR(ATTR_OPAQUE_PAIR,       	7),  /* -S- */
 #else
@@ -266,6 +266,11 @@ typedef enum {
     XV_ERROR_PROC       = XV_ATTR(ATTR_FUNCTION_PTR,    	12),
     XV_X_ERROR_PROC	= XV_ATTR(ATTR_FUNCTION_PTR,    	15)
 } Xv_attr;
+
+#include <xview/macros.h>
+
+#define xv_init(...) \
+    MACRO_DEF1(_xv_init, Attr_attribute, __VA_ARGS__)
 
 /*
  ***********************************************************************
@@ -279,18 +284,10 @@ extern Xv_pkg		xv_generic_pkg;
  * PUBLIC functions 
  */
 
-EXTERN_FUNCTION (Xv_object xv_init, (Attr_attribute attr1, DOTDOTDOT));
+EXTERN_FUNCTION (Xv_object _xv_init, (Attr_attribute attr1, DOTDOTDOT));
 EXTERN_FUNCTION (Attr_attribute xv_unique_key, (void));
 
 EXTERN_FUNCTION (int xv_parse_cmdline, (char *app_name, int *argc_ptr, char **argv_base, int scrunch));
 EXTERN_FUNCTION (Xv_opaque generic_get, (Xv_object object, int *status, Attr_attribute attr, va_list args));
-
-/*
- * PRIVATE functions
- */
-
-EXTERN_FUNCTION (void xv_connection_error, (char *server_name));
-EXTERN_FUNCTION (int xv_get_hostname, (char *buf, int maxlen));
-
 
 #endif /* ~xview_generic_DEFINED */

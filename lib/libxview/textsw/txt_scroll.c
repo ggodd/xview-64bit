@@ -14,9 +14,13 @@ static char     sccsid[] = "@(#)txt_scroll.c 20.41 93/06/28";
  * Liason routines between textsw and scrollbar
  */
 
+#include <xview_private/txt_scroll_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/txt_caret_.h>
+#include <xview_private/txt_event_.h>
+#include <xview_private/txt_sel_.h>
 #include <xview/textsw.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/draw_impl.h>
 #include <xview_private/ev_impl.h>
 
@@ -165,8 +169,6 @@ textsw_mouseless_scroll_event(view, ie, arg)
     register Event *ie;
     Notify_arg      arg;
 {
-	Pkg_private void     textsw_update_scrollbars();
-
 	Textsw_folio    folio		= FOLIO_FOR_VIEW(view);
 	char		*msg		= NULL;
 	int             action		= event_action(ie);

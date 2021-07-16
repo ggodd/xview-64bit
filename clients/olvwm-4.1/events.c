@@ -35,10 +35,17 @@
 #include "list.h"
 #include "mem.h"
 #include "error.h"
+#include "st.h"
+#include "info.h"
+#include "virtual.h"
+#include "states.h"
+#include "client.h"
+#include "wincolor.h"
+#include "evbind.h"
 
 /* ===== externs ========================================================== */
 
-extern void	ReapChildren();
+extern void CheckOlvwmRC(Display *dpy);
 
 /* ===== globals ========================================================== */
 
@@ -61,7 +68,16 @@ static void *timeoutClosure = NULL;
 
 static XModifierKeymap *ModMap = NULL;
 
-static explicitPointerGrab = False;
+static Bool explicitPointerGrab = False;
+
+static void dispatchEvent(Display *dpy, XEvent *event, WinGeneric *winInfo);
+static void dispatchInterposer(Display *dpy, XEvent *event);
+static void doTimeout(void);
+static void nextEventOrTimeout(Display *dpy, XEvent *event);
+static void updateModifierMap(Display *dpy);
+static void updateKeyboardMap(Display *dpy);
+static void *redispatchEvent(XEvent *e, void *c);
+static void tvdiff(struct timeval *t1, struct timeval *t2, struct timeval *diff);
 
 /* ===== private functions ================================================ */
 
@@ -184,7 +200,7 @@ WinGeneric *winInfo;
 		    if (event->xany.type == MapRequest) {
 			StateNew(dpy,None,event->xmaprequest.window,False,NULL);
 		    } else if (event->xany.type == ConfigureRequest) {
-			ClientConfigure(NULL, NULL, event);
+			ClientConfigure(NULL, NULL, (XConfigureRequestEvent *)event);
 		    }
 		}
 
@@ -488,7 +504,7 @@ EventLoop( dpy )
  * Propagate an event to this window's parent.  REMIND: doesn't update the 
  * event fields or the event coordinates.
  */
-PropagateEventToParent(dpy,event,win)
+void PropagateEventToParent(dpy,event,win)
 Display *dpy;
 XEvent *event;
 WinGeneric *win;

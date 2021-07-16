@@ -9,6 +9,13 @@ static char     sccsid[] = "@(#)notice_ol.c 1.15 93/06/28";
  *	pending in the U.S. and foreign countries. See LEGAL_NOTICE 
  *	file for terms of the license.
  */
+#include <xview_private/notice_ol_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/notice_.h>
+#include <xview_private/notice_itm_.h>
+#include <xview_private/notice_pt_.h>
+#include <xview_private/win_treeop_.h>
+#include <xview_private/xv_rop_.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -32,24 +39,8 @@ static char     sccsid[] = "@(#)notice_ol.c 1.15 93/06/28";
  * The table of values for notice dimensions is also here.
  */
 
-Xv_private void		win_change_property();
-
-/*
- * Public routines - these routines are private to the notice pkg
- */
-Pkg_private int		notice_determine_font();
-Pkg_private void	notice_draw_borders();
-Pkg_private int		notice_center();
-Pkg_private void	notice_get_notice_size();
-Pkg_private void	notice_layout();
-Pkg_private void	notice_drawbox();
-Pkg_private void	notice_do_buttons();
-Pkg_private void	notice_button_panel_proc(Panel_item item, Event *event);
-/*
- * Private/static routines - these routines are private to this file
- */
-static void		notice_position_items();
-static int		notice_offset_from_baseline();
+static void notice_position_items(Notice_info *notice, Bool do_msg, Bool do_butt);
+static int notice_offset_from_baseline(Xv_Font font);
 
 /*
  * OPEN LOOK geometry
@@ -145,7 +136,7 @@ Bool		do_butt;
 		 * Set property on notice frame
 		 */
 	        win_change_property(notice->sub_frame, 
-		    SERVER_WM_DEFAULT_BUTTON, XA_INTEGER, 32,  data, 6);
+		    SERVER_WM_DEFAULT_BUTTON, XA_INTEGER, 32,  (unsigned char *)data, 6);
             }
         }
     }
@@ -155,7 +146,7 @@ Bool		do_butt;
          * Set zero length property on notice frame so that the ptr is not warped.
          */
         win_change_property(notice->sub_frame, 
-                    SERVER_WM_DEFAULT_BUTTON, XA_INTEGER, 32,  NULL, NULL);
+                    SERVER_WM_DEFAULT_BUTTON, XA_INTEGER, 32,  NULL, 0);
     }
 
     notice->need_layout = 0;

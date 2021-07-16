@@ -14,10 +14,10 @@ static char     sccsid[] = "@(#)tty_stty.c 20.20 93/06/28";
  * Ttysw parameter setting mechanism using given tty settings.
  */
 
+#include <xview_private/tty_stty_.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <xview_private/portable.h>	/* for XV* defines and termios */
-#include <xview_private/tty_impl.h>
 
 #undef CTRL
 #define CTRL(c) (c & 037)
@@ -132,7 +132,7 @@ we_setptyparms(tp)
 		tp->c_cc[12], tp->c_cc[13], tp->c_cc[14], tp->c_cc[15]);
 #else /* __linux__ */
     (void) sprintf(str + strlen( str ),
-		"%ld,%ld,%ld,%ld,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd",
+		"%d,%d,%d,%d,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd",
 		tp->c_iflag, tp->c_oflag, tp->c_cflag, tp->c_lflag,
 		tp->c_cc[0],  tp->c_cc[1],  tp->c_cc[2],  tp->c_cc[3],
 		tp->c_cc[4],  tp->c_cc[5],  tp->c_cc[6],  tp->c_cc[7],

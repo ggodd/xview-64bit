@@ -14,7 +14,8 @@ static char     sccsid[] = "@(#)ndet_g_in.c 20.12 93/06/28 Copyr 1985 Sun Micro"
  * Ndet_g_in.c - Implement notify_get_input_func call.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndet_g_in_.h>
+#include <xview_private/ndet_g_fd_.h>
 #include <xview_private/ndet.h>
 
 extern          Notify_func

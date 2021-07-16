@@ -16,6 +16,7 @@ static char     sccsid[] = "@(#)stat_imcb.c 1.15 93/06/28";
  * routine is beside the libxvol/frame code.
  */
 
+#include <xview_private/stat_imcb_.h>
 #include <xview_private/i18n_impl.h>
 #include <xview_private/portable.h>
 #include <X11/Xlib.h>

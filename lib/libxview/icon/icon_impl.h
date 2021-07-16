@@ -61,12 +61,5 @@ typedef Xv_icon_info *icon_handle;
 #define ICON_IS_TRANSPARENT(icon) \
   ((icon)->icon_mask || ((icon)->ic_flags & ICON_BKGTRANS))
 
-/* from icon_object.c */
-Pkg_private int 	icon_init();
-Pkg_private Xv_opaque icon_set_internal();
-Pkg_private Xv_opaque icon_get_internal();
-Pkg_private int          icon_destroy_internal();
-
-
 #endif /* ~_xview_icon_impl_h_already_included */
 

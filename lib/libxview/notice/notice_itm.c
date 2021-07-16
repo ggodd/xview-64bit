@@ -9,6 +9,11 @@ static char     sccsid[] = "@(#)notice_itm.c 1.18 93/06/28";
  *	pending in the U.S. and foreign countries. See LEGAL NOTICE 
  *	file for terms of the license.
  */
+#include <xview_private/notice_itm_.h>
+#include <xview_private/notice_ol_.h>
+#include <xview_private/fm_input_.h>
+#include <xview_private/wmgr_decor_.h>
+#include <xview_private/xv_olgx_.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -26,11 +31,10 @@ static char     sccsid[] = "@(#)notice_itm.c 1.18 93/06/28";
 #include <xview/cms.h>
 #include <xview/server.h>
 
-Xv_private Graphics_info	*xv_init_olgx();
-Xv_private void			frame_set_accept_default_focus();
-static void			subframe_event_proc();
-static Notify_value		subframe_destroy_proc();
-static int			notice_get_default_value();
+static void subframe_event_proc(Xv_window window, Event *event);
+static Notify_value subframe_destroy_proc(Notify_client sub_frame, Destroy_status status);
+static int notice_get_default_value(Notice_info *notice);
+
 extern char			xv_iso_default_action;
 
 /*

@@ -14,8 +14,16 @@ static char     sccsid[] = "@(#)txt_match.c 1.33 93/06/28";
  * Text match delimiter popup frame creation and support.
  */
 
+#include <xview_private/txt_match_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/txt_field_.h>
+#include <xview_private/txt_getkey_.h>
+#include <xview_private/txt_edit_.h>
+#include <xview_private/txt_popup_.h>
+#include <xview_private/txt_sel_.h>
+#include <xview_private/xv_.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <xview_private/txt_18impl.h>
 #include <sys/time.h>
@@ -35,6 +43,10 @@ static char     sccsid[] = "@(#)txt_match.c 1.33 93/06/28";
 
 #define HELP_INFO(s) XV_HELP_DATA, s,
 
+static void do_insert_or_remove_delimiter(Textsw_view_handle view, int value, int do_insert);
+static Panel_setting match_cmd_proc(Panel_item item, Event *event);
+static void create_match_items(Panel panel, Textsw_view_handle view);
+
 /* This is for find marked text */
 typedef enum {
     CHOICE_ITEM = 0,
@@ -45,11 +57,6 @@ typedef enum {
 } Match_panel_item_enum;
 
 extern Panel_item match_panel_items[];
-
-Pkg_private Textsw_view_handle text_view_frm_p_itm();
-Pkg_private Xv_Window frame_from_panel_item();
-static Panel_setting match_cmd_proc();
-Textsw_index textsw_replace();
 
 #ifdef OW_I18N
 
@@ -86,6 +93,7 @@ static char    *delimiter_pairs[2][8] = {
 static void
 do_insert_or_remove_delimiter(view, value, do_insert)
     Textsw_view_handle view;
+    int value;
     int             do_insert;
 {
     Textsw_folio    folio = FOLIO_FOR_VIEW(view);

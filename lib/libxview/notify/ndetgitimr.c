@@ -14,7 +14,9 @@ static char     sccsid[] = "@(#)ndetgitimr.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * Ndet_g_itimer.c - Implement the notify_get_itimer_func interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndetgitimr_.h>
+#include <xview_private/ndetgetfnc_.h>
+#include <xview_private/ndetitimer_.h>
 #include <xview_private/ndet.h>
 
 extern          Notify_func

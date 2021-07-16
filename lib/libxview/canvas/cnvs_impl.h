@@ -5,6 +5,9 @@
  *	file for terms of the license.
  */
 
+#ifndef _cnvs_impl_h_already_included
+#define _cnvs_impl_h_already_included
+
 #include <xview/pkg.h>
 #include <xview/attrol.h>
 #include <xview/canvas.h>
@@ -109,49 +112,7 @@ Pkg_private  Attr_attribute  canvas_view_context_key;
 Pkg_private  Attr_attribute  canvas_pew_key;
 #endif /*OW_I18N*/
 
-/* from canvas_input.c */
-Pkg_private Notify_value	canvas_view_event();
-Pkg_private Notify_value	canvas_paint_event();
-
-/* from canvas_set.c */
-Pkg_private Xv_opaque	canvas_set_avlist();
-
-/* from canvas_get.c */
-Pkg_private Xv_opaque	canvas_get_attr();
-
-/* from canvas_resze.c */
-Pkg_private void		canvas_resize_paint_window();
-
-/* from canvas_scroll.c */
-Pkg_private void	canvas_scroll();
-Pkg_private void	canvas_set_scrollbar_object_length();
-/* from canvas.c */
-Pkg_private int      canvas_init();
-Pkg_private int      canvas_destroy();
-/*from canvas_view.c */
-Pkg_private int      canvas_view_init();
-Pkg_private Xv_opaque        canvas_view_get();
-Pkg_private Xv_opaque        canvas_paint_get();
-Pkg_private Xv_opaque        canvas_paint_set();
-Pkg_private int      canvas_view_destroy();
-
 #ifdef OW_I18N
-/*
- * Warning: Accessing panel callbacks from behind.
- */
-Xv_private void				 panel_preedit_display();
-Xv_private XIMPreeditDrawCallbackStruct	*panel_get_preedit();
-Xv_private void				 panel_set_preeedit();
-Xv_private				 panel_text_start();
-Xv_private				 panel_text_done();
-
-/*
- * XIM Preedit callback routines.
- */
-Pkg_private void			 canvas_preedit_start();
-Pkg_private void			 canvas_preedit_draw();
-Pkg_private void			 canvas_preedit_done();
-
 /*
  * Support routines for the pew (PreEdit display Window).
  */
@@ -168,3 +129,4 @@ EXTERN_FUNCTION (Pkg_private Notify_value canvas_pew_event_proc,
  */
 EXTERN_FUNCTION (Pkg_private void canvas_inform_repaint, (Canvas_info *canvas, Xv_Window paint_window));
 
+#endif

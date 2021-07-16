@@ -11,6 +11,7 @@ static char     sccsid[] = "@(#)cnvs_cb.c 50.32 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/cnvs_cb_.h>
 #include <X11/Xatom.h>
 #include <xview_private/cnvs_impl.h>
 #include <xview_private/draw_impl.h>
@@ -24,13 +25,7 @@ static char     sccsid[] = "@(#)cnvs_cb.c 50.32 93/06/28";
 #define INPUT_WINDOW_WIDTH        50	/* columns */
 
 
-Xv_private void			cache_text_state();
-
-Pkg_private void		canvas_pew_done();
-Pkg_private Notify_value	canvas_pew_destory();
-
-static Notify_value	canvas_pew_pi_event_proc();
-
+static Notify_value canvas_pew_pi_event_proc(Notify_client panel, Event *event, Notify_arg arg, Notify_event_type type);
 
 Pkg_private void
 canvas_preedit_start(ic, client_data, callback_data)

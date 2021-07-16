@@ -15,7 +15,8 @@ static char     sccsid[] = "@(#)ndet_sig.c 20.12 93/06/28 Copyr 1985 Sun Micro";
  * NTFY_SYNC_SIGNAL and NTFY_ASYNC_SIGNAL.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndet_sig_.h>
+#include <xview_private/ntfy_debug_.h>
 #include <xview_private/ndet.h>
 #include <signal.h>
 

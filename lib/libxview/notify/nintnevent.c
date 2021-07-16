@@ -14,7 +14,9 @@ static char     sccsid[] = "@(#)nintnevent.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * Nint_n_event.c - Implement the notify_next_event_func interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/nintnevent_.h>
+#include <xview_private/ndet_event_.h>
+#include <xview_private/nint_next_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/nint.h>
 

@@ -36,6 +36,20 @@
 
 #include "client.h"
 #include "states.h"
+#include "winnofoc.h"
+#include "usermenu.h"
+#include "selection.h"
+#include "wingframe.h"
+#include "winframe.h"
+#include "st.h"
+#include "info.h"
+#include "winresize.h"
+#include "winpush.h"
+#include "winbutton.h"
+#include "properties.h"
+#include "virtual.h"
+#include "usleep.h"
+#include "winbusy.h"
 
 /***************************************************************************
 * global data
@@ -53,7 +67,6 @@ extern Atom AtomRightIMStatus;
 /* REMIND - figure out how to get rid of this */
 extern int Resize_height, Resize_width;
 
-extern Time TimeFresh();
 
 /***************************************************************************
 * private data
@@ -77,17 +90,68 @@ static ClassPaneFrame classPaneFrame;
 /***************************************************************************
 * forward-declared functions
 ***************************************************************************/
-
-void FrameSetupGrabs();
-
-static void setTitleText();
-static void setFooterText();
-void FrameUpdateShape();
-#ifdef OW_I18N_L4
-static void setIMStatusText();
-#endif
-static void updateResizePositions();
+typedef struct _winpaneframe WinPaneFrame;
+static int ptSize(Graphics_info *gis);
+static int xposCloseButton(Graphics_info *gis);
+static int yposCloseButton(Client *cli, Graphics_info *gis);
+static int xposPushPin(Graphics_info *gis);
+static int yposPushPin(Client *cli, Graphics_info *gis);
+static int decoToTitle(Graphics_info *gis);
 static int headerHeight(Client *cli, Graphics_info *gis);
+static int footerHeight(Client *cli, Graphics_info *gis);
+#ifdef OW_I18N_L4
+static int IMstatusHeight(Client *cli, Graphics_info *gis);
+#endif
+static int heightTopFrame(WinPaneFrame *win);
+static int heightBottomFrame(WinPaneFrame *win);
+static int widthRightFrame(WinPaneFrame *win);
+static int widthLeftFrame(WinPaneFrame *win);
+static int eventMapRequest(Display *dpy, XEvent *event, WinPaneFrame *frameInfo);
+static int eventConfigureRequest(Display *dpy, XEvent *event, WinPaneFrame *frameInfo);
+static int selectClickFrame(Display *dpy, XEvent *event, WinPaneFrame *frameInfo);
+static int selectDoubleClickFrame(Display *dpy, XEvent *event, WinPaneFrame *frameInfo);
+static int selectDragFrame(Display *dpy, XEvent *event, WinPaneFrame *frameInfo, XButtonEvent *lastpress);
+static int menuPressFrame(Display *dpy, XEvent *event, WinPaneFrame *frameInfo);
+static int selectAdjustPressFrame(Display *dpy, XEvent *event, WinPaneFrame *frameInfo);
+static int adjustClickFrame(Display *dpy, XEvent *event, WinPaneFrame *frameInfo);
+static int eventEnterNotify(Display *dpy, XEvent *event, WinPaneFrame *frameInfo);
+static void eventLeaveNotify(Display *dpy, XEvent *event, WinPaneFrame *frameInfo);
+static void drawHeaderBusy3D(Display *dpy, WinPaneFrame *win, Client *cli, Bool sel);
+static void drawHeaderBusy2D(Display *dpy, WinPaneFrame *win, Client *cli, Bool sel);
+static void drawHeaderBar3D(Display *dpy, WinPaneFrame *win, Client *cli, Bool sel);
+static void drawHeaderLines3D(Display *dpy, WinPaneFrame *win, Client *cli, Bool sel);
+static void drawHeaderNoFocus3D(Display *dpy, WinPaneFrame *win, Client *cli, Bool sel);
+static void drawHeaderBar2D(Display *dpy, WinPaneFrame *win, Client *cli, Bool sel);
+static void drawHeaderLines2D(Display *dpy, WinPaneFrame *win, Client *cli, Bool sel);
+static void drawHeaderNoFocus2D(Display *dpy, WinPaneFrame *win, Client *cli, Bool sel);
+static void drawFooter(Display *dpy, WinPaneFrame *win, Client *cli);
+#ifdef OW_I18N_L4
+static void drawIMStatus(Display *dpy, WinPaneFrame *win, Client *cli);
+#endif 
+static void drawBase2D(Display *dpy, WinPaneFrame *win, Client *cli, Bool sel);
+static void drawBase3D(Display *dpy, WinPaneFrame *win, Client *cli, Bool sel);
+static void drawHeader(Display *dpy, WinPaneFrame *winInfo, Client *cli, Bool sel);
+static int drawFrame(Display *dpy, WinPaneFrame *winInfo);
+static int focusFrame(Display *dpy, WinPaneFrame *winInfo, Bool focus);
+static int destroyFrame(Display *dpy, WinPaneFrame *winInfo);
+static int newconfigFrame(WinPaneFrame *winInfo, XConfigureRequestEvent *pxcre);
+static int setconfigFrame(Display *dpy, WinPaneFrame *winInfo);
+static int selectFrame(Display *dpy, WinPaneFrame *winInfo, Bool selected);
+static void updateResizePositions(WinPaneFrame *frame);
+static void makeSpecials(Client *cli, Display *dpy, WinPaneFrame *wf, Window panewin, int wid, int high);
+static void setVTitleText(Display *dpy, WinPaneFrame *w, Window panewin);
+static void setTitleText(Display *dpy, WinPaneFrame *w, Window panewin);
+static void calcFooterSize(Footer *footer);
+static void setLeftFooter(Display *dpy, WinPaneFrame *winInfo, Window panewin);
+static void setRightFooter(Display *dpy, WinPaneFrame *winInfo, Window panewin);
+static void setFooterText(Display *dpy, WinPaneFrame *w, Window panewin);
+#ifdef OW_I18N_L4
+static void setLeftIMStatus(Display *dpy, WinPaneFrame *winInfo, Window panewin);
+static void setRightIMStatus(Display *dpy, WinPaneFrame *winInfo, Window panewin);
+static void setIMStatusText(Display *dpy, WinPaneFrame *w, Window panewin);
+#endif
+static int fullrestoreFrame(Client *client, Time timestamp);
+
 
 /***************************************************************************
 * sizing and decoration positioning functions
@@ -421,7 +485,7 @@ XEvent *event;
 WinPaneFrame *frameInfo;
 {
     if (frameInfo->core.client->wmDecors->menu_type != MENU_NONE)
-	ShowStandardMenu(frameInfo, event, False);
+	ShowStandardMenu((WinGenericFrame *)frameInfo, event, False);
 }
 
 /*
@@ -477,7 +541,7 @@ WinPaneFrame *frameInfo;
     if (event->xcrossing.detail == NotifyInferior)
 	frameInfo->pointerIsWarped = False;
 
-    GFrameEventEnterNotify(dpy, event, frameInfo);
+    GFrameEventEnterNotify(dpy, event, (WinGenericFrame *)frameInfo);
 }
 
 /*
@@ -488,7 +552,7 @@ WinPaneFrame *frameInfo;
  * the focus.  Also, unset the warp-back flag if the pointer has gone outside 
  * the frame.
  */
-static int
+static void
 /* ARGSUSED */
 eventLeaveNotify(dpy, event, frameInfo)
 Display	*dpy;
@@ -1196,7 +1260,7 @@ Display		*dpy;
 WinPaneFrame	*winInfo;
 Bool		focus;
 {
-	GFrameFocus(dpy,winInfo,focus);
+	GFrameFocus(dpy,(WinGenericFrame *)winInfo,focus);
 	(WinFunc(winInfo,core.drawfunc))(dpy,winInfo);
 }
 
@@ -1333,7 +1397,7 @@ setconfigFrame(dpy, winInfo)
     }
 #endif /* SHAPE */
 
-    GFrameSetConfigFunc(dpy, winInfo);
+    GFrameSetConfigFunc(dpy, (WinGenericFrame *)winInfo);
 }
 
 static int
@@ -1350,7 +1414,7 @@ selectFrame(dpy, winInfo, selected)
         FrameUpdateShape(cli, winInfo);
 #endif /* SHAPE */
 
-    GFrameSelect(dpy, winInfo, selected);
+    GFrameSelect(dpy, (WinGeneric *)winInfo, selected);
 }
 
 /*
@@ -1409,13 +1473,13 @@ int wid,high;
 	if (cli->wmDecors->flags & WMDecorationResizeable)
 	{
             wf->resizeCorner[upleft] =
-                MakeResize(dpy, wf, upleft, 0, 0);
+                MakeResize(dpy, (WinGeneric *)wf, upleft, 0, 0);
             wf->resizeCorner[upright] =
-                MakeResize(dpy, wf, upright, wid - Resize_width, 0);
+                MakeResize(dpy, (WinGeneric *)wf, upright, wid - Resize_width, 0);
             wf->resizeCorner[lowleft] =
-                MakeResize(dpy, wf, lowleft, 0, high - Resize_height);
+                MakeResize(dpy, (WinGeneric *)wf, lowleft, 0, high - Resize_height);
             wf->resizeCorner[lowright] =
-                MakeResize(dpy, wf, lowright, wid - Resize_width,
+                MakeResize(dpy, (WinGeneric *)wf, lowright, wid - Resize_width,
                            high - Resize_height);
 	}
 
@@ -1432,7 +1496,7 @@ int wid,high;
         if (cli->wmDecors->flags & WMDecorationPushPin)
         {
 		wf->winDeco = (WinGeneric *)
-			MakePushPin(dpy,wf,panewin,xposPushPin(gisNormal),
+			MakePushPin(dpy,(WinGeneric *)wf,panewin,xposPushPin(gisNormal),
 				    yposPushPin(cli,gisNormal));
                 decorWidth = xposPushPin(gisNormal) + 
 			PushPinOut_Width(gisNormal);
@@ -1441,7 +1505,7 @@ int wid,high;
         if (cli->wmDecors->flags & WMDecorationCloseButton)
         {
 		wf->winDeco = (WinGeneric *)
-			MakeButton(dpy,wf,xposCloseButton(gisNormal),
+			MakeButton(dpy,(WinGeneric *)wf,xposCloseButton(gisNormal),
 				   yposCloseButton(cli,gisNormal));
                 decorWidth = xposCloseButton(gisNormal) +
 			Abbrev_MenuButton_Width(gisNormal) ;
@@ -1894,7 +1958,7 @@ XWindowAttributes *paneattrs;
 	cli->framewin = w;
 
 	/* register the window */
-	WIInstallInfo(w);
+	WIInstallInfo((WinGeneric *)w);
 
 	/* if there's any special marks, make them */
 	makeSpecials(cli,dpy,w,panewin,wid,high);
@@ -1937,11 +2001,11 @@ Display *dpy;
 	classPaneFrame.core.xevents[MapRequest] = eventMapRequest;
 	classPaneFrame.core.xevents[ConfigureRequest] = eventConfigureRequest;
 	classPaneFrame.core.xevents[Expose] = WinEventExpose;
-	classPaneFrame.core.xevents[ButtonRelease] = GFrameEventButtonRelease;
-	classPaneFrame.core.xevents[MotionNotify] = GFrameEventMotionNotify;
+	classPaneFrame.core.xevents[ButtonRelease] = (FuncPtr)GFrameEventButtonRelease;
+	classPaneFrame.core.xevents[MotionNotify] = (FuncPtr)GFrameEventMotionNotify;
 	classPaneFrame.core.xevents[ButtonPress] = GFrameEventButtonPress;
 	classPaneFrame.core.xevents[EnterNotify] = eventEnterNotify;
-	classPaneFrame.core.xevents[LeaveNotify] = eventLeaveNotify;
+	classPaneFrame.core.xevents[LeaveNotify] = (FuncPtr)eventLeaveNotify;
 	classPaneFrame.core.xevents[FocusIn] = GFrameEventFocus;
 	classPaneFrame.core.xevents[FocusOut] = GFrameEventFocus;
 
@@ -2156,7 +2220,7 @@ FrameUpdateHeader(cli,event)
 	XPropertyEvent	*event;
 {
 	setTitleText(cli->dpy,cli->framewin,PANEWINOFCLIENT(cli));
-	PaintVirtualWindow(cli->framewin);
+	PaintVirtualWindow((WinGenericFrame *)cli->framewin);
 	(WinFunc(cli->framewin,core.drawfunc))(cli->dpy, cli->framewin);
 }
 
@@ -2248,7 +2312,7 @@ Bool newBusy;
 {
 	if (newBusy)
 	{
-	    win->winBusy = MakeBusy(win->core.client->dpy, win);
+	    win->winBusy = MakeBusy(win->core.client->dpy,(WinGenericFrame *)win);
 	}
 	else
 	{

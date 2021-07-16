@@ -9,6 +9,20 @@ static char     sccsid[] = "@(#)frame_init.c 1.46 93/06/28";
  *	pending in the U.S. and foreign countries. See LEGAL NOTICE 
  *	file for terms of the license.
  */
+#include <xview_private/frame_init_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/fm_cmdline_.h>
+#include <xview_private/fm_geom_.h>
+#include <xview_private/fm_input_.h>
+#include <xview_private/fm_layout_.h>
+#include <xview_private/fm_set_.h>
+#include <xview_private/windowutil_.h>
+#include <xview_private/win_geom_.h>
+#include <xview_private/win_treeop_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_olgx_.h>
+#include <xview_private/xv_util_.h>
 #include <sys/param.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -18,17 +32,12 @@ static char     sccsid[] = "@(#)frame_init.c 1.46 93/06/28";
 #include <xview_private/fm_impl.h>
 #include <xview/server.h>
 #include <xview_private/svr_atom.h>
-#include <xview/defaults.h>
 #include <xview/font.h>
 #include <xview_private/windowimpl.h>
-#include <xview/win.h>
 
 #ifndef MAXHOSTNAMELEN
 #define MAXHOSTNAMELEN 64
 #endif
-
-extern Attr_avlist attr_find();
-Pkg_private void frame_update_compose_led();
 
 static short focus_up_bits[] = {
 #include <images/focus_up.cursor>
@@ -117,7 +126,7 @@ frame_init(owner, frame_public, avlist)
     property_array[2] = (Atom) xv_get(xv_server(info), SERVER_WM_SAVE_YOURSELF);
 
     win_change_property(frame_public, SERVER_WM_PROTOCOLS, XA_ATOM, 32, 
-							     property_array, 3);
+							     (unsigned char*)property_array, 3);
 
     /* Set WM_CLIENT_MACHINE property */
     WMMachineName.value = (unsigned char *)hostname;
@@ -345,8 +354,6 @@ Pkg_private Xv_window
 frame_create_footer(frame)
     Frame_class_info *frame;
 {
-    extern Graphics_info *xv_init_olgx();
-    
     Frame frame_public = FRAME_PUBLIC(frame);
     Frame_rescale_state scale;
     Xv_window footer;
@@ -375,8 +382,6 @@ Pkg_private Xv_window
 frame_create_IMstatus(frame)
     Frame_class_info *frame;
 {
-    extern Graphics_info *xv_init_olgx();
-
     Frame frame_public = FRAME_PUBLIC(frame);
     Frame_rescale_state scale;
     Xv_window IMstatus;

@@ -10,13 +10,20 @@ static char     sccsid[] = "@(#)fm_destroy.c 20.55 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/fm_destroy_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/win_treeop_.h>
+#include <xview_private/window_.h>
 #include <xview_private/i18n_impl.h>
 #include <xview_private/fm_impl.h>
 #include <xview_private/draw_impl.h>
 #include <xview/notice.h>
 
-static int      frame_confirm_destroy();
-static void     frame_free();
+
+static int frame_confirm_destroy(Frame_class_info *frame);
+static void frame_free(Frame_class_info *frame);
+
+extern int frame_notify_count;
 
 static int	frame_notice_key;
 
@@ -83,7 +90,7 @@ frame_destroy(frame_public, status)
 		? XV_OK : XV_ERROR);
     }
     if (status == DESTROY_CLEANUP) {	/* waste of time if ...PROCESS_DEATH */
-	if (frame->footer != NULL)
+	if (frame->footer != (Xv_Window)NULL)
 	  xv_destroy(frame->footer);
 #ifdef OW_I18N
 	_xv_free_ps_string_attr_dup(&frame->left_footer);
@@ -102,10 +109,10 @@ frame_destroy(frame_public, status)
         if (frame->default_icon)  {
 	    xv_destroy(frame->default_icon);
 
-	    frame->default_icon = NULL;
+	    frame->default_icon = (Icon)NULL;
 	}
 
-	if (frame->focus_window != NULL)  {
+	if (frame->focus_window != (Xv_Window)NULL)  {
 	    Server_image	image;
 	    GC			gc;
 	    

@@ -25,23 +25,15 @@ static char     sccsid[] = "@(#)sb_init.c 1.46 93/06/28";
  */
 
 #include <xview_private/sb_impl.h>
+#include <xview_private/defaults_.h>
 #include <xview_private/draw_impl.h>
 #include <xview/defaults.h>
 #include <xview/svrimage.h>
 #include <X11/Xlib.h>
 
-Xv_private void window_set_bit_gravity();
-
 Attr_attribute  sb_context_key;
 Attr_attribute  sb_split_view_menu_item_key;
 Attr_attribute  sb_join_view_menu_item_key;
-
-/*
- * Declaration of Functions Defined in This File (in order):
- */
-
-Pkg_private void scrollbar_init_common();
-Pkg_private void scrollbar_create_standard_menu();
 
 /******************************************************************/
 

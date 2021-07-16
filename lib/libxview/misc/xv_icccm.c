@@ -16,7 +16,7 @@ static char     sccsid[] = "@(#)xv_icccm.c	1.8	28 Jun 1993"
  * pre-release-4 versions of Xlib.
  */
 
-#include <X11/Xlib.h>
+#include <xview_private/xv_icccm_.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
 

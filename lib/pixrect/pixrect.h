@@ -173,19 +173,6 @@ struct pixrectops {
 
 #else /* !lint || KERNEL */
 
-extern pr_rop();
-extern pr_stencil();
-extern pr_batchrop();
-extern pr_destroy();
-extern pr_get();
-extern pr_put();
-extern pr_vector();
-extern Pixrect *pr_region();
-extern pr_putcolormap();
-extern pr_getcolormap();
-extern pr_putattributes();
-extern pr_getattributes();
-
 #endif /* lint */
 
 /*
@@ -278,23 +265,6 @@ extern pr_getattributes();
 	pro_line((pr), (x0), (y0), (x1), (y1), (brush), (tex), (op), 0) 
 
 #else /* !lint || KERNEL */
-
-extern prs_rop();
-extern prs_stencil();
-extern prs_batchrop();
-extern prs_destroy();
-extern prs_get();
-extern prs_put();
-extern prs_vector();
-extern Pixrect *prs_region();
-extern prs_putcolormap();
-extern prs_getcolormap();
-extern prs_putattributes();
-extern prs_getattributes();
-
-extern prs_replrop();
-extern pr_close();
-extern pr_line();
 
 #endif /* !lint || KERNEL */
 

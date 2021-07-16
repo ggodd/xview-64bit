@@ -14,6 +14,8 @@ static char     sccsid[] = "@(#)sys_select.c 20.17 93/06/28 Copyr 1985 Sun Micro
  * Sys_select.c - Real system call to select.
  */
 
+#include <xview_private/sys_select_.h>
+#include <xview_private/ntfy_debug_.h>
 #ifndef SVR4
 #ifndef __linux__
 #include <syscall.h>

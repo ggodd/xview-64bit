@@ -22,7 +22,8 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=
-HDRSPRIVATE=	io_stream.h
+HDRSPRIVATE=	io_stream.h file_strms_.h input_.h io_.h othr_strms_.h \
+                output_.h str_strms_.h
 
 DATA_OBJS =
 

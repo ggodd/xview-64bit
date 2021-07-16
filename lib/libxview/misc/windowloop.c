@@ -10,17 +10,17 @@ static char     sccsid[] = "@(#)windowloop.c 20.25 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/windowloop_.h>
+#include <xview_private/win_cntral_.h>
+#include <xview_private/win_global_.h>
+#include <xview_private/win_input_.h>
 #include <stdio.h>
 #include <xview/xview.h>
 #include <xview/frame.h>
 #include <xview/fullscreen.h>
 
-Xv_object input_readevent();
-
 static short    no_return /* = FALSE */ ;
 static Xv_opaque return_value;
-
-
 
 /* BUG: this whole routine is suspect */
 

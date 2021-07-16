@@ -10,6 +10,8 @@ static char     sccsid[] = "@(#)input.c 20.20 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/input_.h>
+#include <xview_private/gettext_.h>
 #include <xview_private/i18n_impl.h>
 #include <xview/xv_error.h>
 #include <xview_private/io_stream.h>
@@ -23,11 +25,7 @@ static char     sccsid[] = "@(#)input.c 20.20 93/06/28";
 		XV_MSG("input stream not of type input"), 0); \
 	ops = in->ops.input_ops
 
-#ifdef __STDC__
-static char	*stream_getstring(char *s, int n, STREAM *in, Bool include_newline);
-#else
-static char	*stream_getstring();
-#endif
+static char *stream_getstring(char *s, int n, STREAM *in, Bool include_newline);
 
 /* GENERIC INPUT FUNCTIONS */
 
@@ -154,7 +152,7 @@ char           *
 stream_get_token(in, dest, charproc)
     STREAM         *in;
     char           *dest;
-    enum CharClass  (*charproc) ();
+    enum CharClass  (*charproc) (char);
 {
     int             c;
     int             i = 0;
@@ -211,7 +209,7 @@ char           *
 stream_get_sequence(in, dest, charproc)
     STREAM         *in;
     char           *dest;
-    struct CharAction (*charproc) ();
+    struct CharAction (*charproc) (char);
 {
     int             c;
     struct CharAction action;
@@ -242,7 +240,7 @@ done:
 void
 xv_skip_over(in, charproc)
     STREAM         *in;
-    enum CharClass  (*charproc) ();
+    enum CharClass  (*charproc) (char);
 
 {
     char            c;

@@ -10,6 +10,17 @@ static char     sccsid[] = "@(#)notice_pt.c 1.26 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/notice_pt_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/notice_.h>
+#include <xview_private/notice_ol_.h>
+#include <xview_private/notice_set_.h>
+#include <xview_private/pf_text_.h>
+#include <xview_private/sel_util_.h>
+#include <xview_private/win_geom_.h>
+#include <xview_private/win_input_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_olgx_.h>
 #include <stdio.h>
 #include <xview_private/noticeimpl.h>
 #include <olgx/olgx.h>
@@ -18,6 +29,16 @@ static char     sccsid[] = "@(#)notice_pt.c 1.26 93/06/28";
 #include <xview_private/pw_impl.h>
 #include <xview/server.h>
 #include <xview/cms.h>
+
+
+static void notice_copy_event(register notice_handle notice, Event *event);
+static void notice_get_button_pin_points(register notice_handle notice);
+static int notice_quadrant(Rect notice_screen_rect, int x, int y);
+static void notice_paint_button(Xv_Window pw, notice_buttons_handle button, int invert, Graphics_info *ginfo, int three_d);
+static notice_buttons_handle notice_button_for_event(register notice_handle noticenotice, int x, int y);
+static notice_buttons_handle notice_get_prev_button(register notice_handle notice, notice_buttons_handle button);
+static Xv_window notice_get_focus_win(Notice_info *notice);
+static int notice_show_focus_win(Notice_info *notice, notice_buttons_handle button, Xv_window focus_window, int erase);
 
 /*
  * XView Public
@@ -36,38 +57,6 @@ Xv_private_data Defaults_pairs xv_kbd_cmds_value_pairs[4];
 extern Defaults_pairs xv_kbd_cmds_value_pairs[4];
 #endif
 
-/*
- * --------------------------- Cursor Stuff -------------------------
- */
-
-
-extern void     xv_help_save_image();
-
-#ifdef OW_I18N
-extern struct pr_size xv_pf_textwidth_wc();
-#else
-extern struct pr_size xv_pf_textwidth();
-#endif
-Xv_private Time	xv_sel_get_last_event_time();
-
-/*
- * --------------------------- DISPLAY PROCS ------------------------
- */
-
-Pkg_private void     notice_build_button();
-Pkg_private int      notice_text_width();
-Pkg_private int      notice_button_width();
-static void     notice_paint_button();
-static void     notice_get_button_pin_points();
-static notice_buttons_handle notice_button_for_event();
-static void     notice_copy_event();
-static Xv_window	notice_get_focus_win();
-static int	notice_show_focus_win();
-#ifdef __STDC__
-static int	notice_quadrant(Rect notice_screen_rect, int x, int y);
-#else
-static int	notice_quadrant();
-#endif
 
 /*
  * --------------------------- STATICS ------------------------------
@@ -77,16 +66,6 @@ extern Defaults_pairs bell_types[];
 
 #define NOTICE_INVERT_BUTTON	1
 #define NOTICE_NORMAL_BUTTON	0
-static notice_buttons_handle	notice_get_prev_button();
-
-static int notice_quadrant(Rect	notice_screen_rect, int x, int y);
-
-/*
- * --------------------------- Externals ----------------------------
- */
-
-Xv_private Graphics_info *xv_init_olgx();
-
 
 /*
  * ----------------------- Public Interface -------------------------
@@ -95,9 +74,9 @@ Xv_private Graphics_info *xv_init_olgx();
 /*VARARGS*/
 Xv_public int
 #ifdef ANSI_FUNC_PROTO
-notice_prompt(Xv_Window client_window, Event *event, ...)
+_notice_prompt(Xv_Window client_window, Event *event, ...)
 #else
-notice_prompt(client_window, event, va_alist)
+_notice_prompt(client_window, event, va_alist)
     Xv_Window       client_window;
     Event          *event;
 va_dcl
@@ -429,6 +408,7 @@ Notice_info	*notice;
      * now fill in the box with the text AND buttons
      */
     (void) notice_layout(notice, &rect, buttons_width);
+
 
     /*
      * Mouseless
@@ -1067,6 +1047,7 @@ notice_paint_button(pw, button, invert, ginfo, three_d)
 static          notice_buttons_handle
 notice_button_for_event(notice, x, y)
     register notice_handle notice;
+    int x, y;
 {
     register notice_buttons_handle curr;
 

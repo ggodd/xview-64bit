@@ -17,12 +17,7 @@ static char     sccsid[] = "@(#)fchsr_data.c 1.3 93/06/28";
  */
 
 #include <xview/xview.h>
-#include <xview_private/fchsr_impl.h>
-
-extern int 		file_chooser_init();
-extern Xv_opaque	file_chooser_set();
-extern Xv_opaque	file_chooser_get();
-extern int 		file_chooser_destroy();
+#include <xview_private/file_chsr_.h>
 
 Xv_pkg file_chooser_pkg = {
     "File_chooser",

@@ -22,7 +22,8 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=     window.h
-HDRSPRIVATE=    windowimpl.h
+HDRSPRIVATE=    windowimpl.h window_cms_.h window_.h windowcmpt_.h windowdrop_.h window_get_.h windowlayt_.h window_set_.h \
+            windowutil_.h
 
 DATA_OBJS = windowdata.o
 

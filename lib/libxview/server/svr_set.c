@@ -10,21 +10,24 @@ static char     sccsid[] = "@(#)svr_set.c 20.56 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/svr_set_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/server_.h>
+#include <xview_private/svr_atom_.h>
+#include <xview_private/win_input_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_list_.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <xview/win_event.h>
 #include <xview_private/svr_impl.h>
 
-Xv_private Notify_value	xv_input_pending();
-Xv_private void 	server_journal_sync_event();
-/* ACC_XVIEW */
-Xv_private int		server_parse_keystr();
-Xv_private void		server_semantic_map_offset();
-Xv_private char		*xv_strtok();
-/* ACC_XVIEW */
-static int server_add_xevent_proc ();
-static int server_add_xevent_mask ();
 
+#ifdef _XV_DEBUG
+static print_struct(Server_info *s);
+#endif
+static int server_add_xevent_proc(Server_info *server, Xv_opaque func, int pkg_id, int external);
+static int server_add_xevent_mask(Server_info *server, Xv_opaque xid, Xv_opaque mask, int pkg_id, int external);
 
 Pkg_private     Xv_opaque
 server_set_avlist(server_public, avlist)

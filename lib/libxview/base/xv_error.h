@@ -73,6 +73,11 @@ typedef enum {
 	ERROR_STRING		= ERROR_ATTR(ATTR_STRING,		27)
 } Error_attr;
 
+#include <xview/macros.h>
+
+#define xv_error(...) \
+    MACRO_DEF1(_xv_error, Xv_object, __VA_ARGS__)
+
 /*
  ***********************************************************************
  *				Globals
@@ -83,7 +88,7 @@ typedef enum {
  * Functions 
  */
 
-EXTERN_FUNCTION (int	xv_error, (Xv_object object, DOTDOTDOT));
+EXTERN_FUNCTION (int	_xv_error, (Xv_object object, DOTDOTDOT));
 EXTERN_FUNCTION (int 	xv_error_default, (Xv_object object, Attr_avlist avlist));
 EXTERN_FUNCTION (char *	xv_error_format, (Xv_object object, Attr_avlist avlist));
 

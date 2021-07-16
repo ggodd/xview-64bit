@@ -14,7 +14,8 @@ static char     sccsid[] = "@(#)nint_copy.c 20.14 93/06/28 Copyr 1985 Sun Micro"
  * Nint_interpose.c - Implement the nint_interpose_func private interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/nint_copy_.h>
+#include <xview_private/ntfy_node_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/nint.h>
 #include <xview_private/portable.h>

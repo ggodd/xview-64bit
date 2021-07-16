@@ -22,7 +22,8 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=	font.h
-HDRSPRIVATE=	font_impl.h
+HDRSPRIVATE=	font_impl.h font_.h font_x_.h font_get_.h pf_text_.h \
+            font_set_.h pf_.h
 
 DATA_OBJS = font_data.o
 

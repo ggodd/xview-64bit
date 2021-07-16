@@ -3,15 +3,14 @@
 static char     sccsid[] = "@(#)base_data.c 1.13 90/03/06";
 #endif
 #endif
-#include <xview_private/draw_impl.h>
+#include <xview_private/generic_.h>
+#include <xview_private/drawable_.h>
 #include <xview/generic.h>
 /*
  *	(c) Copyright 1989 Sun Microsystems, Inc. Sun design patents 
  *	pending in the U.S. and foreign countries. See LEGAL NOTICE 
  *	file for terms of the license.
  */
-extern int      generic_init(), generic_destroy();
-extern Xv_opaque generic_get(), generic_set_avlist();
 
 Xv_pkg          xv_generic_pkg = {
     "Generic",

@@ -42,9 +42,19 @@ HFILES.textsw.4        = convpos.h
 HFILES.textsw.3        =
 
 
-HDRSPRIVATE=    ei.h es.h ev.h ev_impl.h primal.h ps_impl.h\
-		finger_tbl.h txt_impl.h txt_18impl.h ${HFILES.textsw.XvI18nLevel}
 HDRSPUBLIC=     textsw.h text.h
+HDRSPRIVATE=    ei.h es.h ev.h ev_impl.h primal.h ps_impl.h\
+		finger_tbl.h txt_impl.h txt_18impl.h ${HFILES.textsw.XvI18nLevel} \
+		ei_attr_.h ei_text_.h es_attr_.h es_cp_file_.h es_file_.h es_mem_.h \
+		es_util_.h ev_attr_.h ev_display_.h ev_edit_.h ev_field_.h ev_once_.h \
+		ev_op_bdry_.h ev_update_.h finger_tbl_.h ps_impl_.h text_.h \
+		txt_again_.h txt_attr_.h txt_caret_.h txt_dbx_.h txt_disp_.h \
+		txt_edit_.h \
+		txt_e_menu_.h txt_event_.h txt_field_.h txt_file_.h \
+		txt_filter_.h txt_find_.h txt_getkey_.h txt_incl_.h\
+		txt_input_.h txt_line_.h txt_load_.h txt_match_.h txt_menu_.h txt_move_.h txt_once_.h txt_popup_.h \
+		txt_putkey_.h \
+		txt_scroll_.h txt_search_.h txt_sel_.h txt_selsvc_.h txt_store_.h txt_tool_.h txt_view_.h
 
 DATA_OBJS = txt_data.o
 

@@ -10,6 +10,9 @@ static char     sccsid[] = "@(#)dnd_pblc.c 1.17 93/06/28";
  *      file for terms of the license.
  */
 
+#include <xview_private/dnd_pblc_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/xv_.h>
 #include <X11/Xatom.h>
 #include <xview/xview.h>
 #include <xview/notify.h>
@@ -21,7 +24,7 @@ static char     sccsid[] = "@(#)dnd_pblc.c 1.17 93/06/28";
 #include <stdlib.h> 
 #endif /* SVR4 */
 
-static void BuildDefaults();
+static void BuildDefaults(Dnd_info *dnd);
 
 /* ARGSUSED */
 Pkg_private int
@@ -53,7 +56,7 @@ dnd_set_avlist(dnd_public, avlist)
     register Dnd_info		*dnd = DND_PRIVATE(dnd_public);
     register Attr_avlist	 attrs;
 
-    for (attrs = avlist; (int)*attrs; attrs = attr_next(attrs)) {
+    for (attrs = avlist; *attrs; attrs = attr_next(attrs)) {
         switch ((int)attrs[0]) {
             case DND_TYPE:
                dnd->type = (DndDragType) attrs[1];
@@ -169,7 +172,7 @@ BuildDefaults(dnd)
     dnd->atom[DSDM] =    (Atom) xv_get(server,
 					SERVER_ATOM, "_SUN_DRAGDROP_DSDM");
     dnd->type = DND_MOVE;
-    dnd->sel = NULL;
+    dnd->sel = (Selection_requestor)NULL;
     dnd->siteRects = NULL;
     dnd->affXCursor = (Cursor)NULL; 
     dnd->xCursor = (Cursor)NULL;

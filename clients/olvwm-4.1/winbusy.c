@@ -29,6 +29,11 @@
 #include "olwm.h"
 #include "win.h"
 #include "globals.h"
+#include "winbusy.h"
+#include "st.h"
+#include "info.h"
+#include "virtual.h"
+#include "winnofoc.h"
 
 /***************************************************************************
 * global data
@@ -40,6 +45,11 @@
 
 static ClassBusy classBusy;
 static Bool busyDisabled = True;
+
+static int destroyBusy(Display* dpy, WinBusy *winInfo);
+static int newConfigBusy(WinBusy *winInfo, XConfigureRequestEvent *pxcre);
+static int newPosBusy(WinBusy *winInfo, int x, int y);
+static int setConfigBusy(Display* dpy, WinBusy *winInfo);
 
 /***************************************************************************
 * private functions
@@ -56,10 +66,10 @@ WinBusy *winInfo;
 {
 	/* free our data and throw away window */
 	XUndefineCursor(dpy, winInfo->core.self);
-	WinRemoveChild(winInfo->core.parent,winInfo);
+	WinRemoveChild(winInfo->core.parent,(WinGeneric *)winInfo);
 	ScreenDestroyWindow(winInfo->core.client->scrInfo, winInfo->core.self);
 	WIUninstallInfo(winInfo->core.self);
-	PaintVirtualWindow(winInfo->core.parent);
+	PaintVirtualWindow((WinGenericFrame *)winInfo->core.parent);
 	MemFree(winInfo);
 }
 
@@ -112,7 +122,7 @@ newConfigBusy(winInfo, pxcre)
     if (busyDisabled)
 	return 0;
     else
-	return WinNewConfigFunc(winInfo, pxcre);
+	return WinNewConfigFunc((WinGeneric *)winInfo, pxcre);
 }
 
 
@@ -124,7 +134,7 @@ newPosBusy(winInfo, x, y)
     if (busyDisabled)
 	return 0;
     else
-	return WinNewPosFunc(winInfo, x, y);
+	return WinNewPosFunc((WinGeneric *)winInfo, x, y);
 }
 
 
@@ -136,7 +146,7 @@ setConfigBusy(dpy, winInfo)
     if (busyDisabled)
 	return 0;
     else {
-	WinSetConfigFunc(dpy, winInfo);
+	WinSetConfigFunc(dpy, (WinGeneric *)winInfo);
 	return 1;
     }
 }
@@ -166,7 +176,7 @@ WinGenericFrame *par;
 	w = MemNew(WinBusy);
 	w->core.kind = WIN_BUSY;
 	w->class = &classBusy;
-	WinAddChild(par,w);
+	WinAddChild((WinGeneric *)par, (WinGeneric *)w);
 	w->core.children = NULL;
 	w->core.client = par->core.client;
 	if (busyDisabled) {
@@ -201,8 +211,8 @@ WinGenericFrame *par;
 
 	/* fill out remaining fields */
 	w->core.self = win;
-	WIInstallInfo(w);
-        MapRaised(w);
+	WIInstallInfo((WinGeneric *)w);
+        MapRaised((WinGeneric *)w);
 	PaintVirtualWindow(par);
 
 	return w;
@@ -214,10 +224,10 @@ BusyInit(dpy)
 Display *dpy;
 {
 	classBusy.core.kind = WIN_BUSY;
-	classBusy.core.xevents[ButtonPress] = NoFocusEventBeep;
-	classBusy.core.xevents[ButtonRelease] = NoFocusEventBeep;
-	classBusy.core.xevents[KeyPress] = NoFocusEventBeep;
-	classBusy.core.xevents[KeyRelease] = NoFocusEventBeep;
+	classBusy.core.xevents[ButtonPress] = (FuncPtr)NoFocusEventBeep;
+	classBusy.core.xevents[ButtonRelease] = (FuncPtr)NoFocusEventBeep;
+	classBusy.core.xevents[KeyPress] = (FuncPtr)NoFocusEventBeep;
+	classBusy.core.xevents[KeyRelease] = (FuncPtr)NoFocusEventBeep;
 	classBusy.core.focusfunc = NULL;
 	classBusy.core.drawfunc = NULL;
 	classBusy.core.destroyfunc = destroyBusy;

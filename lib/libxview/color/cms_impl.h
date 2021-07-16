@@ -79,26 +79,4 @@ typedef struct cms_info {
     } status_bits;
 } Cms_info;
 
-/*
- *************************************************************************
- *		Private functions
- *************************************************************************
- */
-Pkg_private int   	cms_init();
-Pkg_private Xv_opaque	cms_set_avlist();
-Pkg_private Xv_opaque   cms_get_attr();
-Pkg_private int   	cms_destroy();
-Pkg_private Xv_opaque   cms_find_cms();
-Pkg_private void	cms_set_size();
-Pkg_private void	cms_free_colors();
-Pkg_private void	cms_set_name();
-Pkg_private void	cms_set_unique_name();
-Pkg_private int		cms_set_colors();
-Pkg_private int		cms_set_static_colors();
-Pkg_private XColor     *cms_parse_named_colors();
-Pkg_private int		cms_set_dynamic_colors();
-Pkg_private int		cms_get_colors();
-Pkg_private int		cms_alloc_static_colors();
-
-Xv_private Xv_opaque	cms_default_colormap();
 #endif	/* ~xview_cms_impl_h_DEFINED */

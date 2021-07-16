@@ -14,8 +14,12 @@ static char     sccsid[] = "@(#)ev_once.c 20.28 93/06/28";
  * Initialization and finalization of entity views.
  */
 
+#include <xview_private/ev_once_.h>
+#include <xview_private/es_util_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/ev_edit_.h>
+#include <xview_private/finger_tbl_.h>
 #include <xview_private/primal.h>
-
 #include <sys/time.h>
 #include <pixrect/pixrect.h>
 #include <pixrect/pr_util.h>
@@ -97,7 +101,6 @@ ev_create_view(chain, pw, rect)
     Xv_Window       pw;
     struct rect    *rect;
 {
-    Pkg_private Ev_line_table ev_ft_for_rect();
     Ev_handle       view = NEW(struct ev_object);
     Ev_pd_handle    private = NEW(struct ev_private_data_object);
 
@@ -315,13 +318,12 @@ ev_rect_for_ith_physical_line(view, phys_line, first, rect, skip_white_space)
     Rect           *rect;
     int             skip_white_space;
 {
-    Pkg_private Rect ev_rect_for_line();
     int             lt_index;
     Es_index        last_plus_one;
     CHAR            newline_str[2];
     
     newline_str[0] = '\n';
-    newline_str[1] = NULL;
+    newline_str[1] = '\0';
 
     ev_view_range(view, first, &last_plus_one);
     if (phys_line == 0) {

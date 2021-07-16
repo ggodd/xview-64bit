@@ -13,7 +13,7 @@ static char     sccsid[] = "@(#)help_file.c 1.17 90/12/04";
 #include <stdio.h>
 #include <sys/types.h>
 #include <string.h>
-#include <xview/sun.h>
+/*#include <xview/sun.h>*/
 #include <xview/pkg.h>
 
 #ifdef OLWMSLAVE

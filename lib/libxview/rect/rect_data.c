@@ -15,7 +15,7 @@ static char     sccsid[] = "@(#)rect_data.c 20.11 93/06/28 Copyr 1984 Sun Micro"
  * rectlist.c and rect.c
  */
 
-#include <xview/base.h>
+#include <xview/pkg.h>
 #include <xview/rect.h>
 #include <xview/rectlist.h>
 

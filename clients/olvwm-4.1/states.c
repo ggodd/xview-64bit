@@ -41,6 +41,16 @@
 #include "slots.h"
 #include "states.h"
 #include "evbind.h"
+#include "selection.h"
+#include "winicon.h"
+#include "st.h"
+#include "info.h"
+#include "win.h"
+#include "winframe.h"
+#include "winpane.h"
+#include "winipane.h"
+#include "wincolor.h"
+#include "winpush.h"
 
 /***************************************************************************
 * global data
@@ -74,9 +84,7 @@ extern Atom AtomWTHelp;
 extern Atom AtomWTNotice;
 extern Atom AtomWTOther;
 
-extern	int	WinDrawFunc();
-extern	void	IconPaneSetPixmap();
-extern	void	IconPaneSetMask();
+extern void SearchProgString(Display *dpy, ScreenInfo *scrInfo, char *name, char *inst, char *wm_class, int *frame_x, int *frame_y, int *icon_x, int *icon_y);
 
 
 /***************************************************************************
@@ -174,14 +182,22 @@ typedef struct {
 } FocusClosure;
 
 
-#ifdef __STDC__
-static void	checkGroupBinding(Display *dpy, minimalclosure *mc, Boolean focus, FocusClosure *fcl);
-static void	promoteDependentFollowers(Window window, Window groupid);
-#else
-static void	checkGroupBinding();
-static void	promoteDependentFollowers();
-#endif
-
+static FocusMode focusModeFromHintsProtocols(XWMHints *wmHints, int protocols);
+static Bool matchInstClass(char *str, minimalclosure *mc);
+static Bool clientSpecifiedPosition(XSizeHints *normHints, XWindowAttributes *paneAttr);
+static void calcPosition(Display* dpy, int screen, XWindowAttributes *attrs, WinPaneFrame *frame);
+static void *iconifyOne(Client *cli, WinGeneric *winIcon);
+static void *deiconifyOne(Client *cli, WinGeneric *winIcon, Bool raise);
+static void *markFrame(Client *cli, int value);
+static void *unmarkAllFrames(void);
+#ifdef DEBUG
+static void printClientList(void);
+static void *printGroupMember(Client *cli, int value);
+static void printGroupList(unsigned long id);
+#endif 
+static void deiconifyGroup(Client *cli, WinIconFrame* winIcon);
+static void promoteDependentFollowers(Window window, Window groupid);
+static void checkGroupBinding(Display* dpy, minimalclosure *mc, Boolean focus, FocusClosure *fcl);
 
 /***************************************************************************
 * private functions
@@ -265,7 +281,7 @@ Client	*cli;
 	mc.instance = cli->wmInstance;
 	if (!XFetchName(dpy, win, &mc.name))
 	    mc.name = NULL;
-	if (ListApply(GRV.NoDecors, matchInstClass, &mc) != NULL) {
+	if (ListApply(GRV.NoDecors, (void * (*)())matchInstClass, &mc) != NULL) {
 	    *decors = NoDecors;
 	    goto out;
 	}
@@ -376,7 +392,7 @@ Client	*cli;
 	 * listed for minimal decoration, only provide resize corners
 	 * and a menu.
 	 */
-	if (ListApply(GRV.Minimals,matchInstClass,&mc) != NULL)
+	if (ListApply(GRV.Minimals, (void * (*)())matchInstClass,&mc) != NULL)
 	{
 	    decors->flags &= ~WMDecorationHeader;
 	}
@@ -541,7 +557,7 @@ WinGeneric *winIcon;
 	if (cli->groupmask == GROUP_DEPENDENT)
     	    RemoveSelection(cli);
 	else
-	    DrawIconToWindowLines(cli->dpy, winIcon, cli->framewin);
+	    DrawIconToWindowLines(cli->dpy, (WinIconFrame *)winIcon, cli->framewin);
 
 	UnmapWindow((WinGeneric *)cli->framewin);
 	XUnmapWindow(cli->dpy, PANEWINOFCLIENT(cli));
@@ -560,7 +576,7 @@ WinGeneric *winIcon;
 Bool raise;
 {
 	if (cli->groupmask != GROUP_DEPENDENT)
-	    DrawIconToWindowLines(cli->dpy, winIcon, cli->framewin);
+	    DrawIconToWindowLines(cli->dpy, (WinIconFrame *)winIcon, cli->framewin);
 
 	if (raise)
 	    RaiseWindow((WinGeneric *)cli->framewin);
@@ -666,10 +682,10 @@ deiconifyGroup(cli, winIcon)
     unmarkAllFrames();
 
     if (cli->groupmask == GROUP_LEADER) {
-	GroupApply(cli->groupid, markFrame, 1, GROUP_LEADER | GROUP_DEPENDENT);
+	GroupApply(cli->groupid, markFrame, (void*)1L, GROUP_LEADER | GROUP_DEPENDENT);
     } else if (cli->groupmask == GROUP_INDEPENDENT) {
 	markFrame(cli, 1);
-        GroupApply(PANEWINOFCLIENT(cli), markFrame, 1, GROUP_DEPENDENT);
+        GroupApply(PANEWINOFCLIENT(cli), markFrame, (void*)1L, GROUP_DEPENDENT);
     }
 
     (void) XQueryTree(cli->dpy, cli->scrInfo->rootid, &root, &parent,
@@ -717,7 +733,7 @@ promoteDependentFollowers(window, groupid)
     Client *cli;
 
     unmarkAllFrames();
-    GroupApply(window, markFrame, 1, GROUP_DEPENDENT);
+    GroupApply(window, markFrame, (void *)1L, GROUP_DEPENDENT);
     for (cli = ListEnum(&l); cli != NULL; cli = ListEnum(&l)) {
 	if (cli->framewin && cli->framewin->core.tag) {
 	    GroupRemove(window, cli);
@@ -1057,7 +1073,7 @@ WinPane *ourWinInfo;
 	 * call the creation callback function; this is used for pinned menus.
 	 */
         if (ourWinInfo == NULL) {
-                winPane = MakePane(cli,winFrame,window,&paneAttr);
+                winPane = MakePane(cli, (WinGeneric *)winFrame,window,&paneAttr);
         } else {
                 winPane = ourWinInfo;
                 (WinClass(winPane)->core.createcallback)(ourWinInfo,cli,
@@ -1143,7 +1159,7 @@ WinPane *ourWinInfo;
 	 * Officially set up the icon
 	 */
 	winIcon = MakeIcon(cli,window,&paneAttr);
-	winIconPane = MakeIconPane(cli,winIcon,cli->wmHints,fexisting);
+	winIconPane = MakeIconPane(cli,(WinGeneric *)winIcon,cli->wmHints,fexisting);
 
 	/* 
 	 * Keep track of any subwindows that need colormap installation
@@ -1190,7 +1206,7 @@ WinPane *ourWinInfo;
 	 */
 	mc.class = cli->wmClass;
 	mc.instance = cli->wmInstance;
-	if (ListApply(GRV.StickyList, matchInstClass, &mc) != NULL)
+	if (ListApply(GRV.StickyList, (void * (*)())matchInstClass, &mc) != NULL)
 	    cli->sticky = True;
 	if (mc.name)
 	    XFree(mc.name);
@@ -1646,7 +1662,7 @@ StateUpdateWMHints(cli,event)
 	if (wmHints.flags & IconMaskHint) 
 		IconPaneSetMask(cli->dpy,iconPane,wmHints.icon_mask);
 	if (wmHints.flags & IconPixmapHint || wmHints.flags & IconMaskHint) 
-		WinDrawFunc(iconPane);
+		WinDrawFunc((WinGeneric *)iconPane);
 
 	if (cli->wmHints == NULL)
 		cli->wmHints = MemNew(XWMHints);
@@ -1745,7 +1761,7 @@ checkGroupBinding(dpy, mc, focus, fcl)
     List *list = *(fcl->list);
     Boolean newstate = fcl->state;
 
-    newstate = focus ? (ListApply(list, matchInstClass, mc) != NULL) : False;
+    newstate = focus ? (ListApply(list, (void * (*)())matchInstClass, mc) != NULL) : False;
 
     if (newstate != fcl->state) {
       fcl->state = newstate;

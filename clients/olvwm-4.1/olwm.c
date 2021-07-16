@@ -21,6 +21,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <sys/time.h>
 #include <sys/types.h>
@@ -35,6 +36,7 @@
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/Xresource.h>
+#include <X11/Intrinsic.h>
 
 #include "i18n.h"
 #include "ollocale.h"
@@ -51,11 +53,33 @@
 #include "slots.h"
 #include "error.h"
 #include "dsdm.h"
+#include "evbind.h"
+#include "atom.h"
+#include "atom.h"
+#include "client.h"
+#include "st.h"
+#include "info.h"
+#include "winnofoc.h"
+#include "slave.h"
+#include "winframe.h"
+#include "winicon.h"
+#include "winresize.h"
+#include "wincolor.h"
+#include "winbutton.h"
+#include "winmenu.h"
+#include "winbusy.h"
+#include "winpinmenu.h"
+#include "winroot.h"
+#include "winpush.h"
+#include "winpane.h"
+#include "winipane.h"
+#include "virtual.h"
 
 #include "patchlevel.h"
 
-typedef	void	(*VoidFunc)();
+typedef	void	(*VoidFunc)(int);
 
+extern void InitOlvwmRC(Display *ldpy, char *path);
 
 /*
  * Globals
@@ -94,13 +118,13 @@ XrmQuark OlwmQ;
 /*
  * Forward declarations.
  */
-
-static void	usage();
-static Display *openDisplay();
-static void	parseCommandline();
-static void	sendSyncSignal();
-static void	initWinClasses();
-
+static void parseCommandline(int *argc, char *argv[], XrmDatabase *tmpDB);
+static Display *openDisplay(XrmDatabase rdb);
+static void sendSyncSignal(void);
+static void initWinClasses(Display *dpy);
+static void cleanup(void);
+static void handleChildSignal(void);
+static void usage(char *s1, char *s2);
 
 /*
  * Command-line option table.  Resources named here must be kept in sync with 
@@ -158,10 +182,8 @@ static	XrmOptionDescRec	optionTable[] = {
 /* Child Process Handling */
 
 static Bool deadChildren = False;
-static void handleChildSignal();
 static int slavePid;
 
-void ReapChildren();		/* public -- called from events.c */
 
 #ifdef ALLPLANES
 Bool AllPlanesExists;		/* server supports the ALLPLANES extension */
@@ -187,14 +209,12 @@ main(argc, argv)
 	int argc;
 	char **argv;
 {
-	int			ExitOLWM(), RestartOLWM();
 	XrmDatabase		commandlineDB = NULL;
 	char			*dpystr;
 
 #ifdef OW_I18N_L3
 	char			*OpenWinHome;
 	char			locale_dir[MAXPATHLEN+1];
-	extern char		*getenv();
 #endif /* OW_I18N_L3 */
 
 #ifdef MALLOCDEBUG
@@ -261,13 +281,13 @@ olvwm: Warning: '%s' is invalid locale for the LC_CTYPE category,\n\
 	sigset(SIGHUP, (VoidFunc)ExitOLWM);
 	sigset(SIGINT, (VoidFunc)ExitOLWM);
 	sigset(SIGTERM, (VoidFunc)ExitOLWM);
-	sigset(SIGCHLD, handleChildSignal);
+	sigset(SIGCHLD, (VoidFunc)handleChildSignal);
 	sigset(SIGUSR1, (VoidFunc)RestartOLWM);
 #else
 	signal(SIGHUP, (VoidFunc)ExitOLWM);
 	signal(SIGINT, (VoidFunc)ExitOLWM);
 	signal(SIGTERM, (VoidFunc)ExitOLWM);
-	signal(SIGCHLD, handleChildSignal);
+	signal(SIGCHLD, (VoidFunc)handleChildSignal);
 	signal(SIGUSR1, (VoidFunc)RestartOLWM);
 #endif
 
@@ -583,7 +603,6 @@ void
 Exit(dpy)
 Display	*dpy;
 {
-	extern void *ClientShutdown();
 	
 	SlaveStop();
 	ListApply(ActiveClientList, ClientShutdown, (void *)0);
@@ -600,8 +619,6 @@ Display	*dpy;
 static void
 cleanup()
 {
-	extern void *UnparentClient();
-
 	/*
  	 * If DefDpy is NULL then we didn't get to the XOpenDisplay()
 	 * so basically there is nothing to clean up so return.
@@ -688,7 +705,7 @@ handleChildSignal()
  * mbuck@debian.org
  */
 #if (defined(SYSV) && !defined(SVR4)) || defined(__linux__)
-	signal(SIGCHLD, handleChildSignal);
+	signal(SIGCHLD, (__sighandler_t)handleChildSignal);
 #endif
 #else
 #ifdef SYSV
@@ -708,9 +725,10 @@ handleChildSignal()
 void
 ReapChildren()
 {
-#ifdef SYSV
+#if defined(SYSV) || defined(__linux__)
         pid_t pid;
         int status;
+        int oldmask;
 #else
 	int oldmask;
 	int pid;
@@ -720,7 +738,7 @@ ReapChildren()
 	if (!deadChildren)
 		return;
 
-#ifdef SYSV
+#if defined(SYSV)
 	sighold(SIGCHLD);
 #else
 	oldmask = sigblock(sigmask(SIGCHLD));
@@ -730,7 +748,7 @@ ReapChildren()
 
 	while (1) {
 
-#ifdef SYSV
+#if defined(SYSV) || defined(__linux__)
                 pid = waitpid(-1, &status, WNOHANG);
 #else
                 pid = wait3(&status, WNOHANG, (struct rusage *)0);
@@ -757,7 +775,7 @@ ReapChildren()
 
 	deadChildren = False;
 
-#ifdef SYSV
+#if defined(SYSV)
 	sigrelse(SIGCHLD);
 #else
         (void) sigsetmask(oldmask);

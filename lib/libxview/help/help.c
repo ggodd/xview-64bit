@@ -10,6 +10,12 @@ static char     sccsid[] = "@(#)help.c 1.77 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/help_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/help_file_.h>
+#include <xview_private/scrn_get_.h>
+#include <xview_private/xv_.h>
 #include <stdio.h>
 #include <string.h>
 #include <xview_private/i18n_impl.h>
@@ -17,7 +23,6 @@ static char     sccsid[] = "@(#)help.c 1.77 93/06/28";
 #include <xview/notice.h>
 #include <xview/canvas.h>
 #include <xview/cursor.h>
-#include <xview/defaults.h>
 #include <xview/notify.h>
 #include <xview/panel.h>
 #include <xview/svrimage.h>
@@ -52,18 +57,10 @@ extern wchar_t *xv_app_name_wcs;
 #define MORE_HELP_KEY 1
 
 
-Xv_private void	    frame_set_rect();
-Xv_private void	    screen_adjust_gc_color();
-
-Pkg_private FILE   *xv_help_find_file();
-Pkg_private int	    xv_help_get_arg();
-Pkg_private char   *xv_help_get_text();
-
-#ifdef __STDC__
+static void invoke_more_help(Xv_Window client_window, char *sys_command);
 static void more_help_proc(Panel_item item, Event *event);
-#else
-static void more_help_proc();
-#endif
+static void help_request_failed(Xv_Window window, char *data, char *str);
+static Notify_value help_frame_destroy_proc(Notify_client client, Destroy_status status);
 
 typedef struct {
      Xv_Cursor    busy_pointer;
@@ -209,9 +206,9 @@ help_frame_destroy_proc(client, status)
 	if (help_info) {
 	    if (help_info->help_image) {
 		xv_destroy(help_info->help_image);
-		help_info->help_image = NULL;
+		help_info->help_image = 0;
 	    }
-	    help_info->help_frame = NULL;
+	    help_info->help_frame = 0;
 	}
     }
     return (notify_next_destroy_func(client, status));
@@ -250,7 +247,7 @@ xv_help_save_image(pw, client_width, client_height, mouse_x, mouse_y)
     if (help_info->help_image && 
 	(xv_depth(info) != xv_get(help_info->help_image,SERVER_IMAGE_DEPTH))) {
 	xv_destroy(help_info->help_image);
-	help_info->help_image = NULL;
+	help_info->help_image = 0;
     }
     if (!help_info->help_image) {
 	/* Create a server image for magnifying glass with help target image */

@@ -10,6 +10,8 @@ static char     sccsid[] = "@(#)font_x.c 20.33 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/font_x_.h>
+#include <xview_private/mem_.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <xview/pkg.h>
@@ -21,8 +23,6 @@ static char     sccsid[] = "@(#)font_x.c 20.33 93/06/28";
 #include <locale.h>
 #include <string.h>
 #endif /*OW_I18N*/
-
-extern Pixrect *xv_mem_create();
 
 /*
  * PERFORMANCE BUG!  [Space traded for time] glyph_pixmap/_gc/_pr are left

@@ -14,10 +14,33 @@ static char     sccsid[] = "@(#)txt_attr.c 20.127 93/04/28";
  * Attribute set/get routines for text subwindows.
  */
 
-#include <xview/pkg.h>
+#include <xview_private/txt_attr_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/ei_text_.h>
+#include <xview_private/es_file_.h>
+#include <xview_private/es_mem_.h>
+#include <xview_private/ev_edit_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/ev_once_.h>
+#include <xview_private/finger_tbl_.h>
+#include <xview_private/font_.h>
+#include <xview_private/pf_.h>
+#include <xview_private/txt_dbx_.h>
+#include <xview_private/txt_disp_.h>
+#include <xview_private/txt_edit_.h>
+#include <xview_private/txt_event_.h>
+#include <xview_private/txt_file_.h>
+#include <xview_private/txt_input_.h>
+#include <xview_private/txt_menu_.h>
+#include <xview_private/txt_once_.h>
+#include <xview_private/txt_sel_.h>
+#include <xview_private/txt_scroll_.h>
+#include <xview_private/window_cms_.h>
+#include <xview_private/win_input_.h>
+#include <xview_private/xv_.h>
 #include <xview/attrol.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/txt_18impl.h>
 #ifdef SVR4
 #include <dirent.h>
@@ -28,32 +51,11 @@ static char     sccsid[] = "@(#)txt_attr.c 20.127 93/04/28";
 #include <pixrect/pixfont.h>
 #include <xview/window.h>
 #include <xview/openmenu.h>
-#include <xview/defaults.h>
 #include <xview_private/ev_impl.h>
 #include <xview_private/draw_impl.h>
 
-Pkg_private int ei_plain_text_line_height();
-Pkg_private void     ev_line_info();
-Pkg_private Es_handle es_file_create(), es_mem_create();
-Pkg_private Es_handle textsw_create_ps();
-Pkg_private void textsw_display_view_margins();
-Pkg_private void textsw_init_again(), textsw_init_undo();
-Pkg_private Es_status textsw_load_file_internal();
-Pkg_private Textsw_index textsw_position_for_physical_line();
-Pkg_private Textsw_index textsw_replace();
-Pkg_private Es_index textsw_get_contents();
-Pkg_private void  textsw_view_cms_change();
-#ifdef OW_I18N
-Pkg_private Es_index textsw_get_contents_wcs();
-#endif /* OW_I18N */
-pkg_private void textsw_resize();
-Xv_private char *xv_font_monospace();
-
-Xv_private PIXFONT *xv_pf_open();
-Xv_private int      xv_pf_close();
-
-Attr_avlist attr_copy_avlist();
-Es_status es_copy();
+static Textsw_status set_first(register Textsw_view_handle view, char *error_msg, CHAR *filename, int reset_mode, Es_index first, int first_line, int all_views);
+static Xv_opaque textsw_get_internal(register Textsw_folio folio, Textsw_view_handle view, int *status, Textsw_attribute attribute, va_list args);
 
 #ifndef CTRL
 #ifndef __STDC__
@@ -87,11 +89,6 @@ set_first(view, error_msg, filename, reset_mode, first, first_line, all_views)
     Es_status       load_status;
     Textsw_status   result = TEXTSW_STATUS_OKAY;
     register Textsw_folio folio = FOLIO_FOR_VIEW(view);
-#ifdef OW_I18N
-    Pkg_private void     textsw_normalize_view_wc();
-#else
-    Pkg_private void     textsw_normalize_view();
-#endif
 
     msg = (error_msg) ? error_msg : msg_buf;
 #ifdef OW_I18N
@@ -441,7 +438,7 @@ textsw_set_internal(textsw, view, attrs, is_folio)
 #else /* OW_I18 */
 	    if (!file) {
 		if (str_length > 0) {
-		    scratch_esh = es_file_create(attrs[1], 0, &es_status);
+		    scratch_esh = es_file_create((char*)attrs[1], 0, &es_status);
 #endif /* OW_I18N */
 		    /* Ensure no caret turds will leave behind */
 		    textsw_take_down_caret(textsw);
@@ -1024,8 +1021,6 @@ textsw_set_internal_tier2(textsw, view, attrs, is_folio, status_ptr,
 
           case TEXTSW_INSERT_FROM_FILE:{
 #ifdef OW_I18N
-                pkg_private Textsw_status textsw_get_from_file();
-
                 (void) mbstowcs(name_wc, (char *) (attrs[1]), MAXPATHLEN);
                 *status_ptr = textsw_get_from_file(view, name_wc, TRUE);
                 if (*status_ptr == TEXTSW_STATUS_OKAY)
@@ -1034,8 +1029,6 @@ textsw_set_internal_tier2(textsw, view, attrs, is_folio, status_ptr,
             };
           case TEXTSW_INSERT_FROM_FILE_WCS:{
 #endif /* OW_I18N */
-                pkg_private Textsw_status textsw_get_from_file();
-
                 *status_ptr = textsw_get_from_file(view, (CHAR *) (attrs[1]),
                                              TRUE);
                 if (*status_ptr == TEXTSW_STATUS_OKAY)
@@ -1211,8 +1204,6 @@ textsw_get_from_defaults(attribute)
 	    defaults_set_locale(NULL, XV_LC_BASIC_LOCALE);
 	    def_str = xv_font_monospace();
 	    defaults_set_locale(NULL, NULL);
-#else
-	    def_str = xv_font_monospace();
 #endif /* OW_I18N */
       	    font = (def_str && ((int)strlen(def_str) > 0))
                     ? xv_pf_open(def_str) : 0;
@@ -1381,7 +1372,7 @@ textsw_get_internal(folio, view, status, attribute, args)
 	    Es_index        pos = va_arg(args, Es_index);
 	    /* temporaries for TEXTSW_CONTENTS */
 	    char           *buf = va_arg(args, caddr_t);
-	    int             buf_len = va_arg(args, int);
+	    int             buf_len = va_arg(args, Attr_attribute);
 
 	    return ((Xv_opaque)
 		    textsw_get_contents(folio, pos, buf, buf_len));
@@ -1395,7 +1386,7 @@ textsw_get_internal(folio, view, status, attribute, args)
 	    /* temporaries for TEXTSW_CONTENTS */
 	    CHAR           *buf = va_arg(args, CHAR *);
 	    /* OW_I18N: buf_len is character based */
-	    int             buf_len = va_arg(args, int);
+	    int             buf_len = va_arg(args, Attr_attribute);
 	    return ((Xv_opaque)
 		    textsw_get_contents_wcs(folio, pos, buf, buf_len));
 	}
@@ -1534,8 +1525,6 @@ textsw_get_internal(folio, view, status, attribute, args)
 
 	/* Super-class attributes that we override. */
       case WIN_MENU:{
-	    Pkg_private Menu     textsw_get_unique_menu();
-
 	    return ((Xv_opaque) textsw_get_unique_menu(folio));
 	}
       case XV_LEFT_MARGIN:
@@ -1595,7 +1584,7 @@ textsw_set(abstract, avlist)
 
     return ((Xv_opaque)
 	    textsw_set_internal(folio, VIEW_FROM_FOLIO_OR_VIEW(folio),
-				avlist, TRUE));
+				(Attr_attribute *)avlist, TRUE));
 }
 
 /* VARARGS1 */
@@ -1612,14 +1601,14 @@ textsw_view_set(view_public, avlist)
     Textsw_view_handle view = VIEW_PRIVATE(view_public);
 
     return ((Xv_opaque)
-	    textsw_set_internal(FOLIO_FROM_VIEW(view), view, avlist, FALSE));
+	    textsw_set_internal(FOLIO_FROM_VIEW(view), view, (Attr_attribute *)avlist, FALSE));
 }
 
 Pkg_private void
 #ifdef ANSI_FUNC_PROTO
-textsw_notify(Textsw_view_handle view, ...)
+_textsw_notify(Textsw_view_handle view, ...)
 #else
-textsw_notify(view, va_alist)
+_textsw_notify(view, va_alist)
     Textsw_view_handle view;
 va_dcl
 #endif

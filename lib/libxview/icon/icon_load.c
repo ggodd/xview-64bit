@@ -11,6 +11,11 @@ static char     sccsid[] = "@(#)icon_load.c 20.11 89/04/09";
  * 
  */
 
+#include <xview_private/icon_load_.h>
+#include <xview_private/drawable_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/mem_.h>
+#include <xview_private/xv_rop_.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <pixrect/pixrect.h>
@@ -32,7 +37,9 @@ static char     sccsid[] = "@(#)icon_load.c 20.11 89/04/09";
 
 #define NULL_PIXRECT	((struct pixrect *)0)
 #define NULL_PIXFONT	((struct pixfont *)0)
-extern Pixrect *xv_mem_create();
+
+
+static int icon_read_pr(register FILE *fd, register Xv_icon_header_info *header, register struct pixrect *pr);
 
 FILE           *
 icon_open_header(from_file, error_msg, info)
@@ -280,7 +287,7 @@ icon_load_svrim(from_file, error_msg)
     xv_set_gc_op(display, info, gc, PIX_SRC, XV_USE_CMS_FG, XV_DEFAULT_FG_BG);
     XSetPlaneMask(display, gc, (0x1 << mpr->pr_depth) - 1);
     xv_rop_mpr_internal(display, xv_xid(info), gc,
-	0, 0, mpr->pr_width, mpr->pr_height, mpr, 0, 0, info, TRUE);
+	0, 0, mpr->pr_width, mpr->pr_height, (Xv_opaque)mpr, 0, 0, info, TRUE);
     xv_free(mpr);
 
 Return:

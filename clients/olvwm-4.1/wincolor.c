@@ -28,6 +28,10 @@
 #include "olwm.h"
 #include "win.h"
 #include "globals.h"
+#include "wincolor.h"
+#include "st.h"
+#include "info.h"
+#include "properties.h"
 
 /***************************************************************************
 * global data
@@ -56,18 +60,18 @@ extern Atom AtomColorMapWindows;
  * This is updated regardless of the color focus mode.
  */
 
-extern void WinAddColorClient();
-extern void WinRemoveColorClient();
-extern Bool PropGetWMColormapWindows();
-
-void	InstallDefaultColormap();
-void	ColormapChange();
 
 /***************************************************************************
 * private data
 ***************************************************************************/
 
 static ClassColormap classColormap;
+
+static int eventDestroy(Display *dpy, XEvent *event, WinColormap *winInfo);
+static int eventEnterLeaveNotify(Display *dpy, XEvent *event, WinColormap *winInfo);
+static int eventUnmapNotify(Display *dpy, XEvent *event, WinColormap *winInfo);
+static int eventColormapNotify(Display *dpy, XEvent *event, WinColormap *winInfo);
+static int destroyColormap(Display *dpy, WinGeneric *winInfo);
 
 /***************************************************************************
 * private functions
@@ -304,7 +308,7 @@ InstallDefaultColormap(dpy,winInfo,lock)
 {
     WinRoot *rootwin = winInfo->core.client->scrInfo->rootwin;
 
-    InstallColormap(dpy, rootwin);
+    InstallColormap(dpy, (WinGeneric *)rootwin);
     if (lock) {
 	ColorFocusClient(rootwin) = rootwin->core.client;
 	ColorFocusLocked(rootwin) = True;
@@ -450,6 +454,8 @@ InstallPointerColormap(dpy, root, rootx, rooty, setfocusclient)
 void
 UnlockColormap(dpy, root, rootx, rooty)
     Display *dpy;
+    Window root;
+    int rootx, rooty;
 {
     WinGeneric *rootinfo = WIGetInfo(root);
 
@@ -512,7 +518,7 @@ TrackSubwindows(cli)
 {
     Display	    *dpy = cli->dpy;
     Window	    pane = PANEWINOFCLIENT(cli);
-    unsigned long   nItems, remain;
+    int   nItems;
     Window	    *cmapwindata;
     List	    **last;
     List	    *oldlist;
@@ -601,7 +607,7 @@ TrackSubwindows(cli)
 
     switch (paneinfo->core.tag) {
     case TAG_NEITHER:
-	WinAddColorClient(paneinfo, cli);
+	WinAddColorClient((WinGeneric *)paneinfo, cli);
 	/* FALL THRU */
     case TAG_OLDLIST:
 	cli->colormapWins = ListCons(paneinfo, cli->colormapWins);
@@ -636,7 +642,7 @@ TrackSubwindows(cli)
 	if (cli->colormapWins)
 	    InstallColormap(dpy, (WinGeneric *)cli->colormapWins->value);
 	else
-	    InstallColormap(dpy, paneinfo);
+	    InstallColormap(dpy, (WinGeneric *)paneinfo);
     }
 }
 
@@ -667,14 +673,14 @@ UnTrackSubwindows(cli, destroyed)
 	    ColorFocusClient(paneinfo) = NULL;
 	    if (GRV.ColorLocked) {
 		/* lock in the root's colormap */
-		InstallColormap(cli->dpy,cli->scrInfo->rootwin);
+		InstallColormap(cli->dpy,(WinGeneric *)cli->scrInfo->rootwin);
 	    } else {
 		/* revert to follow-mouse */
 		ColorFocusLocked(paneinfo) = False;
 		InstallPointerColormap(cli->dpy, None, 0, 0, False);
 	    }
 	} else {
-	    InstallColormap(cli->dpy,paneinfo);
+	    InstallColormap(cli->dpy,(WinGeneric *)paneinfo);
 	}
     }
 }

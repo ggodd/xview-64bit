@@ -16,15 +16,14 @@
 
 extern	Time	SelectionTime;
 
-extern	Bool	IsSelected(/*  client  */);
-extern	int	AddSelection(/*  client, time  */);
-extern	Bool	RemoveSelection(/*  client  */);
-extern	Bool	ToggleSelection(/*  client, time  */);
-extern	void	ClearSelections(/*  dpy  */);
-extern	Client* EnumSelections(/*  void*  */);
-
-extern	void	SelectionInit();
-extern	void	SelectionRegister(/*  seln, handler  */);
-extern	void	SelectionResponse(/*  event  */);
+Bool IsSelected(Client *cli);
+void AddSelection(Client *cli, Time timestamp);
+Bool RemoveSelection(Client *cli);
+Bool ToggleSelection(Client *cli, Time timestamp);
+void ClearSelections(Display *dpy);
+Client *EnumSelections(void *foo);
+void SelectionRegister(Atom selection, void (*handler)(XEvent*));
+void SelectionResponse(XEvent *event);
+void SelectionInit(void);
 
 #endif /* _OLWM_SELECTION_H */

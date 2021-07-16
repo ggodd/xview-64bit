@@ -13,10 +13,18 @@ static char     sccsid[] = "@(#)ev_display.c 20.60 93/06/28";
 /*
  * Display of entity views.
  */
-#include <xview/pkg.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/es_util_.h>
+#include <xview_private/ev_attr_.h>
+#include <xview_private/ev_edit_.h>
+#include <xview_private/ev_op_bdry_.h>
+#include <xview_private/ev_update_.h>
+#include <xview_private/finger_tbl_.h>
+#include <xview_private/rect_.h>
+#include <xview_private/tty_newtxt_.h>
+#include <xview_private/win_damage_.h>
 #include <xview/attrol.h>
 #include <xview_private/primal.h>
-#include <xview_private/ev_impl.h>
 #include <xview_private/txt_18impl.h>
 #include <sys/time.h>
 #include <pixrect/pr_util.h>
@@ -36,12 +44,13 @@ static char     sccsid[] = "@(#)ev_display.c 20.60 93/06/28";
 #include <xview_private/tty_impl.h>
 #include <xview_private/txt_impl.h>
 
-Pkg_private unsigned ev_op_bdry_info(), ev_op_bdry_info_merge();
-Pkg_private Op_bdry_handle ev_add_op_bdry();
-
-Es_index es_bounds_of_gap();
-
-Pkg_private struct ei_process_result ev_display_internal();
+static void ev_init_X_carets(Xv_opaque window);
+static void ev_put_caret(Xv_opaque window, int which, int x, int y);
+static Ev_range ev_get_selection_range(Ev_chain_pd_handle private, unsigned type, int *mode);
+static void ev_swap_line_table(Ev_line_table *table1, Ev_line_table *table2);
+#ifdef DEBUG
+static int line_table_is_consistent(Ev_line_table table);
+#endif
 
 /*
  * The following code is a short-circuit to use simpler output for the carets
@@ -459,7 +468,6 @@ ev_ft_for_rect(eih, rect)
      * visible in the view (usually because it is on a partial line, but
      * possibly because it is below the view).
      */
-    Pkg_private Ev_line_table ft_create();
     Ev_line_table   result;
 
     result =
@@ -467,7 +475,7 @@ ev_ft_for_rect(eih, rect)
 			 struct ev_impl_line_seq);
     if (result.last_plus_one > 0)
 	ft_set(result, 0, result.last_plus_one, ES_INFINITY,
-	       &line_data);
+	       (char*)&line_data);
     result.seq[0] = 0;
     return (result);
 }
@@ -485,7 +493,6 @@ ev_get_selection_range(private, type, mode)
     unsigned        type;
     int            *mode;
 {
-    extern Op_bdry_handle ev_find_op_bdry();
     register Op_bdry_handle obh;
     Ev_mark         to_use;
     Ev_range        result;	/* Struct cannot be register */
@@ -519,7 +526,6 @@ ev_clear_selection(chain, type)
     Ev_chain        chain;
     unsigned        type;
 {
-    Pkg_private void     ev_display_range();
     register Ev_chain_pd_handle private = EV_CHAIN_PRIVATE(chain);
     Ev_mark         to_use;
 
@@ -562,7 +568,6 @@ ev_xy_in_view(view, pos, lt_index, rect)
     register int   *lt_index;
     register Rect  *rect;
 {
-    extern struct rect ev_rect_for_line();
     register Ev_impl_line_seq seq = (Ev_impl_line_seq)
     view->line_table.seq;
     unsigned        at_end_of_stream = 0;
@@ -625,7 +630,6 @@ ev_display_range(chain, first, last_plus_one)
     register Ev_handle view;
     struct rect     rect;
     int             lt_index;
-    extern struct rect ev_rect_for_line();
 
     /*
      * Don't display a null range because 1.  We'll probably screw it up, and
@@ -675,7 +679,7 @@ ev_display_range(chain, first, last_plus_one)
 Pkg_private	void
 ev_set_selection(chain, first, last_plus_one, type)
     Ev_chain        chain;
-    register Es_index first, last_plus_one;
+    register        Es_index first, last_plus_one;
     unsigned        type;
 {
     register        Ev_chain_pd_handle
@@ -838,10 +842,10 @@ ev_set_start(view, start)
 	    if (lt_index > 1)
 		if (view->line_table.last_plus_one > 1)
 		    ft_set(view->line_table, 1, lt_index,
-		       ev_index_for_line(view, lt_index), &valid_line_data);
+		       ev_index_for_line(view, lt_index), (char*)&valid_line_data);
 	    if (view->line_table.last_plus_one > 0)
 		ft_set(view->line_table, 0, 1,
-		     ev_index_for_line(view, lt_index), &invalid_line_data);
+		     ev_index_for_line(view, lt_index), (char*)&invalid_line_data);
 	    ev_update_view_display(view);
 	    break;
 	}			/* else fall thru */
@@ -917,8 +921,6 @@ ev_swap_line_table(table1, table2)
 
 }
 
-static void     ev_swap_line_table();
-
 Pkg_private	Es_index
 ev_scroll_lines(view, line_count, scroll_by_display_lines)
     register Ev_handle view;
@@ -936,7 +938,6 @@ ev_scroll_lines(view, line_count, scroll_by_display_lines)
 	struct es_buf_object esbuf;
 	register int    i;
 	Es_index        pos, pos_to_remember;
-	Pkg_private void ev_lt_format();
 
 	esbuf.esh = chain->esh;
 	esbuf.buf = buf;
@@ -963,7 +964,7 @@ ev_scroll_lines(view, line_count, scroll_by_display_lines)
 		pos = span_result.first;
                 {
 #define MAX_SUB_LINES 128 /* max sublines per a line */
-                        struct ei_process_result lpo_res, ev_line_lpo();
+                        struct ei_process_result lpo_res;
                         int count = 0;
                         unsigned long tmp_pos[MAX_SUB_LINES];
                         tmp_pos[0] = pos;
@@ -1004,7 +1005,7 @@ ev_scroll_lines(view, line_count, scroll_by_display_lines)
 		while (line_seq[-line_count].pos !=
 		       pos_to_remember) {
 		    if (view->line_table.last_plus_one > 0)
-			ft_set(view->line_table, 0, 1, pos, &invalid_line_data);
+			ft_set(view->line_table, 0, 1, pos, (char*)&invalid_line_data);
 		    ev_lt_format(view, &view->tmp_line_table, &view->line_table);
 
 		    line_seq = (Ev_impl_line_seq) view->tmp_line_table.seq;
@@ -1012,11 +1013,11 @@ ev_scroll_lines(view, line_count, scroll_by_display_lines)
 		    if (line_seq[0].pos == 0) break; 
 		}
 		(void) ev_swap_line_table(&view->line_table, &view->tmp_line_table);
-		if (ev_get(view, EV_NO_REPAINT_TIL_EVENT) == 0)
+		if (ev_get(view, EV_NO_REPAINT_TIL_EVENT, (Xv_opaque)NULL, (Xv_opaque)NULL, (Xv_opaque)NULL) == 0)
 		    ev_lt_paint(view, &view->line_table, &view->tmp_line_table);
 	    } else {
 		if (view->line_table.last_plus_one > 0)
-		    ft_set(view->line_table, 0, 1, pos, &invalid_line_data);
+		    ft_set(view->line_table, 0, 1, pos, (char*)&invalid_line_data);
 		ev_update_view_display(view);
 	    }
 	} else {
@@ -1070,7 +1071,7 @@ ev_display_in_rect(view, rect)
     }
     if (view->line_table.last_plus_one > 0)
 	ft_set(view->line_table, 0, view->line_table.last_plus_one,
-	       pos, &invalid_line_data);
+	       pos, (char*)&invalid_line_data);
     ev_update_view_display(view);
 
     /* Notify the client of the painting. */
@@ -1296,7 +1297,7 @@ ev_process(ph, flags, op, rop, pw)
 	  case EV_WRAP_AT_WORD:{
 		Es_index        span_first, span_lpo;
 		unsigned        span_flags;
-		struct ei_process_result ei_measure, ev_ei_process();
+		struct ei_process_result ei_measure;
 
 		span_flags = ev_span(ph->view->view_chain,
 			   ph->result.last_plus_one, &span_first, &span_lpo,
@@ -1376,7 +1377,7 @@ ev_ei_process(view, start, stop_plus_one)
     while (!ev_process_update_buf(ph)) {
 
 	(void) ev_process(ph, EV_PROCESS_NEXT_LINE,
-			  EI_OP_MEASURE, PIX_SRC, NULL);
+			  EI_OP_MEASURE, PIX_SRC, (Xv_Window)NULL);
     }
     return (ph->result);
 }
@@ -1394,7 +1395,6 @@ ev_line_lpo(view, line_start)
     Rect            rect;
     Ev_process_object process_object;
     register Ev_process_handle ph;
-    Ev_process_handle ev_process_init();
 
     rect.r_left = view->rect.r_left;
     rect.r_top = 0;
@@ -1406,7 +1406,7 @@ ev_line_lpo(view, line_start)
     while (!ev_process_update_buf(ph)) {
 
 	(void) ev_process(ph, 0,
-			  EI_OP_MEASURE, PIX_SRC, NULL);
+			  EI_OP_MEASURE, PIX_SRC, (Xv_Window)NULL);
 	if (ph->result.break_reason != EI_PR_BUF_EMPTIED)
 	    break;
     }
@@ -1453,7 +1453,7 @@ ev_display_line_start(view, pos)
 
 	    line_start = ph->result.last_plus_one;
 	    (void) ev_process(ph, EV_PROCESS_NEXT_LINE,
-			      EI_OP_MEASURE, PIX_SRC, NULL);
+			      EI_OP_MEASURE, PIX_SRC, (Xv_Window)NULL);
 	}
 	if (pos == es_get_length(view->view_chain->esh))
 	    return (line_start);
@@ -1467,7 +1467,7 @@ ev_display_line_start(view, pos)
 			     &rect, buf, EV_BUFSIZE);
 	while (!ev_process_update_buf(ph)) {
 	    (void) ev_process(ph, EV_PROCESS_NEXT_LINE,
-			      EI_OP_MEASURE, PIX_SRC, NULL);
+			      EI_OP_MEASURE, PIX_SRC, (Xv_Window)NULL);
 	    if (ph->result.break_reason == EI_PR_HIT_RIGHT) {
 		line_start = ph->result.last_plus_one;
 		break;
@@ -1570,7 +1570,6 @@ ev_display_internal(view, rect, line, stop_plus_one, ei_op, break_action)
     int             rop_to_use;
     Es_index        esbuf_last_plus_one;
     Es_index        esbuf_sizeof_buf;
-    extern struct rect ev_rect_for_line();
 
 #define INCREMENT_LINE	line++; ASSERT(line < view->line_table.last_plus_one)
 #define ADVANCE_TO_NEW_LINE						\
@@ -1651,7 +1650,6 @@ Glyph_restart:
 	 */
 	while (esbuf.first < esbuf.last_plus_one) {
 	    if (range.ei_op & EI_OP_EV_OVERLAY) {
-		extern Op_bdry_handle ev_find_glyph();
 		Op_bdry_handle  glyph_op_bdry;
 		range.ei_op &= ~EI_OP_EV_OVERLAY;
 		glyph_op_bdry = ev_find_glyph(chain, line_seq[line].pos);
@@ -1716,7 +1714,7 @@ Glyph_restart:
 	      case EI_PR_HIT_RIGHT:
 		result.bounds.r_width = MIN(result.bounds.r_width,
 					    view->rect.r_width -
-				       (int) ev_get(view, EV_RIGHT_MARGIN));
+				       (int) ev_get(view, EV_RIGHT_MARGIN, (Xv_opaque)NULL, (Xv_opaque)NULL, (Xv_opaque)NULL));
 		switch (private->right_break) {
 		  case EV_CLIP:{
 			struct ei_span_result span_result;

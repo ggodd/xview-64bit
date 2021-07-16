@@ -10,6 +10,13 @@ static char     sccsid[] = "@(#)svrim_pblc.c 20.63 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/svrim_pblc_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/drawable_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/mem_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_rop_.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <pixrect/pixrect.h>
@@ -27,16 +34,7 @@ static char     sccsid[] = "@(#)svrim_pblc.c 20.63 93/06/28";
 #include <xview/window.h>
 #include <xview/cms.h>
 #include <xview/notify.h>
-#include <xview_private/svrim_impl.h>
 #include <X11/Xutil.h>
-
-Pixrect * xv_mem_point();
-
-#ifdef __STDC__
-Xv_private int xv_set_embedding_data(Xv_opaque object, Xv_opaque std_object);
-#else
-Xv_private int xv_set_embedding_data();
-#endif
 
 Xv_private_data struct pixrectops server_image_ops = {
     server_image_rop,
@@ -99,7 +97,7 @@ server_image_create_internal(parent, server_image_public, avlist, offset_ptr)
 						(Notify_func)xv_destroy_status);
 
     for (attrs = avlist; *attrs; attrs = attr_next(attrs)) {
-	switch ((int)attrs[0]) {
+	switch (attrs[0]) {
 #ifdef OW_I18N
 	    case SERVER_IMAGE_BITMAP_FILE_WCS:
 #endif /* OW_I18N */
@@ -193,9 +191,9 @@ server_image_set_internal(server_image_public, avlist)
     new_pixmap  = (xv_xid(info) == 0) ? TRUE : FALSE;
 
     for (attrs = avlist; *attrs; attrs = attr_next(attrs)) {
-	switch ((int)attrs[0]) {
+	switch (attrs[0]) {
 	  case XV_WIDTH:
-	    if (((int) attrs[1] != 0) && 
+	    if ((attrs[1] != 0) && 
 		    (rpr->pr_size.x != (int) attrs[1])) {
 		rpr->pr_size.x = (int) attrs[1];
 		new_pixmap = TRUE;
@@ -203,7 +201,7 @@ server_image_set_internal(server_image_public, avlist)
 	    break;
 
 	  case XV_HEIGHT:
-	    if (((int) attrs[1] != 0) &&
+	    if ((attrs[1] != 0) &&
 		    (rpr->pr_size.y != (int) attrs[1])) {
 		rpr->pr_size.y = (int) attrs[1];
 		new_pixmap = TRUE;
@@ -358,7 +356,7 @@ server_image_set_internal(server_image_public, avlist)
 	}
 
 	pr = (Pixrect *) xv_mem_point(rpr->pr_width, rpr->pr_height,
-				rpr->pr_depth, rpr->pr_data);
+				rpr->pr_depth, (short*)rpr->pr_data);
 	xv_set_gc_op(xv_display(info), info,
 	    	xv_gc(server_image_public, info), PIX_SRC,
 		XV_USE_CMS_FG, XV_DEFAULT_FG_BG);
@@ -368,7 +366,7 @@ server_image_set_internal(server_image_public, avlist)
 
 	xv_rop_mpr_internal(xv_display(info), xv_xid(info),
 	    xv_gc(server_image_public, info), 0, 0, rpr->pr_width,
-	    rpr->pr_height, pr, 0, 0, info,
+	    rpr->pr_height, (Xv_opaque)pr, 0, 0, info,
 	    (new_bits == TRUE) ? TRUE : FALSE);
 
 	xv_free((char *) pr);

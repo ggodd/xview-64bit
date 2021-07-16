@@ -11,7 +11,7 @@
 
 #ifndef _OLWM_PROPERTIES_H
 #define _OLWM_PROPERTIES_H
-
+#include "win.h"
 /*
  * Open Look Window Attribute structure
  */
@@ -57,31 +57,7 @@ typedef struct {
 
 #define ENTIRE_CONTENTS		(10000000L)
 
-extern	void	*GetWindowProperty();
-
-extern	long	PropListAvailable();
-extern	void	PropSetAvailable();
-extern	void	PropClearAvailable();
-
-extern	Bool	PropGetWMName();
-extern	Bool	PropGetWMIconName();
-extern	Bool	PropGetWMClass();
-extern	Bool	PropGetWMNormalHints();
-extern	Bool	PropGetWMHints();
-extern	Bool	PropGetWMProtocols();
-extern	Bool	PropGetWMTransientFor();
-extern	Bool	PropGetWMState();
-extern	void	PropSetWMState();
-extern	Bool	PropGetOLWindowState();
-extern	Bool	PropGetOLWinAttr();
-extern	Bool	PropGetOLDecorAdd();
-extern	Bool	PropGetOLDecorDel();
-extern	Bool	PropGetOLLeftFooter();
-extern	Bool	PropGetOLRightFooter();
-#ifdef OW_I18N_L4
-extern	Bool	PropGetOLLeftIMStatus();
-extern	Bool	PropGetOLRightIMStatus();
-#endif
+Bool PropGetOLWindowState(Display *dpy, Window win, OLWindowState *winState);
 
 
 #endif /* _OLWM_PROPERTIES_H */

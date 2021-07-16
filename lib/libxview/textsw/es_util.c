@@ -14,10 +14,9 @@ static char     sccsid[] = "@(#)es_util.c 20.22 93/06/28";
  * Utilities for use with entity streams.
  */
 
-#include <xview/pkg.h>
+#include <xview_private/es_util_.h>
 #include <xview/attrol.h>
 #include <xview_private/primal.h>
-#include <xview_private/es.h>
 #include <xview_private/txt_18impl.h>
 #include <xview_private/ev_impl.h>
 

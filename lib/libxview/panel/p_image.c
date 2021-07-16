@@ -10,10 +10,11 @@ static char     sccsid[] = "@(#)p_image.c 20.18 89/07/31";
  *	file for terms of the license.
  */
 
-#include <xview_private/panel_impl.h>
+#include <xview_private/p_image_.h>
+#include <xview_private/p_utl_.h>
+#include <xview_private/pf_text_.h>
 #include <xview/svrimage.h>
 
-extern struct pr_size xv_pf_textwidth();
 
 /*****************************************************************************/
 /* panel_button_image                                                        */

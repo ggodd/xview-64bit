@@ -12,6 +12,6 @@
 #ifndef _OLWM_ENVIRON_H
 #define _OLWM_ENVIRON_H
 
-extern	char	**MakeEnviron(/* ScreenInfo *scrInfo */);
+char **MakeEnviron(Display *dpy, int screen);
 
 #endif /* _OLWM_ENVIRON_H */

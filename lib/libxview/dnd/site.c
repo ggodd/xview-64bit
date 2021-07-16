@@ -12,6 +12,10 @@ static char     sccsid[] = "@(#)site.c 1.13 93/06/28";
 
 /* SUPPRESS 560 */
 
+#include <xview_private/site_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_list_.h>
+#include <xview_private/windowdrop_.h>
 #include <assert.h>
 #include <xview_private/xv_list.h>
 #include <xview_private/site_impl.h>
@@ -20,8 +24,7 @@ static char     sccsid[] = "@(#)site.c 1.13 93/06/28";
 #include <stdlib.h> 
 #endif /* SVR4 */
 
-static     void 	TransCoords();
-Xv_private Xv_Window	win_get_top_level();
+static void TransCoords(register Dnd_site_info *site, register Dnd_rect_list *node);
 
 Pkg_private Xv_opaque
 DndDropAreaOps(site, mode, area)

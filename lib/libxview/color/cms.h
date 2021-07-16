@@ -46,7 +46,7 @@
 #define CMS_ATTR_LIST(ltype, type, ordinal) \
 	CMS_ATTR(ATTR_LIST_INLINE((ltype), (type)), (ordinal))
 #define CMS_CONTROL_CMS_NAME(name, visual, color) \
-	    sprintf(name, "xv_ctl_%x_%d%d%d", visual, \
+	    sprintf(name, "xv_ctl_%p_%d%d%d", visual, \
 		    color.red, color.green, color.blue);
 #define CMS_STATUS(bits, status)    ((bits) & (1 << (status)))
 

@@ -10,20 +10,20 @@ static char     sccsid[] = "@(#)attr_cust.c 1.7 91/03/25";
  *	file for terms of the license.
  */
 
+#include  <xview_private/attr_cust_.h>
+#include  <xview_private/xv_.h>
 #include  <X11/X.h>
 #include  <X11/Xlib.h>
 #include  <X11/Xresource.h>
 #include  <xview_private/attr_impl.h>
+#include  <xview_private/attr_.h>
+#include  <xview_private/generic_.h>
+#include  <xview_private/quark_.h>
 #include  <xview/pkg.h>
 #include  <xview/server.h>
 #include  <xview/window.h>
 #include  <xview/canvas.h>
 #include  <xview/panel.h>
-
-EXTERN_FUNCTION( Xv_opaque db_get_data, ( XID db, XrmQuarkList instance_qlist, char *attr_name, Attr_attribute attr, Xv_opaque default_value ));
-
-Xv_private XrmQuarkList generic_create_instance_qlist();
-static Attr_avlist attr_copy_customize();
 
 /*
  * Typedefs for storing customizable attributes
@@ -38,7 +38,6 @@ typedef struct cust_attrs  {
     struct cust_attrs	*next;
 }Cust_attrs;
 
-
 /*
  * Node for storing customizable attributes for one pkg
  */
@@ -47,6 +46,16 @@ typedef struct cust_pkgs  {
     Cust_attrs		*attr_list;
     struct cust_pkgs	*next;
 }Cust_pkgs;
+
+static Cust_pkgs *attr_new_cust_pkg(Xv_pkg* pkg);
+static Cust_attrs *attr_new_cust_attr(Attr_attribute attr, char *attr_name);
+static Cust_attrs *attr_search_cust_attr(Cust_attrs *attr_list, Attr_attribute attr);
+static Cust_pkgs *attr_search_cust_pkg(Xv_pkg *pkg);
+static Cust_pkgs *attr_find_cust_pkg(Xv_pkg *pkg);
+static char *attr_check_custom_pkg(Xv_pkg *pkg, Attr_attribute attr);
+static char *attr_check_custom(Xv_pkg *pkg, Attr_attribute attr);
+static Attr_avlist attr_copy_customize(Xv_object obj, Xv_pkg *pkg, char* instance_name, Xv_object owner, int use_db, Attr_avlist dest, Attr_avlist avlist);
+static int attr_check_use_custom(Attr_attribute avlist[]);
 
 /*
  * Ptr to list of nodes of customizable pkgs
@@ -226,7 +235,7 @@ Attr_attribute	attr;
     return((char *)NULL);
 }
 
-static Xv_server
+Xv_server
 attr_get_server(obj, passed_owner)
 Xv_object	obj;
 Xv_object	passed_owner;
@@ -257,7 +266,7 @@ Xv_object	passed_owner;
     }
     else  {
 	owner = (Xv_opaque)xv_get(obj, XV_OWNER, NULL);
-	server = attr_get_server(owner, NULL);
+	server = attr_get_server(owner, (Xv_object)NULL);
     }
 
     if (!server)  {
@@ -317,7 +326,7 @@ Attr_avlist	avlist;
 		if (attr_name)  {
                     default_value = (Xv_opaque)avlist_get(avlist);
 
-                    temp = db_get_data(db, instance_qlist, 
+                    temp = db_get_data((XrmDatabase)db, instance_qlist, 
 				attr_name, attr, default_value);
                     *dest++ = (Attr_attribute)temp;
 		}
@@ -528,9 +537,9 @@ Attr_attribute  avlist[];
  */
 Xv_public	int
 #ifdef ANSI_FUNC_PROTO
-xv_add_custom_attrs(Xv_pkg *pkg, ...)
+_xv_add_custom_attrs(Xv_pkg *pkg, ...)
 #else
-xv_add_custom_attrs(pkg, va_alist)
+_xv_add_custom_attrs(pkg, va_alist)
    Xv_pkg	   *pkg;
 va_dcl
 #endif

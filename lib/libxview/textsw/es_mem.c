@@ -14,13 +14,15 @@ static char     sccsid[] = "@(#)es_mem.c 20.25 93/06/28";
  * Entity stream implementation for one block of virtual memory.
  */
 
+#include <xview_private/es_mem_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/xv_.h>
 #include <sys/types.h>
 #include <string.h>
 #include <xview/pkg.h>
 #include <xview/attrol.h>
 #include <xview_private/primal.h>
 #include <xview_private/txt_18impl.h>
-#include <xview_private/es.h>
 #ifdef SVR4 
 #include <stdlib.h> 
 #endif /* SVR4 */
@@ -37,20 +39,14 @@ typedef struct es_mem_text {
 typedef Es_mem_text *Es_mem_data;
 #define	ABS_TO_REP(esh)	(Es_mem_data)esh->data
 
-Pkg_private Es_handle es_mem_create();
-static Es_status es_mem_commit();
-static Es_handle es_mem_destroy();
-static Es_index es_mem_get_length();
-static Es_index es_mem_get_position();
-static Es_index es_mem_set_position();
-static Es_index es_mem_read();
-static Es_index es_mem_replace();
-static int      es_mem_set();
-#ifdef __STDC__
-static caddr_t es_mem_get(Es_handle esh, Es_attribute attribute, ...);
-#else
-static caddr_t es_mem_get();
-#endif
+static Es_status es_mem_commit(Es_handle esh);
+static Es_handle es_mem_destroy(Es_handle esh);
+static int es_mem_set(Es_handle esh, Attr_avlist attrs);
+static Es_index es_mem_get_length(Es_handle esh);
+static Es_index es_mem_get_position(Es_handle esh);
+static Es_index es_mem_set_position(Es_handle esh, Es_index pos);
+static Es_index es_mem_read(Es_handle esh, u_int len, register CHAR *bufp, u_int *resultp);
+static Es_index es_mem_replace(Es_handle esh, int end, int new_len, CHAR *new, int *resultp);
 
 static struct es_ops es_mem_ops = {
     es_mem_commit,

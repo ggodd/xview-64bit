@@ -15,7 +15,10 @@ static char     sccsid[] = "@(#)nint_stack.c 20.16 93/06/28 Copyr 1985 Sun Micro
  * interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/nint_stack_.h>
+#include <xview_private/ntfy_debug_.h>
+#include <xview_private/ntfy_node_.h>
+#include <xview_private/ntfyprotec_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/nint.h>
 #include <xview_private/portable.h>
@@ -66,7 +69,7 @@ nint_push_callout(client, cond)
      * consistency checking later.
      */
 /* Alpha compatibility, mbuck@debian.org */
-#if defined(__alpha) || defined(_XV_API_BROKEN_64BIT)
+#if defined(__alpha) || defined(_XV_API_BROKEN_64BIT) || defined(__amd64__)
     stack_cond->data.an_u_int = (unsigned long) client->nclient;
 #else
     stack_cond->data.an_u_int = (u_int) client->nclient;

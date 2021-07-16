@@ -14,8 +14,11 @@ static char     sccsid[] = "@(#)txt_incl.c 1.35 93/06/28";
  * Text include popup frame creation and support.
  */
 
+#include <xview_private/txt_incl_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/txt_file_.h>
+#include <xview_private/txt_popup_.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <sys/time.h>
 #include <signal.h>
@@ -47,11 +50,11 @@ typedef enum {
 }               File_panel_item_enum;
 
 Pkg_private Panel_item include_panel_items[];
-Pkg_private Textsw_view_handle text_view_frm_p_itm();
-Pkg_private Xv_Window frame_from_panel_item();
-static Panel_setting include_cmd_proc_accel(Panel_item item, Event *event);
-static Panel_setting old_include_cmd_proc(Panel_item item, Event *event);
 
+static int do_include_proc(Textsw_folio folio, Event *ie);
+static Panel_setting old_include_cmd_proc(Panel_item item, Event *event);
+static Panel_setting include_cmd_proc_accel(Panel_item item, Event *event);
+static void create_include_items(Panel panel, Textsw_view_handle view);
 
 static int
 do_include_proc(folio, ie)
@@ -60,7 +63,7 @@ do_include_proc(folio, ie)
 {
     CHAR           *file_str, *dir_str;
     register int    locx, locy;
-    CHAR            curr_dir[MAX_STR_LENGTH];
+    CHAR            curr_dir[MAX_STR_LENGTH], *dir;
 #ifdef OW_I18N
     char            curr_dir_mb[MAX_STR_LENGTH];
 #endif
@@ -118,9 +121,9 @@ do_include_proc(folio, ie)
     (void) mbstowcs(curr_dir, curr_dir_mb, MAX_STR_LENGTH);
 #else /* OW_I18N */
 #if defined(SVR4) || defined(__linux__)
-    (void) getcwd(curr_dir, MAX_STR_LENGTH);
+    dir = getcwd(curr_dir, MAX_STR_LENGTH);
 #else
-    (void) getwd(curr_dir);
+    dir = getwd(curr_dir);
 #endif /* SVR4 */
 #endif /* OW_I18N */
 
@@ -268,16 +271,16 @@ create_include_items(panel, view)
 {
 
     CHAR            include_string[MAX_STR_LENGTH];
-    char            current_dir_include_string[MAX_STR_LENGTH];
+    char            current_dir_include_string[MAX_STR_LENGTH], *dir;
     Es_index        dummy;
 
     include_string[0] = (CHAR)'\0';
     (void) textsw_get_selection(view, &dummy, &dummy, include_string,
 				MAX_STR_LENGTH);
 #if defined(SVR4) || defined(__linux__)
- (void) getcwd(current_dir_include_string, MAX_STR_LENGTH);
+  dir = getcwd(current_dir_include_string, MAX_STR_LENGTH);
 #else
-  (void) getwd(current_dir_include_string);
+  dir = getwd(current_dir_include_string);
 #endif /* SVR4 */
     include_panel_items[(int) DIR_STRING_ITEM] =
 	panel_create_item(panel, PANEL_TEXT,
@@ -354,7 +357,7 @@ include_cmd_proc(fc,path,file,client_data)
     Textsw          textsw = FOLIO_REP_TO_ABS(folio);
     CHAR           *dir_str;
     register int    locx, locy;
-    CHAR            curr_dir[MAX_STR_LENGTH];
+    CHAR            curr_dir[MAX_STR_LENGTH], *dir;
 #ifdef OW_I18N
     char            curr_dir_mb[MAX_STR_LENGTH];
 #endif
@@ -394,9 +397,9 @@ include_cmd_proc(fc,path,file,client_data)
     (void) mbstowcs(curr_dir, curr_dir_mb, MAX_STR_LENGTH);
 #else /* OW_I18N */
 #if defined(SVR4) || defined(__linux__)
-    (void) getcwd(curr_dir, MAX_STR_LENGTH);
+    dir = getcwd(curr_dir, MAX_STR_LENGTH);
 #else
-    (void) getwd(curr_dir);
+    dir = getwd(curr_dir);
 #endif /* SVR4 */
 #endif /* OW_I18N */
 

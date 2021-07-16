@@ -170,11 +170,4 @@ typedef struct font_info {
     unsigned		 overlapping_chars:1;
 } Font_info;
 
-/* from font.c */
-Pkg_private Xv_opaque    font_set_avlist();
-Pkg_private Xv_opaque    font_get_attr();
-Pkg_private int 	 font_init();
-Pkg_private int 	 font_destroy_struct();
-Pkg_private Xv_object 	 font_find_font();
-
 #endif

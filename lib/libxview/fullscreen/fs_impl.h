@@ -44,14 +44,4 @@ typedef struct {
 	XV_PRIVATE(Fullscreen_info, Xv_fullscreen, fullscreen)
 #define	FULLSCREEN_PUBLIC(fullscreen)	XV_PUBLIC(fullscreen)
 
-/* fullscreen_get.c */
-Pkg_private Xv_opaque		fullscreen_get_attr();
-
-/* fullscreen_set.c */
-Pkg_private Xv_opaque		fullscreen_set_avlist();
-
-/* fullscreen_data.c */
-Pkg_private int			fullscreen_init_internal();
-Pkg_private int 		fullscreen_destroy_internal();
-
 #endif

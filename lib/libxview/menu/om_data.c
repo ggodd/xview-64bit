@@ -10,17 +10,9 @@ static char     sccsid[] = "@(#)om_data.c 20.28 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview/openmenu.h>
-
-Pkg_private int		menu_create_internal();
-Pkg_private int		menu_create_item_internal();
-Pkg_private int		menu_destroy_internal();
-Pkg_private Xv_opaque	menu_gets();
-Pkg_private int		menu_item_destroy_internal();
-Pkg_private Xv_opaque	menu_item_gets();
-Pkg_private Xv_opaque	menu_item_sets();
-Pkg_private Xv_opaque	menu_pkg_find();
-Pkg_private Xv_opaque	menu_sets();
+#include <xview_private/om_get_.h>
+#include <xview_private/om_public_.h>
+#include <xview_private/om_set_.h>
 
 Xv_pkg          xv_command_menu_pkg = {
     "Command Menu",		/* seal -> package name */

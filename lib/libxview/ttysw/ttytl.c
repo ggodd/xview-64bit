@@ -15,6 +15,12 @@ static char     sccsid[] = "@(#)ttytl.c 20.42 93/06/28";
  * programs to set/get data about the tool window (common routines).
  */
 
+#include <xview_private/ttytl_.h>
+#include <xview_private/fm_geom_.h>
+#include <xview_private/ttyansi_.h>
+#include <xview_private/tty_main_.h>
+#include <xview_private/txt_dbx_.h>
+#include <xview_private/win_geom_.h>
 #include <stdio.h>
 #include <string.h>
 #ifdef SVR4
@@ -167,7 +173,7 @@ ttytlsw_escape(ttysw_view_public, c, ac, av)
       case 18:			/* report size in chars */
 	{
 		int rows, columns;
-		if (ttysw_getopt((caddr_t) ttysw, TTYOPT_TEXT)) {
+		if (ttysw_getopt(ttysw, TTYOPT_TEXT)) {
 			rows = textsw_screen_line_count(TTY_PUBLIC(ttysw));
 			columns = textsw_screen_column_count(TTY_PUBLIC(ttysw));
 		}
@@ -208,7 +214,7 @@ ttytlsw_escape(ttysw_view_public, c, ac, av)
 /* BUG ALERT: No XView prefix */
 Pkg_private int
 ttytlsw_string(ttysw_public, type, c)
-    Tty             ttysw_public;
+    caddr_t             ttysw_public;
     CHAR            type, c;
 {
     Ttysw_folio     ttysw = TTY_PRIVATE_FROM_ANY_PUBLIC(ttysw_public);
@@ -217,7 +223,7 @@ ttytlsw_string(ttysw_public, type, c)
     CHAR            iconlabel[33];
 
     if (type != ']')
-	return (ttysw_ansi_string(ttysw_public, type, c));
+	return (ttysw_ansi_string((caddr_t)ttysw_public, type, c));
     switch (ttytlsw->hdrstate) {
       case HS_BEGIN:
 	switch (c) {
@@ -333,7 +339,7 @@ ttytlsw_string(ttysw_public, type, c)
 	    ttytlsw->hdrstate = HS_BEGIN;
 	break;
       default:
-	return (ttysw_ansi_string(ttysw_public, type, c));
+	return (ttysw_ansi_string((caddr_t)ttysw_public, type, c));
     }
     return (TTY_DONE);
 }

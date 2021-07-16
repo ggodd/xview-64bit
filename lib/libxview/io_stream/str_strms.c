@@ -10,13 +10,24 @@ static char     sccsid[] = "@(#)str_strms.c 20.17 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/str_strms_.h>
+#include <xview_private/xv_.h>
 #include <xview/xv_error.h>
-#include <xview_private/io_stream.h>
 #include <stdlib.h>		/* free() */
 
 /* STREAM FROM STRING */
 
 #define GetSISData struct string_input_stream_data	*data = (struct string_input_stream_data*) in->client_data
+
+static void string_input_stream_close(STREAM *in);
+static int string_input_stream_getc(STREAM *in);
+static struct posrec string_input_stream_get_pos(STREAM *in);
+static int string_input_stream_set_pos(STREAM *in, int n);
+static int string_input_stream_ungetc(char c, STREAM *in);
+static int string_input_stream_chars_avail(STREAM *in);
+static void string_output_stream_close(STREAM *out);
+static int string_output_stream_putc(char c, STREAM *out);
+static struct posrec string_output_stream_getpos(STREAM *out);
 
 struct string_input_stream_data {
     char           *string;
@@ -46,9 +57,8 @@ string_input_stream_getc(in)
 
 /*ARGSUSED*/
 static struct posrec
-string_input_stream_get_pos(in, n)
+string_input_stream_get_pos(in)
     STREAM         *in;
-    int             n;
 {
     struct posrec   p;
     GetSISData;
@@ -176,8 +186,7 @@ string_output_stream_putc(c, out)
 
 /*ARGSUSED*/
 static struct posrec
-string_output_stream_getpos(n, out)
-    int             n;
+string_output_stream_getpos(out)
     STREAM         *out;
 {
     struct posrec   p;

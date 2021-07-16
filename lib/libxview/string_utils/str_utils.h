@@ -57,7 +57,7 @@ struct CharAction {
  * xv_white_space is also defined in io_stream.h 
  * returns sepr for blanks, newlines, and tabs, other for everything else 
  */
-EXTERN_FUNCTION (ENUM_TYPE(enum,CharClass) xv_white_space, (int c));
+EXTERN_FUNCTION (ENUM_TYPE(enum,CharClass) xv_white_space, (char c));
 #endif
 
 EXTERN_FUNCTION (int string_find, (char *s, char *target, Bool case_matters));
@@ -88,7 +88,7 @@ EXTERN_FUNCTION (Bool xv_substrequal, (char *s1, int start1, char *s2, int start
  * If case_matters = FALSE, 'a' will match with 'a' or 'A'.
  */
 
-EXTERN_FUNCTION (char *string_get_token, (char *s, int *index, char *dest, ENUM_TYPE(enum,CharClass) (*charproc)(int)));
+EXTERN_FUNCTION (char *string_get_token, (char *s, int *index, char *dest, ENUM_TYPE(enum,CharClass) (*charproc)(char)));
 /*	char *s;
  *	int *index;
  *	char *dest;

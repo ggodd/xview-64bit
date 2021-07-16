@@ -14,7 +14,8 @@ static char     sccsid[] = "@(#)nintn_wait.c 20.13 93/06/28 Copyr 1985 Sun Micro
  * Nint_n_wait.c - Implement the notify_next_wait3_func interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/nintn_wait_.h>
+#include <xview_private/nint_next_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/nint.h>
 
@@ -22,7 +23,7 @@ extern          Notify_value
 notify_next_wait3_func(nclient, pid, status, rusage)
     Notify_client   nclient;
     int             pid;
-#ifndef SVR4
+#if !defined(SVR4) && !defined(linux)
     union wait     *status;
 #else /* SVR4 */
     int *status;

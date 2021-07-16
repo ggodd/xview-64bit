@@ -17,19 +17,12 @@
 #define bzero(a,b) memset(a,0,b)
 #endif
 
-#if !defined(__linux__) || !defined(__GLIBC__)
-char *malloc(), *strdup();
-#endif
-char * dgettext();
-char *_gettext();
-char *in_path();
-char *fgets(), *getenv();
-#if !defined(__linux__) || !defined(__GLIBC__)
-caddr_t mmap(), calloc();
-#endif
-
 #ifdef NOT
 static struct domain_binding *firstbind=0, *lastbind=0;
+
+static void initbindinglist(void);
+static char *lookupdefbind(char *domain_name);
+static char *findtextdomain(char *domain_name);
 
 static void
 initbindinglist()

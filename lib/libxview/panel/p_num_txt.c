@@ -10,13 +10,18 @@ static char     sccsid[] = "@(#)p_num_txt.c 20.47 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/p_num_txt_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/p_paint_.h>
+#include <xview_private/p_txt_.h>
+#include <xview_private/p_utl_.h>
+#include <xview_private/xv_.h>
 #include <ctype.h>
 #include <string.h>
 #include <X11/X.h>
 #include <xview/sun.h>
-#include <xview_private/panel_impl.h>
 #include <xview_private/draw_impl.h>
-#include <xview/defaults.h>
 #include <xview/screen.h>
 #include <xview/pixwin.h>
 
@@ -36,30 +41,35 @@ static char     sccsid[] = "@(#)p_num_txt.c 20.47 93/06/28";
 
 #define	NUM_TEXT_FROM_ITEM(ip)	NUM_TEXT_PRIVATE(ITEM_PUBLIC(ip))
 
+typedef struct {
+    Panel_item	    public_self;   /* back pointer to object */
+    Rect	    btn_rect;
+    int		    btn_state;     /* OLGX state of numeric scroll button */
+    int		    flags;
+    int		    jump_delta;	   /* amount to add/subtract on jump up/down */
+    int		    max_value;
+    int		    min_value;
+    Panel_setting   notify_level;  /* NONE, SPECIFIED, NON_PRINTABLE, ALL */
+    char	   *terminators;
+    Panel_item	    text_field;
+#ifdef OW_I18N
+    wchar_t	   *terminators_wc;
+#endif /* OW_I18N */
+} Num_text_info;
 
-/* XView functions */
-Pkg_private int     panel_num_text_init();
-Pkg_private Xv_opaque panel_num_text_set_avlist();
-Pkg_private Xv_opaque panel_num_text_get_attr();
-Pkg_private int     panel_num_text_destroy();
-
-/* Panel Item Operations */
-static void	    num_txt_begin_preview();
-static void	    num_txt_cancel_preview();
-static void	    num_txt_accept_preview();
-static void	    num_txt_paint();
-static void	    num_txt_layout();
-
-/* Local functions */
-static int	    check_dimming();
-static int	    get_value();
-static Bool	    notify_user();
-static void	    num_txt_paint_btn();
-static void	    num_txt_paint_value();
-static int	    set_value();
-static Panel_setting text_notify_proc();
-static void         num_textitem_scroll_itimer_func();
-
+static void num_txt_begin_preview(Panel_item item_public, Event *event);
+static void num_txt_cancel_preview(Panel_item item_public, Event *event);
+static void num_txt_accept_preview(Panel_item item_public, Event *event);
+static void num_txt_paint(Panel_item item_public);
+static void num_txt_layout(Panel_item item_public, Rect *deltas);
+static void num_textitem_scroll_itimer_func(Panel_item item, int which);
+static int check_dimming(register Num_text_info *dp); 
+static int get_value(register Num_text_info *dp);
+static Bool notify_user(register Num_text_info *dp, Event *event);
+static void num_txt_paint_btn(register Item_info *ip, register Num_text_info *dp);
+static void num_txt_paint_value(register Item_info *ip);
+static int set_value(register Num_text_info *dp, int new_value); 
+static Panel_setting text_notify_proc(Panel_item text_field, Event *event);
 
 static Panel_ops ops = {
     panel_default_handle_event,		/* handle_event() */
@@ -80,22 +90,6 @@ static Panel_ops ops = {
     NULL				/* extension: reserved for future use */
 };
 
-
-typedef struct {
-    Panel_item	    public_self;   /* back pointer to object */
-    Rect	    btn_rect;
-    int		    btn_state;     /* OLGX state of numeric scroll button */
-    int		    flags;
-    int		    jump_delta;	   /* amount to add/subtract on jump up/down */
-    int		    max_value;
-    int		    min_value;
-    Panel_setting   notify_level;  /* NONE, SPECIFIED, NON_PRINTABLE, ALL */
-    char	   *terminators;
-    Panel_item	    text_field;
-#ifdef OW_I18N
-    wchar_t	   *terminators_wc;
-#endif /* OW_I18N */
-} Num_text_info;
 
 /* Numeric Text flags */
 #define NTX_READ_ONLY 0x1
@@ -531,7 +525,7 @@ num_txt_begin_preview(item_public, event)
             if (!(dp->btn_state & UP_SELECTED))
             {
                 panel_autoscroll_start_itimer( item_public,
-                    num_textitem_scroll_itimer_func );
+                    (int*)num_textitem_scroll_itimer_func );
                 dp->btn_state |= UP_SELECTED;
             }
         }
@@ -566,7 +560,7 @@ num_txt_begin_preview(item_public, event)
             if (!(dp->btn_state & DOWN_SELECTED))
             {
                 panel_autoscroll_start_itimer( item_public,
-                    num_textitem_scroll_itimer_func );
+                    (int*)num_textitem_scroll_itimer_func );
                 dp->btn_state |= DOWN_SELECTED;
             }
         }

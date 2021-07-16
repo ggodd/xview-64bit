@@ -15,8 +15,6 @@ static char     sccsid[] = "@(#)fm_rodata.c 1.6 93/06/28";
  * of the shared library. So,this data is strictly read-only.
  */
 
-#include <xview_private/portable.h>
-
 const unsigned short    default_frame_icon_image[256] = {
 #include        <images/default.icon>
 };

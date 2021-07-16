@@ -10,17 +10,35 @@ static char     sccsid[] = "@(#)screen.c 20.51 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/screen_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/scrn_get_.h>
+#include <xview_private/scrn_lyout_.h>
+#include <xview_private/scrn_vis_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_init_x_.h>
 #include <xview_private/i18n_impl.h>
 #include <xview_private/scrn_impl.h>
 #include <xview/notify.h>
 #include <xview/server.h>
 #include <xview/cms.h>
 #include <xview/window.h>
-#include <xview/defaults.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <stdlib.h>		/* free() */
+
+typedef enum {
+	XvNewValue,
+	XvDeleted
+} Xv_sel_state;
+
+static Screen_visual *screen_default_visual(Display *display, Screen_info *screen);
+static XVisualInfo *screen_default_visual_info(Display *display, Screen_info *screen);
+static void screen_update_sun_wm_protocols(Xv_object window, Xv_sel_state state);
+static void screen_input(Xv_server server, Display *dpy, XPropertyEvent *xev, Xv_opaque obj);
 
 #define VisualClassError -1
 static Defaults_pairs visual_class_pairs[] = {
@@ -32,16 +50,6 @@ static Defaults_pairs visual_class_pairs[] = {
     "DirectColor", DirectColor,
     NULL,          VisualClassError
 };
-
-static Screen_visual *screen_default_visual();
-static XVisualInfo   *screen_default_visual_info();
-static void	      screen_input();
-static void           screen_update_sun_wm_protocols();
-
-typedef enum {
-	XvNewValue,
-	XvDeleted
-} Xv_sel_state;
 
 Pkg_private int
 screen_init(parent, screen_public, avlist)
@@ -72,7 +80,7 @@ screen_init(parent, screen_public, avlist)
     screen->num_sun_wm_protocols = 0;
     screen->sel_state = 0;
 
-    for (attrs = avlist; (Screen_attr)*attrs; attrs = attr_next(attrs)) {
+    for (attrs = avlist; *attrs; attrs = attr_next(attrs)) {
 	switch ((Screen_attr) attrs[0]) {
 	  case SCREEN_NUMBER:
 	    if ((int) attrs[1] >= ScreenCount(display)) {
@@ -136,7 +144,7 @@ screen_init(parent, screen_public, avlist)
 	return XV_ERROR;
     }
     font_id = (int) xv_get(font, XV_XID);
-    xv_set_default_font(xv_get(screen->server, XV_DISPLAY),
+    xv_set_default_font((Display*)xv_get(screen->server, XV_DISPLAY),
 			screen->number, font_id);
 
     /* NOTE: Do we really need the screen_layout proc? */
@@ -272,7 +280,7 @@ screen_set_avlist(screen_public, avlist)
 {
     register Attr_avlist    attrs;
 
-    for (attrs = avlist; (int)*attrs; attrs = attr_next(attrs)) {
+    for (attrs = avlist; *attrs; attrs = attr_next(attrs)) {
 	switch (attrs[0]) {
 	    default:
 		xv_check_bad_attr(&xv_screen_pkg, attrs[0]);

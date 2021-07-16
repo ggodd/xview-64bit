@@ -35,14 +35,16 @@
 #include "resources.h"
 #include "states.h"
 #include "evbind.h"
+#include "winnofoc.h"
+#include "services.h"
+#include "wingframe.h"
 
 #define OLVWM_USE_SELECTION	"OLVWM_USE_SELECTION"
 
-extern CheckForKeyProg();
-char	*LookupToken();
-char	*FindOlvwmRC();
-void	resetKeys();
-static char	*strexpand();
+int CheckForKeyProg(Display *dpy, XEvent *ev);
+char *LookupToken(char *src, char *delim);
+char *FindOlvwmRC(struct stat *buf);
+static char *strexpand(char *s);
 
 typedef struct progscreen {
     char        *target;
@@ -167,7 +169,7 @@ Assignment	:	WORD EQUALS String
 		{
 		    Variable *v;
 
-	            v = ListApply(VariableList, varMatch, $1);
+	            v = ListApply(VariableList, (void*(*)())varMatch, $1);
 
 		    if (v != NULL) {
 		        MemFree(v->value);
@@ -475,7 +477,7 @@ KeySpec : 	Key Modifier
 			    if (ks == NoSymbol) {
 				sprintf(msg,
 				    gettext("Unknown keysymbol %s in .olvwmrc"),
-				    $1);
+				    (char*)$1);
 				ErrorWarning(msg);
 				YYERROR;
 			    }
@@ -483,7 +485,7 @@ KeySpec : 	Key Modifier
 			    if (kc == 0) {
 				sprintf(msg,
 				    gettext("Unknown keysymbol %s in .olvwmrc"),
-				    $1);
+				    (char*)$1);
 				ErrorWarning(msg);
 				YYERROR;
 			    }
@@ -530,7 +532,7 @@ List	:	String
 			    char	*s;
 
 			    s = MemAlloc(strlen($1) + strlen($3) + 2);
-			    sprintf(s, "%s,%s", $1, $3);
+			    sprintf(s, "%s,%s", (char*)$1, (char*)$3);
 			    free($1);
 			    free($3);
 			    $$ = s;
@@ -565,6 +567,7 @@ String :    WORD
 extern List	*ActiveClientList;
 extern Client	*CurrentClient;
 
+void
 yyerror(s)
     char	*s;
 
@@ -634,7 +637,7 @@ char *s;
 	       Variable *v;
 
 	       if (getname(&t, name)) {
-	           v = ListApply(VariableList, varMatch, name);
+	           v = ListApply(VariableList, (void *(*)())varMatch, name);
 	           if (v == NULL) {
 		       sprintf(msg,
 			   gettext("Reference to undefined variable '%s' ignored.\n"),
@@ -686,7 +689,7 @@ char *s;
 	       Variable *v;
 
 	       if (getname(&t, name)) {
-	           v = ListApply(VariableList, varMatch, name);
+	           v = ListApply(VariableList, (void * (*)())varMatch, name);
 	           if (v == NULL) {
 		       sprintf(msg,
 			   gettext("Reference to undefined variable '%s' ignored.\n"),
@@ -841,7 +844,7 @@ struct stat statbuf;
 		    /* allow one warp per screen */
 		    for (scr = ListEnum(&l); scr != NULL; scr = ListEnum(&l)) {
 			findClient_rootid = scr->rootid;
-			c = (Client *) ListApply(ActiveClientList, findClient, t);
+			c = (Client *) ListApply(ActiveClientList, (void * (*)())findClient, t);
 			if (c) {
 			    if (XQueryPointer(dpy, c->groupid, &root, &child,
 					&rx, &ry, &wx, &wy, &keys)) {
@@ -1043,7 +1046,7 @@ struct stat statbuf;
 		else if (!(r & YValue))
 		    y = cli->framewin->core.y;
 
-		GFrameSetConfig(cli->framewin, x, y, w, h);
+		GFrameSetConfig((WinGenericFrame *)cli->framewin, x, y, w, h);
 
 		clientRestoreFocus();
 	    }
@@ -1191,11 +1194,11 @@ struct stat statbuf;
 	    l = ActiveClientList;
 	    for (c = ListEnum(&l); c != NULL; c = ListEnum(&l)) {
 		if (findClient(c, ie->identifier)) {
-		    ListApply(ie->doIf, applyAction, c);
-		    return;
+		    ListApply(ie->doIf, (void * (*)())applyAction, c);
+		    return True;
 		}
 	    }
-	    ListApply(ie->doElse, applyAction, cli);
+	    ListApply(ie->doElse, (void * (*)())applyAction, cli);
 	}
 
     }
@@ -1327,6 +1330,7 @@ extern XrmDatabase OlwmDB;
     }
 }
 
+Bool
 DestroyVariable(p)
     Variable	*p;
 {
@@ -1335,6 +1339,7 @@ DestroyVariable(p)
     return False;
 }
 
+Bool
 DestroyProgScreen(p)
     ProgScreen	*p;
 {
@@ -1342,6 +1347,7 @@ DestroyProgScreen(p)
     return False;
 }
 
+Bool
 DestroyProgKeyNode(p)
     ProgKeyNode	*p;
 {
@@ -1350,25 +1356,27 @@ DestroyProgKeyNode(p)
 
 	ie = (IfElseStruct *) p->parameter;
 	MemFree(ie->identifier);
-	ListApply(ie->doIf, DestroyProgKeyNode, 0);
-	ListApply(ie->doElse, DestroyProgKeyNode, 0);
+	ListApply(ie->doIf, (void*(*)())DestroyProgKeyNode, 0);
+	ListApply(ie->doElse, (void*(*)())DestroyProgKeyNode, 0);
     }
     else MemFree(p->parameter);
     return False;
 }
 
+Bool
 DestroyProgKey(p)
     ProgKey	*p;
 {
-    ListApply(p->todo, DestroyProgKeyNode, 0);
+    ListApply(p->todo, (void*(*)())DestroyProgKeyNode, 0);
     ListDestroy(p->todo);
     return False;
 }
 
+Bool
 DestroyWinMenuActions(p)
     WinMenuActions	*p;
 {
-    ListApply(p->actions, DestroyProgKeyNode, 0);
+    ListApply(p->actions, (void*(*)())DestroyProgKeyNode, 0);
     ListDestroy(p->actions);
     return False;
 }
@@ -1379,13 +1387,13 @@ ReInitOlvwmRC(ldpy, path)
     char	*path;
 
 {
-    ListApply(ProgScreenList, DestroyProgScreen, 0);
+    ListApply(ProgScreenList, (void*(*)())DestroyProgScreen, 0);
     ListDestroy(ProgScreenList);
-    ListApply(ProgKeyList, DestroyProgKey, 0);
+    ListApply(ProgKeyList, (void*(*)())DestroyProgKey, 0);
     ListDestroy(ProgKeyList);
-    ListApply(WinMenuActionsList, DestroyWinMenuActions, 0);
+    ListApply(WinMenuActionsList, (void*(*)())DestroyWinMenuActions, 0);
     ListDestroy(WinMenuActionsList);
-    ListApply(VariableList, DestroyVariable, 0);
+    ListApply(VariableList, (void*(*)())DestroyVariable, 0);
     ListDestroy(VariableList);
     ProgScreenList = NULL;
     ProgKeyList = NULL;
@@ -1407,11 +1415,11 @@ int		dw = DisplayWidth(dpy, scrInfo->screen);
 int		dh = DisplayHeight(dpy, scrInfo->screen);
 
     if (name)
-       p = (ProgScreen *) ListApply(ProgScreenList, matchProgString, name);
+       p = (ProgScreen *) ListApply(ProgScreenList, (void*(*)())matchProgString, name);
     if (!p && inst)
-       p = (ProgScreen *) ListApply(ProgScreenList, matchProgString, inst);
+       p = (ProgScreen *) ListApply(ProgScreenList, (void*(*)())matchProgString, inst);
     if (!p && wm_class)
-       p = (ProgScreen *) ListApply(ProgScreenList, matchProgString, wm_class);
+       p = (ProgScreen *) ListApply(ProgScreenList, (void*(*)())matchProgString, wm_class);
     if (p) {
 	*frame_x = (*frame_x % dw) + dw * (p->screen % scrInfo->vdm->columns) +
 				scrInfo->vdm->offsetX;
@@ -1434,13 +1442,13 @@ ProgKey	*p;
 WinGeneric	*win;
 extern XrmDatabase OlwmDB;
 
-    p = (ProgKey *) ListApply(ProgKeyList, matchProgKey, ev);
+    p = (ProgKey *) ListApply(ProgKeyList, (void*(*)())matchProgKey, ev);
     if (!p)
 	return False;
     if (ev->xkey.type != KeyPress)
 	return False;
     applyIsKey = True;
-    ListApply(p->todo, applyAction, CurrentClient);
+    ListApply(p->todo, (void*(*)())applyAction, CurrentClient);
 
     if (rebind) {
 	RefreshKeyGrabsFile(dpy, OlwmDB, rebindFile);
@@ -1450,6 +1458,7 @@ extern XrmDatabase OlwmDB;
     return True;
 }
 
+Bool
 DumpProgKeyNode(n)
     ProgKeyNode	*n;
 {
@@ -1457,19 +1466,22 @@ DumpProgKeyNode(n)
     return False;
 }
 
+Bool
 DumpProgKey(p)
     ProgKey	*p;
 {
     printf(gettext("Actions for key %d mask %x\n"), p->keycode, p->modmask);
-    ListApply(p->todo, DumpProgKeyNode, 0);
+    ListApply(p->todo, (void*(*)())DumpProgKeyNode, 0);
     return False;
 }
 
+void
 DumpProgKeyList()
 {
-    ListApply(ProgKeyList, DumpProgKey, 0);
+    ListApply(ProgKeyList, (void*(*)())DumpProgKey, 0);
 }
 
+Bool
 DumpProgScreen(p)
     ProgScreen	*p;
 {
@@ -1477,22 +1489,25 @@ DumpProgScreen(p)
     return False;
 }
 
+Bool
 DumpWinMenu(p)
     WinMenuActions	*p;
 {
     printf(gettext("Menu key %s\n"), p->key);
-    ListApply(p->actions, DumpProgKeyNode, 0);
+    ListApply(p->actions, (void*(*)())DumpProgKeyNode, 0);
     return False;
 }
 
+void
 DumpScreenList()
 {
-    ListApply(ProgScreenList, DumpProgScreen, 0);
+    ListApply(ProgScreenList, (void*(*)())DumpProgScreen, 0);
 }
 
+void
 DumpWinMenuList()
 {
-    ListApply(WinMenuActionsList, DumpWinMenu, 0);
+    ListApply(WinMenuActionsList, (void*(*)())DumpWinMenu, 0);
 }
 
 char *
@@ -1534,6 +1549,7 @@ int	idx = 0;
 }
 
 /* ARGSUSED */
+void
 MenuOfWindowsAction(dpy,winInfo,menuInfo,idx)
 Display 	*dpy;
 WinGeneric      *winInfo;
@@ -1545,14 +1561,14 @@ List	*l;
 
     cli = (Client *) menuInfo->menu->buttons[idx]->action.submenu;
     l = (List *) ListApply(WinMenuActionsList,
-			matchProgString, cli->framewin->fcore.name);
+			(void*(*)())matchProgString, cli->framewin->fcore.name);
     if (!l)
-        l = (List *) ListApply(WinMenuActionsList, matchProgString, cli->wmInstance);
+        l = (List *) ListApply(WinMenuActionsList, (void*(*)())matchProgString, cli->wmInstance);
     if (!l)
-        l = (List *) ListApply(WinMenuActionsList, matchProgString, cli->wmClass);
+        l = (List *) ListApply(WinMenuActionsList, (void*(*)())matchProgString, cli->wmClass);
     if (l) {
 	applyIsKey = False;
-	ListApply(l, applyAction, cli);
+	ListApply(l, (void*(*)())applyAction, cli);
     }
     else {
 	/* Warp */
@@ -1608,7 +1624,7 @@ int	len;
     b->has_submenu = False;
     b->enabled = True;
     b->visible = True;
-    b->callback = MenuOfWindowsAction;
+    b->callback = (FuncPtr)MenuOfWindowsAction;
     b->action.submenu = (Menu *) cli;
     b->generate_func = NULL;
     return NULL;
@@ -1650,6 +1666,7 @@ char	buf1[256], buf2[256];
 }
 
 /* ARGSUSED */
+void
 GenWinMenuFunc(dpy, menuInfo, bindex, cache, winInfo, depth)
     Display	*dpy;
     MenuInfo	*menuInfo;

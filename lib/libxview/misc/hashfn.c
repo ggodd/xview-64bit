@@ -16,7 +16,7 @@ static char     sccsid[] = "@(#)hashfn.c 20.12 93/06/28";
 
 #define hashfn_c
 
-#include <xview_private/hashfn.h>
+#include <xview_private/hashfn_.h>
 #ifdef __linux__
 #include <stdlib.h>		/* malloc() */
 #endif
@@ -30,8 +30,8 @@ static char     sccsid[] = "@(#)hashfn.c 20.12 93/06/28";
 HashTable      *
 hashfn_new_table(size, hash_fn, cmp_fn)
     int             size;
-    int             (*hash_fn) ();
-    int             (*cmp_fn) ();
+    int             (*hash_fn) (caddr_t);
+    int             (*cmp_fn) (caddr_t, caddr_t);
 {
     HashTable      *h;
     int             i;

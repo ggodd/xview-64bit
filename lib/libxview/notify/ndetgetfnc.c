@@ -14,7 +14,12 @@ static char     sccsid[] = "@(#)ndetgetfnc.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * Ndet_get_func.c - Implement the ndet_get_func private interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndetgetfnc_.h>
+#include <xview_private/nint_get_.h>
+#include <xview_private/ntfyclient_.h>
+#include <xview_private/ntfy_cond_.h>
+#include <xview_private/ntfy_debug_.h>
+#include <xview_private/ntfyprotec_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/nint.h>
 

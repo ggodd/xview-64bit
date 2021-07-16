@@ -14,7 +14,9 @@ static char     sccsid[] = "@(#)xv_stencil.c 20.24 89/07/31";
  * xv_stencil.c:
  */
 
-#include <xview_private/pw_impl.h>
+#include <xview_private/xv_stencil_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/xv_rop_.h>
 #include <xview_private/i18n_impl.h>
 #include <xview/screen.h>
 
@@ -138,7 +140,7 @@ xv_stencil(window, dx, dy, width, height, op, stpr, stx, sty, spr, sx, sy)
     }
 
     if (xv_stencil_internal(display, info, xv_xid(info), gc, dx, dy, width, height,
-			    stpr, stx, sty, spr, sx, sy, info) == XV_ERROR) {
+			    (Xv_opaque)stpr, stx, sty, (Xv_opaque)spr, sx, sy, info) == XV_ERROR) {
 	xv_error((Xv_object)NULL,
 		 ERROR_STRING, 
 		 XV_MSG("xv_stencil: xv_stencil_internal failed"),

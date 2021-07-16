@@ -14,12 +14,11 @@ static char     sccsid[] = "@(#)wmgr_state.c 20.23 93/06/28";
  * Window mgr open/close and top/bottom.
  */
 
+#include <xview_private/wmgr_state_.h>
+#include <xview_private/win_treeop_.h>
 #include <stdio.h>
-#include <xview/wmgr.h>
 #include <xview/win_struct.h>
 #include <xview/win.h>
-
-XID win_getlink();
 
 Xv_public void
 wmgr_changelevel(window, parent, top)

@@ -10,6 +10,8 @@
 #define	_attr_impl_h_already_included
 
 #include <xview/attr.h>
+#include <xview/font.h>
+#include <xview/server.h>
 #include <xview_private/portable.h>
 
 /* size of an attribute */
@@ -38,11 +40,5 @@
     else { \
 	avlist_copy(avlist, dest, count); \
     }
-
-
-/* package private routines */
-extern Attr_avlist	attr_copy_avlist();
-extern int		attr_count_avlist();
-extern Attr_avlist	attr_copy_valist();
 
 #endif /* _attr_impl_h_already_included */

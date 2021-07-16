@@ -10,7 +10,7 @@ static char     sccsid[] = "@(#)fs_compat.c 20.25 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview/fullscreen.h>
+#include <xview_private/fs_compat_.h>
 
 /*
  * Backwards compatible fullscreen utilities

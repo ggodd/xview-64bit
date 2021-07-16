@@ -58,10 +58,4 @@ typedef struct {
     Cursor_type	    type;		/* pixmap, glyph or text cursor */
 } Cursor_info;
 
-/* from cursor.c */
-Pkg_private  Xv_opaque       cursor_set_internal();
-Pkg_private  int             cursor_create_internal();
-Pkg_private  Xv_opaque       cursor_get_internal();
-Pkg_private  int             cursor_destroy_internal();
-
 #endif	/* _xview_cursor_impl_h_already_included */

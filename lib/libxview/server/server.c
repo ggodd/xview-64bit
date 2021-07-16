@@ -10,6 +10,17 @@ static char     sccsid[] = "@(#)server.c 20.157 93/04/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/server_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/gettext_.h>
+/*#include <xview_private/sel_agent_.h>*/
+#include <xview_private/svr_x_.h>
+#include <xview_private/win_input_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_list_.h>
+#include <xview_private/xv_parse_.h>
+#include <xview_private/xv_util_.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -23,7 +34,6 @@ static char     sccsid[] = "@(#)server.c 20.157 93/04/28";
 #include <xview_private/ndet.h>
 #include <xview/notify.h>
 #include <xview/win_notify.h>
-#include <xview/defaults.h>
 /* mbuck@debian.org */
 #if 1
 #include <X11/Xlibint.h>
@@ -32,7 +42,6 @@ static char     sccsid[] = "@(#)server.c 20.157 93/04/28";
 #endif
 #include <xview_private/portable.h>
 #include <xview_private/svr_atom.h>
-#include <xview_private/svr_impl.h>
 #include <xview_private/svr_kmdata.h>
 #include <xview_private/draw_impl.h>
 #include <xview_private/xv_color.h>
@@ -63,50 +72,43 @@ static char     sccsid[] = "@(#)server.c 20.157 93/04/28";
 Xv_private_data int server_gather_stats;
 #endif
 
-static int		 xv_set_scheduler();
+Xv_private int selection_init_agent(Xv_Server server, Xv_Screen screen);
 
-static int		 xv_set_scheduler();
-static void		 load_kbd_cmds();
-static void     	 server_init_atoms();
-static void		 destroy_atoms();
-static Notify_value 	 scheduler();
-static unsigned int 	 string_to_modmask();
-static Server_atom_type  save_atom();
-static void 		 server_yield_modifiers();
-
-Xv_private char		*xv_strtok();
-
-Xv_private Notify_value  xv_input_pending();
-Xv_private void 	 xv_do_enqueued_input();
-Xv_private void		 xv_merge_cmdline();
+static void load_kbd_cmds(Server_info *server, Key_binding *kb_table);
+static void server_build_keymap_table(Server_info *server);
+static void server_yield_modifiers(Server_info *server);
+static int svr_parse_display(char *display_name);
 #ifdef OS_HAS_LOCALE
-static void		 server_set_locale(),
-			 server_effect_locale(),
-			 server_setlocale_to_c(),
-			 server_setlocale_to_default(),
-			 server_warning();
-static char		*server_get_locale_from_str(),
-			*server_get_locale_name_str();
+static void server_set_locale (Server_info *server);
+static void server_effect_locale (Server_info *server, char *character_set);
+static char *server_get_locale_from_str(Ollc_from from);
+static char *server_get_locale_name_str(int id);
+static void server_setlocale_to_c(Ollc_item *ollc);
+static void server_setlocale_to_default(Server_info *server);
+#endif 
+static void destroy_atoms(Server_info *server);
+static Notify_value scheduler(int n, Notify_client clients[]);
+static int xv_set_scheduler(void);
+static void server_init_atoms(Xv_Server server_public);
+static Server_atom_type save_atom(Server_info *server, Atom atom, Server_atom_type type);
+static unsigned int string_to_modmask(char *str);
 #ifdef OW_I18N
 #ifdef FULL_R5
-Xv_private XIMStyle	 xv_determine_im_style();
+static XIMStyle xv_determine_im_style(XIM im, XIMStyles *avail_styles, char *req_preedit_style, char *req_status_style);
+#endif 
+#endif 
+static void server_warning(char *msg);
+
+#ifdef OW_I18N
+#ifdef FULL_R5
 #define XV_SUPPORTED_STYLE_COUNT 12
 #endif /* FULL_R5 */
 #endif /* OW_I18N */
-#endif /* OS_HAS_LOCALE */
 
-Xv_private int 	    	 xv_has_been_initialized();
-Xv_private void 	 server_refresh_modifiers();
-
-extern char	    	*setlocale();
-XrmDatabase 	    	 XrmGetFileDatabase();
 static Notify_func 	 default_scheduler;
 extern XrmDatabase  	 defaults_rdb;
 extern char	    	 *xv_app_name;
-extern char    		*getenv();
 Xv_private_data char 	*xv_shell_prompt;
-
-char * bindtextdomain();
 
 /* global default server parameters */
 #ifndef __linux__
@@ -1674,12 +1676,15 @@ server_get_atom_type(server_public, atom)
     Atom            atom;
 {
     Server_atom_type    type;
+    XPointer data;
     Server_info        *server = SERVER_PRIVATE(server_public);
 
 
     if (XFindContext(server->xdisplay, server->atom_mgr[TYPE], 
-		     (XContext) atom, (caddr_t *)&type) != XCNOENT)
-	return ((Server_atom_type) type);
+		     (XContext) atom, &data) != XCNOENT) {
+    type = (Server_atom_type)data;
+	return type;
+	}
     else {
 	char *atomName;
 	const Server_atom2type *tbl;
@@ -1698,7 +1703,7 @@ server_get_atom_type(server_public, atom)
 	if (tbl->name == NULL)
 	    type = save_atom(server, atom, SERVER_WM_UNKNOWN_TYPE);
 
-	return ((Server_atom_type) type);
+	return (type);
     }
 }
 
@@ -1708,9 +1713,11 @@ Server_info	*server;
 Atom		 atom;
 Server_atom_type type;
 {
+    XPointer data = (XPointer)type;
+
 	(void) XSaveContext(server->xdisplay, server->atom_mgr[TYPE],
-		     (XContext) atom, (caddr_t) type);
-	return (type); 
+		     (XContext) atom, data);
+	return type; 
 }
 
 /*

@@ -14,25 +14,22 @@ static char     sccsid[] = "@(#)txt_event.c 20.63 93/06/28";
  * New style, notifier-based, event and timer support by text subwindows.
  */
 
+#include <xview_private/txt_event_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/txt_caret_.h>
+#include <xview_private/txt_input_.h>
+#include <xview_private/txt_scroll_.h>
+#include <xview_private/win_cntral_.h>
+#include <xview_private/win_input_.h>
 #include <xview_private/primal.h>
 #include <xview_private/draw_impl.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <errno.h>
 #include <xview_private/win_keymap.h>
 
 
 extern int      errno;
-Pkg_private Notify_error win_post_event();
-Pkg_private void     ev_blink_caret();
-
-Pkg_private int  textsw_is_typing_pending();
-Pkg_private void textsw_stablize();
-Pkg_private void textsw_start_blinker();
-Pkg_private void textsw_stop_blinker();
-Pkg_private Notify_value textsw_blink();
-Pkg_private void textsw_hide_caret();
-Pkg_private void textsw_show_caret();
 
 #define CARET_WIDTH 7
 
@@ -60,7 +57,7 @@ textsw_view_abs_to_rep(abstract)
 {
     Textsw_view_handle view;
 
-    if( abstract == NULL )
+    if( abstract == (Textsw)NULL )
 	return NULL;
 
     view = VIEW_PRIVATE(abstract);

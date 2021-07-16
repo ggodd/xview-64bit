@@ -14,6 +14,8 @@ static char     sccsid[] = "@(#)pw_read.c 20.24 93/06/28";
  * pw_read.c: Implements the read function of pixwin interface.
  */
 
+#include <xview_private/pw_read_.h>
+#include <xview_private/gettext_.h>
 #include <xview_private/i18n_impl.h>
 #include <xview_private/pw_impl.h>
 

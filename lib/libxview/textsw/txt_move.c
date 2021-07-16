@@ -14,8 +14,18 @@ static char     sccsid[] = "@(#)txt_move.c 20.91 93/06/28";
  * Text subwindow move & duplicate
  */
 
+#include <xview_private/txt_move_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/ev_edit_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/txt_edit_.h>
+#include <xview_private/txt_getkey_.h>
+#include <xview_private/txt_input_.h>
+#include <xview_private/txt_sel_.h>
+#include <xview_private/txt_scroll_.h>
+#include <xview_private/txt_selsvc_.h>
+#include <xview_private/xv_.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <xview_private/draw_impl.h>
 #include <xview_private/txt_18impl.h>
@@ -55,19 +65,11 @@ static char     sccsid[] = "@(#)txt_move.c 20.91 93/06/28";
 #define TEXTSW_INSERTION_POINT_I18N	TEXTSW_INSERTION_POINT
 #endif /* OW_I18N */
 
+static void display_notice(Xv_opaque public_view, int dnd_status);
+static int DndConvertProc(Dnd dnd, Atom *type, Xv_opaque *data, unsigned long *length, int *format);
+
 static int dnd_data_key = 0; /* XXX: Don't do this at home kids. */
 static int dnd_view_key = 0; 
-static int DndConvertProc();
-
-Pkg_private Es_handle textsw_esh_for_span();
-Pkg_private Es_index ev_resolve_xy();
-Pkg_private Es_index textsw_do_balance_beam();
-Pkg_private int ev_get_selection();
-Pkg_private int xv_pf_text();
-Pkg_private int textsw_end_quick_move();
-Pkg_private void textsw_finish_move();
-Pkg_private void textsw_finish_duplicate();
-Pkg_private void textsw_reset_cursor();
 
 static unsigned short    drag_move_arrow_data[] = {
 #include <images/text_move_cursor.pr>
@@ -158,7 +160,7 @@ textsw_do_move(view, selection_is_local)
 			       last_plus_one, TXTSW_DS_SHELVE);
 	} else {
 	    textsw_delete_span(view, (first < ro_bdry) ? ro_bdry : first,
-			       last_plus_one, NULL);
+			       last_plus_one, 0);
 	}
 	if (first != ES_INFINITY)
 	    textsw_set_selection(VIEW_REP_TO_ABS(view),
@@ -235,8 +237,6 @@ Pkg_private int
 textsw_end_quick_move(view)
     Textsw_view_handle view;
 {
-    extern void     textsw_init_selection_object();
-    extern void     textsw_clear_secondary_selection();
     int             result = 0;
     register Textsw_folio folio = FOLIO_FOR_VIEW(view);
     int             selection_is_local;
@@ -733,7 +733,7 @@ DndConvertProc(dnd, type, data, length, format)
 			       last_plus_one, TXTSW_DS_SHELVE);
 	  } else {
 	    textsw_delete_span(view, (first < ro_bound) ? ro_bound : first,
-					       last_plus_one, NULL);
+					       last_plus_one, 0);
 	  }
 	}
         *format = 32;
@@ -802,7 +802,6 @@ textsw_do_remote_drag_copy_move(view, ie, is_copy)
 				 pos,
 				 index,
 				 temp;
-    void	    		 DndReplyProc();
     /*struct textsw_context  	 context;*/
 
     is_read_only = NULL;

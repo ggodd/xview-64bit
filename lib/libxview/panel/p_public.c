@@ -13,7 +13,7 @@ static char     sccsid[] = "@(#)p_public.c 20.14 93/06/28 Copyr 1984 Sun Micro";
  */
 /*****************************************************************************/
 
-#include <xview_private/panel_impl.h>
+#include <xview_private/p_public_.h>
 
 /* utilities for event location translation */
 

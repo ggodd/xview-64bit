@@ -10,6 +10,9 @@ static char     sccsid[] = "@(#)fm_get.c 20.62 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/fm_get_.h>
+#include <xview_private/win_geom_.h>
+#include <xview_private/svr_parse_.h>
 #ifdef __linux__
 #include <ctype.h>			/* isascii() */
 #endif
@@ -18,11 +21,8 @@ static char     sccsid[] = "@(#)fm_get.c 20.62 93/06/28";
 #include <xview/server.h>
 #include <xview/win.h>
 
-static int      			frame_fit_direction();
-/* ACC_XVIEW */
-Xv_private int  			server_parse_keystr();
-Pkg_private Frame_menu_accelerator	*frame_find_menu_acc();
-/* ACC_XVIEW */
+
+static int frame_fit_direction(Frame_class_info *frame, Window_attribute direction);
 
 Pkg_private     Xv_opaque
 frame_get_attr(frame_public, status, attr, valist)
@@ -91,7 +91,7 @@ frame_get_attr(frame_public, status, attr, valist)
 
       case FRAME_NTH_SUBWINDOW:{
 	    register Xv_Window sw;
-	    register int    n = va_arg(valist, int);
+	    register int    n = va_arg(valist, Attr_attribute);
 
 	    FRAME_EACH_SUBWINDOW(frame, sw)
 		if (--n == 0)
@@ -180,7 +180,7 @@ frame_get_attr(frame_public, status, attr, valist)
 
       case FRAME_NTH_SUBFRAME:{
 	    register Xv_Window sw;
-	    register int    n = va_arg(valist, int);
+	    register int    n = va_arg(valist, Attr_attribute);
 
 	    FRAME_EACH_SUBFRAME(frame, sw)
 		if (--n == 0)
@@ -249,8 +249,8 @@ frame_get_attr(frame_public, status, attr, valist)
 
       case FRAME_ACCELERATOR:
       case FRAME_X_ACCELERATOR: {
-        short	    code = (short) va_arg(valist, int);
-        KeySym	    keysym = (KeySym) va_arg(valist, int);
+        short	    code = (short) va_arg(valist, Attr_attribute);
+        KeySym	    keysym = (KeySym) va_arg(valist, Attr_attribute);
         Frame_accelerator *accel;
 
 	for (accel = frame->accelerators; accel; accel = accel->next) {
@@ -280,7 +280,8 @@ frame_get_attr(frame_public, status, attr, valist)
 #else
 	case FRAME_MENU_ACCELERATOR: {
 #endif /* OW_I18N */
-	int			keycode, result;
+	int			/*fgao keycode,*/ result;
+	KeyCode keycode;
 	unsigned int		state;
 	KeySym			keysym;
         Frame_menu_accelerator *menu_accel;
@@ -353,9 +354,9 @@ frame_get_attr(frame_public, status, attr, valist)
 	KeySym			keysym;
         Frame_menu_accelerator *menu_accel;
 
-	keycode = (int) va_arg(valist, int);
-	state = (unsigned int)va_arg(valist, int);
-	keysym = (KeySym)va_arg(valist, int);
+	keycode = (int) va_arg(valist, Attr_attribute);
+	state = (unsigned int)va_arg(valist, Attr_attribute);
+	keysym = (KeySym)va_arg(valist, Attr_attribute);
 
 	/*
 	 * Search for menu accelerator with matching state and 
@@ -378,8 +379,8 @@ frame_get_attr(frame_public, status, attr, valist)
 	 int *width = (int *)va_arg(valist, int *),
 	     *height = (int *)va_arg(valist, int *),
 #else
-	 int *width = (int *)va_arg(valist, int),
-	     *height = (int *)va_arg(valist, int),
+	 int *width = (int *)va_arg(valist, Attr_attribute),
+	     *height = (int *)va_arg(valist, Attr_attribute),
 #endif
 	      footer_height = 0;
 
@@ -402,8 +403,8 @@ frame_get_attr(frame_public, status, attr, valist)
 	 int *width = (int *)va_arg(valist, int *),
 	     *height = (int *)va_arg(valist, int *),
 #else
-	 int *width = (int *)va_arg(valist, int),
-	     *height = (int *)va_arg(valist, int),
+	 int *width = (int *)va_arg(valist, Attr_attribute),
+	     *height = (int *)va_arg(valist, Attr_attribute),
 #endif
 	      footer_height = 0;
 

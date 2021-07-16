@@ -19,14 +19,11 @@ static char     sccsid[] = "@(#)ow_get.c 1.25 90/06/21";
  * 
  */
 
-#include <xview_private/ow_impl.h>
+#include <xview_private/ow_get_.h>
+#include <xview_private/ow_view_.h>
 #include <xview_private/draw_impl.h>
 #include <xview_private/portable.h>
 
-/*
- * Package Private Functions
- */
-Pkg_private Xv_opaque openwin_get();
 
 /*-------------------Function Definitions-------------------*/
 
@@ -46,7 +43,7 @@ openwin_get(owin_public, get_status, attr, valist)
 
     switch ((int)attr) {
       case OPENWIN_NTH_VIEW:
-	view = openwin_nth_view(owin, va_arg(valist, int));
+	view = openwin_nth_view(owin, va_arg(valist, Attr_attribute));
 	if (view != NULL) {
 	    v = (Xv_opaque) view->view;
 	} else {

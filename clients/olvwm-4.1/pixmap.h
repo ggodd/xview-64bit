@@ -1,22 +1,20 @@
 #ifndef _OLWM_PIXMAP_H
 #define _OLWM_PIXMAP_H
 
-#ifdef __STDC__
-void FreePixmapColors(Display *dpy, int ncolors, XColor *colors, Colormap *colormap);
+typedef enum { BadFormat, XBitmapFormat,
+                SunIconFormat, XPixmapFormat, GifFormat } ImageFormat;
+
+void _swaplong (register char *bp, register unsigned n);
 unsigned ImageSize(XImage *image);
-Bool MakePixmap(Display *dpy, ScreenInfo *scrInfo, char *filename, PixInfo *pixinfo);
-void doPseudo8(Display *dpy, Colormap *colormap, int ncolors, XColor *colors, XImage *in_image, XImage *out_image);
-void doPseudo24(Display *dpy, Colormap *colormap, int ncolors, XColor *colors, XImage *in_image, XImage *out_image);
-void doPseudo(Display *dpy, Colormap *colormap, int ncolors, XColor *colors, XImage *in_image, XImage *out_image);
-void _swaplong(char *bp, unsigned n);
-#else
-void FreePixmapColors();
-unsigned ImageSize();
-Bool MakePixmap();
-void doPseudo8();
-void doPseudo24();
-void doPseudo();
-void _swaplong();
-#endif
+int readGifFile(Display* dpy, ScreenInfo *scrInfo, Drawable drawable, char *fn, unsigned int *w, unsigned int *h, Pixmap *pPix, int *hotx, int *hoty, Colormap *colormap, int *ncolors, XColor **colors);
+void FreePixmapColors(Display* dpy, int ncolors, XColor *colors, Colormap *colormap);
+void doPseudo8(Display* dpy, Colormap *colormap, int ncolors, XColor *colors, register XImage *in_image, register XImage *out_image);
+void doPseudo24(Display* dpy, Colormap *colormap, int ncolors, XColor *colors, register XImage *in_image, register XImage *out_image);
+void doPseudo(Display* dpy, Colormap *colormap, int ncolors, XColor *colors, register XImage *in_image, register XImage *out_image);
+#ifdef SUNICON
+SunReadIconFile(Display* dpy, Window drawable, char *filename, int *width, int *height, Pixmap *bitmap);
+#endif 
+ImageFormat imageFileFormat(char *filename);
+Bool MakePixmap(Display* dpy, ScreenInfo *scrInfo, char *filename, PixInfo *pixinfo);
 
 #endif

@@ -14,18 +14,18 @@ static char     sccsid[] = "@(#)es_attr.c 20.22 93/06/28";
  * Attribute support for entity streams.
  */
 
+#include <xview_private/es_attr_.h>
 #include <sys/types.h>
 #include <xview/attrol.h>
 #include <xview/pkg.h>
 #include <xview_private/primal.h>
-#include <xview_private/es.h>
 
 Pkg_private int
 #ifdef ANSI_FUNC_PROTO
-es_set(register Es_handle esh, ...)
+_es_set(Es_handle esh, ...)
 #else
-es_set(esh, va_alist)
-    register Es_handle esh;
+_es_set(esh, va_alist)
+    Es_handle esh;
 va_dcl
 #endif
 {

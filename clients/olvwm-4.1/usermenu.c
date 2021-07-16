@@ -142,12 +142,15 @@ typedef unsigned long	Pixel;	    /* Index into colormap		*/
 #include "usermenu.h"
 #include "client.h"
 #include "services.h"
+#include "virtual.h"
+#include "images.h"
+
+extern void GenWinMenuFunc(Display *dpy, MenuInfo *menuInfo, int bindex, MenuCache *cache, WinGeneric *winInfo, int depth);
 
 static char *menuFileName	= "openwin-menu";
 static char *workspaceHelpStub	= "workspace";
 static int  menuRecursionCount;
 
-extern char *getenv();
 
 #define TOKLEN		300
 
@@ -175,51 +178,11 @@ typedef enum {
  * 	Externals
  * ---------------------------------------------------------------------
  */
-extern int  RefreshFunc();
-extern int  ClipboardFunc();
-extern int  PrintScreenFunc();
-extern int  ExitFunc();
-extern int  ExitNoConfirmFunc();
-extern int  PropertiesFunc();
-extern int  SaveWorkspaceFunc();
-extern int  FlipDragFunc();
-extern int  AppMenuFunc();
-extern int  PshFunc();
-extern int  NopFunc();
-extern int  WindowCtlFunc();
-extern int  RestartOLWM();
-extern int  FlipFocusFunc();
-extern int  ReReadUserMenuFunc();
-extern int  OpenCloseSelnFunc();
-extern int  FullRestoreSizeSelnFunc();
-extern int  BackSelnFunc();
-extern int  QuitSelnFunc();
-extern int  StartDSDMFunc();
-extern int  StopDSDMFunc();
-
-extern int  GenWinMenuFunc();
-extern int  GenDirMenuFunc();
-extern int  StickSelnFunc();
-extern int  MoveDesktopFunc();
 
 /* ---------------------------------------------------------------------
  *	local forward declarations
  * ---------------------------------------------------------------------
  */
-static int  menuFromFile();
-static int  parseMenu();
-static void fillMenuStruct();
-static TokenType lookupToken();
-static Menu *buildFromSpec();
-static void initMenu();
-static void initButton();
-static void freeButtonData();
-static void freeMenuData();
-static void freeUserMenu();
-static Bool menuFileModified();
-static void addToMenuInfo();
-static void freeFileInfoList();
-static int firstEnabledItem();
 
 /* ---------------------------------------------------------------------
  *	local data
@@ -399,7 +362,43 @@ static Button *rootButtons[] = {
 };
 #endif
 
-static menudata *makeRootMenu();
+struct _setdefinfo {
+    WinGenericFrame *win;
+    Menu *menu;
+    void (*proc)();
+    void *data;
+#ifdef DEBUG
+    Bool flinuse;
+#endif
+};
+
+static menudata *getUserMenu(void);
+static Button *createButton(Text *label0, Text *label1, char *helpstr0, char *helpstr1, int which, Bool has_submenu, Bool enabled, Bool visible, FuncPtr callback, void *action);
+static Button *createSeparatorButton(void);
+static Button *createSimpleButton(Text *label, char *helpstr, FuncPtr callback, void *action);
+static Menu *getBuiltinMenu(void);
+static char **makeMenuSearchPath(void);
+#ifdef NOT
+static Bool checkFile(char *location, char *file, char *path);
+#endif
+static int menuFromFileSearch(char *file, menudata *menu, Bool messages);
+static int menuFromFile(char *file, menudata *menu, Bool messages);
+static menudata *makeRootMenu(char* file);
+static int parseMenu(char *filename, FILE *stream, menudata *parent, int *lineno);
+static void fillMenuStruct(menudata *mptr);
+static TokenType lookupToken(char *nm, FuncPtr *ppf);
+static Menu *buildFromSpec(Display* dpy, ScreenInfo *scrInfo, menudata *pmenu, char *deftitle);
+static void initMenu(menudata **newmenu);
+static void initButton(buttondata **newButton);
+static void freeMenuData(menudata *unusedMenu);
+static void freeButtonData(buttondata *unusedButton);
+static void freeUserMenu(Menu *menu);
+static Bool menuFileModified(void);
+static void addToMenuInfo(char *file);
+static void freeFileInfoList(List **plist);
+static int firstEnabledItem(Menu *menu);
+static void setFrameDefault(struct _setdefinfo *sdi);
+static void doClickCallback(MenuTrackMode clickmode, struct _setdefinfo *sdi);
 
 /* ---------------------------------------------------------------------
  * 	Global routines
@@ -407,8 +406,6 @@ static menudata *makeRootMenu();
  */
 
 /********************************************************************************/
-
-void SetWindowMenuLabels();
 
 void
 WindowMenuCreate(dpy, scrInfo)
@@ -1340,7 +1337,7 @@ parseMenu(filename, stream, parent, lineno)
 	    saveMenu = currentMenu;
 	    currentMenu = (menudata *) currentButton->submenu;
 	    currentMenu->menulabel = MemNewString(label);
-	    currentButton->generate = GenWinMenuFunc;
+	    currentButton->generate = (FuncPtr)GenWinMenuFunc;
 	    currentButton->generate_args = NULL;
 	    currentMenu->columns = atoi(args);
 	    currentMenu->idefault = NOBUTTON;
@@ -1354,7 +1351,7 @@ parseMenu(filename, stream, parent, lineno)
 	    saveMenu = currentMenu;
 	    currentMenu = (menudata *) currentButton->submenu;
 	    currentMenu->menulabel = MemNewString(label);
-	    currentButton->generate = GenDirMenuFunc;
+	    currentButton->generate = (FuncPtr)GenDirMenuFunc;
 	    currentButton->generate_args = MemNewString(args);
 	    currentMenu->columns = 0;
 	    currentMenu->idefault = NOBUTTON;
@@ -1377,7 +1374,7 @@ parseMenu(filename, stream, parent, lineno)
 	    }
 	    currentButton->generate_args = MemNewString(args);
 	    currentButton->name = MemNewString(label);
-	    currentButton->func = MoveDesktopFunc;
+	    currentButton->func = (FuncPtr)MoveDesktopFunc;
 	    currentButton->exec = NULL;
 	    initButton((buttondata **) &(currentButton->next));
 	    currentButton = currentButton->next;
@@ -1518,7 +1515,7 @@ struct _svctoken {
     {   "START_DSDM",       StartDSDMFunc,          ServiceToken        },
     {   "STOP_DSDM",        StopDSDMFunc,           ServiceToken        },
     {   "STICK_UNSTICK_SELN",StickSelnFunc, 	    ServiceToken        },
-    {   "MOVE_DESKTOP",     MoveDesktopFunc,        ServiceToken        }
+    {   "MOVE_DESKTOP",     (FuncPtr)MoveDesktopFunc,        ServiceToken        }
 };
 
 #define NSERVICES COUNT(svctokenlookup)
@@ -1899,12 +1896,6 @@ Menu       *MenuTable[NUM_MENUS];
 static char *windowTitle = "Window";
 static char *frameHelpString = "window:WindowMenu";
 
-extern Button *MakeOpenButton(), *MakeOwnerButton(), *MakeFullSizeButton(),
-	      *MakePropertiesButton(), *MakeBackButton(),
-	      *MakeDismissThisButton(), *MakeRefreshButton(),
-	      *MakeDismissButton(), *MakeResizeButton(), *MakeQuitButton(),
-	      *MakeMoveButton(), *MakeStickyButton(), *MakeDismissAllButton();
-
 extern Button	openButton, fullSizeButton, moveButton, resizeButton,
 		propertiesButton, backButton, refreshButton, stickyButton,
 		quitButton, dismissButton, dismissAllButton,
@@ -2121,9 +2112,9 @@ CreateWindowMenuInfo(dpy, scrInfo)
 
     scrInfo->menuCache->nextSlot = 0;
 
-    (void) MenuInfoCreate(scrInfo->menuCache, scrInfo->rootwin,
+    (void) MenuInfoCreate(scrInfo->menuCache, (WinGeneric *)scrInfo->rootwin,
 			  scrInfo->menuTable[MENU_FULL], 1, MENU_NEWSLOT);
-    (void) MenuInfoCreate(scrInfo->menuCache, scrInfo->rootwin,
+    (void) MenuInfoCreate(scrInfo->menuCache, (WinGeneric *)scrInfo->rootwin,
 			  scrInfo->menuTable[MENU_LIMITED], 1, MENU_NEWSLOT);
 
     scrInfo->menuCache->nextSlot = origNextSlot;
@@ -2211,16 +2202,6 @@ GetEnabledMenu(cli, flfull, flnotitle, flsticky)
     return menu;
 }
 
-struct _setdefinfo {
-    WinGenericFrame *win;
-    Menu *menu;
-    void (*proc)();
-    void *data;
-#ifdef DEBUG
-    Bool flinuse;
-#endif
-};
-
 static void
 setFrameDefault(sdi)
     struct _setdefinfo *sdi;
@@ -2271,7 +2252,7 @@ ShowStandardMenuSync(win, eve, flbutton, proc, data)
     if (proc != NULL) {
 	SetClickCallback(doClickCallback, &sdi);
     }
-    MenuShowSync(win->core.client->dpy, win, sdi.menu, eve, setFrameDefault, &sdi, 
+    MenuShowSync(win->core.client->dpy, (WinGeneric *)win, sdi.menu, eve, setFrameDefault, &sdi, 
 		 (eve->type == KeyPress) || (eve->type == KeyRelease),
 		 flbutton);
 }

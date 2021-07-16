@@ -34,9 +34,5 @@ typedef struct {
 
 #define	win_set_image(info, im)	(info)->visual->image = im
 
-extern GC		window_private_gc();
-extern Win_info		*window_info();
-extern Xv_object	win_data();
-
 #define CONTEXT		1
 #endif

@@ -9,12 +9,7 @@ static char     sccsid[] = "@(#)p_drp_data.c 1.3 93/06/28";
  *	pending in the U.S. and foreign countries. See LEGAL NOTICE 
  *	file for terms of the license.
  */
-#include <xview_private/panel_impl.h>
-
-Pkg_private int panel_drop_init();
-Pkg_private Xv_opaque panel_drop_set_avlist();
-Pkg_private Xv_opaque panel_drop_get_attr();
-Pkg_private int panel_drop_destroy();
+#include <xview_private/p_drop_.h>
 
 Xv_pkg          xv_panel_drop_pkg = {
     "Drop Target Item",

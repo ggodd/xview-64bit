@@ -10,6 +10,10 @@
 #ifndef _OLWM_VIRTUAL_H
 #define _OLWM_VIRTUAL_H
 
+#include "menu.h"
+#include "ollocale.h"
+#include "globals.h"
+
 /*
  * The virtual desktop exists as a logical abstraction only; there is no
  * actual X window called the virtual desktop to which the frames are
@@ -110,60 +114,42 @@ struct deltas {
     double	delta_x, delta_y;
 };
 
-#ifdef __STDC__
-void ChangeProperty(Display *dpy, WinGenericFrame *win, Atom property, Atom type, int format, int mode, unsigned char *data, int nelements);
-void ConfigureWindow(Display *dpy, WinGeneric *win, int mask, XWindowChanges *values);
-void DeleteProperty(Display *dpy, WinGenericFrame *win, Atom atom);
-void DestroyVDM(Display *dpy, VirtualDesktop *vdm, Colormap *cm);
-int DispatchVirtual(Display *dpy, XEvent *event);
-int KeyMoveVDM(Display *dpy, XEvent *ev);
-void LowerWindow(WinGeneric *win);
+void calculateVirtualDesktopSize(Display *dpy, int screen, VirtualDesktop *v);
+void SetWName(Display *dpy, VirtualDesktop *vdm);
+void RedrawVDM(VirtualDesktop *vdm);
+void VirtualInit(Display *dpy);
 void MakeVDM(Display *dpy, ScreenInfo *scrInfo, Client *client, VirtualResources *rsc);
-void MakeVirtualIcon(Client *cli);
+void DestroyVDM(Display *dpy, VirtualDesktop *vdm, Colormap *cm);
+void InitVDMMenu(Display *dpy, ScreenInfo *scrInfo);
 void MakeVirtual(Client *cli);
+void MakeVirtualIcon(Client *cli);
+void VirtualChangeFocus(WinGenericFrame *win, Bool focus);
+void PaintVirtualWindow(WinGenericFrame *win);
+int DispatchVirtual(Display *dpy, XEvent *event);
 int MakeSticky(Client *cli, Bool sticky);
+int KeyMoveVDM(Display *dpy, XEvent *ev);
+void VirtualSelect(WinGeneric *win, Bool sel);
+void VirtualSaveDesktops(Display *dpy, int x, int y);
+void VirtualRestoreDesktops(Display *dpy);
+void VirtualCleanup(Display *dpy);
+void ResizeVDM(VirtualDesktop *vdm, char *size);
+void RescaleVDM(VirtualDesktop *vdm, int scale);
+void VirtualUpdateVirtualWindows(Client *cli);
+void VirtualUpdateDrawSticky(Client *cli);
+void VirtualSetGeometry(WinGeneric *win, char *geom);
+int VDMMenuAction(Display *dpy, WinPinMenu *winInfo, MenuInfo *menuInfo, int btn);
+void VDMMoveTo(Display *dpy, Client *client, int x, int y);
+void VDMGoto(Display *dpy, Client *client, int screen);
+void MoveDesktopFunc(Display *dpy, WinGeneric *wininfo, MenuInfo *menuinfo, int btn);
 void MapWindow(WinGeneric *win);
 void UnmapWindow(WinGeneric *win);
 void MapRaised(WinGeneric *win);
 void RaiseWindow(WinGeneric *win);
-void RedrawVDM(VirtualDesktop *vdm);
-void RescaleVDM(VirtualDesktop *vdm, int scale);
-void ResizeVDM(VirtualDesktop *vdm, char *size);
-void SetWName(Display *dpy, VirtualDesktop *vdm);
-void VDMGoto(Display *dpy, Client *client, int screen);
-void VDMMoveTo(Display *dpy, Client *client, int x, int y);
-void VirtualCleanup(Display *dpy);
-void VirtualSelect(WinGeneric *win, Bool sel);
-void VirtualSetGeometry(WinGeneric *win, char *geom);
-void VirtualUpdateDrawSticky(Client *cli);
-void VirtualUpdateVirtualWindows(Client *cli);
-#else
-void ChangeProperty();
-void ConfigureWindow();
-void DeleteProperty();
-void DestroyVDM();
-int DispatchVirtual();
-int KeyMoveVDM();
-void LowerWindow();
-void MakeVDM();
-void MakeVirtualIcon();
-void MakeVirtual();
-int MakeSticky();
-void MapWindow();
-void UnmapWindow();
-void MapRaised();
-void RaiseWindow();
-void RedrawVDM();
-void RescaleVDM();
-void ResizeVDM();
-void SetWName();
-void VDMGoto();
-void VDMMoveTo();
-void VirtualCleanup();
-void VirtualSelect();
-void VirtualSetGeometry();
-void VirtualUpdateDrawSticky();
-void VirtualUpdateVirtualWindows();
-#endif
+void LowerWindow(WinGeneric *win);
+void DestroyWindow(WinGeneric *win);
+void DeleteProperty(Display *dpy, WinGenericFrame *win, Atom atom);
+void ChangeProperty(Display *dpy, WinGenericFrame *win, Atom property, Atom type, int format, int mode, unsigned char *data, int nelements);
+void ConfigureWindow(Display *dpy, WinGeneric *win, int mask, XWindowChanges *values);
+void GenDirMenuFunc(Display *dpy, MenuInfo *menuInfo, int bindex, MenuCache *cache, WinGeneric *winInfo, int depth);
 
 #endif	/* _OLWM_VIRTUAL_H */

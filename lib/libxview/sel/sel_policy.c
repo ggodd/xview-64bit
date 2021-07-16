@@ -10,7 +10,8 @@ static char     sccsid[] = "@(#)sel_policy.c 20.20 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview_private/seln_impl.h>
+#include <xview_private/sel_policy_.h>
+#include <xview_private/gettext_.h>
 #include <xview/sel_svc.h>
 #include <xview/sel_compat.h>
 #include <xview/rect.h>
@@ -22,7 +23,7 @@ static char     sccsid[] = "@(#)sel_policy.c 20.20 93/06/28";
  * selection_service
  */
 
-static int      seln_non_null_primary();
+static int seln_non_null_primary(Seln_holder *holder);
 
 
 /*

@@ -61,16 +61,4 @@ typedef	struct	{
     } status_bits;
 } Frame_help_info;
 
-/* frame_help_get.c */
-Pkg_private int		frame_help_init();
-
-/* frame_help_get.c */
-Pkg_private Xv_opaque	frame_help_get_attr();
-
-/* frame_help_set.c */
-Pkg_private Xv_opaque	frame_help_set_avlist();
-
-/* frame_help_destroy.c */
-Pkg_private int			frame_help_destroy();
-
 #endif

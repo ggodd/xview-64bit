@@ -550,12 +550,6 @@ typedef WinGeneric WinColormap;
 
 /* functions mapping windows to infos */
 
-extern void WIInstallInfo();
-extern Bool WIUninstallInfo();
-extern WinGeneric *WIGetInfo();
-extern WinGeneric *VGetInfo();
-extern void WIApply();
-
 /* Useful client macros */
 #define PANEOFCLIENT(cli) ((cli)->framewin->fcore.panewin)
 #define PANEWINOFCLIENT(cli) (PANEOFCLIENT(cli)->core.self)
@@ -569,57 +563,22 @@ extern int  ShapeErrorBase;
 
 extern Client *CurrentClient;
 
-#ifdef __STDC__
-void ColorFocusInit(Display *dpy, WinGeneric *root);
-void FrameFlashTitleBar(WinPaneFrame *winInfo);
-void FrameMinSize(WinPaneFrame *frame, int *width, int *height);
-void FrameSetupGrabs(Client *cli, Window win, Bool activate);
-void FrameUnparentPane(Client *cli, WinPaneFrame *winFrame, WinPane *winPane);
-void FrameUpdateShape(Client *cli, WinPaneFrame *winInfo);
-void FrameFlashTitleBar(WinPaneFrame *winInfo);
-void HandleHelpKey(Display *dpy, XEvent *pEvent);
-void IconUpdateName(Client *cli, XPropertyEvent *event);
-void LockColormap(Display *dpy, Client *cli, WinGeneric *winInfo);
-/*WinPinMenu *MakePinMenu(Display *dpy, WinGeneric *winInfo, MenuInfo *origMenuInfo);*/
-void MenuInit(Display *dpy);
-int PinMenuInit(Display *dpy);
-void PushPinInit(Display *dpy);
-void PushPinSetPinState(Display *dpy, WinPushPin *winInfo, int newState, Bool sendDelete);
-void PushPinTogglePinState(Display *dpy, WinPushPin *winInfo, Bool sendDelete);
-void ResizeInit(Display *dpy);
-void RootInit(Display *dpy);
-void WinAddChild(WinGeneric *parent, WinGeneric *child);
-void WinCallConfig(Display *dpy, WinGeneric *win, XConfigureRequestEvent *pxcre);
+void WinCallSelect(Client *cli, Bool sel);
+void WinCallFocus(WinGeneric *win, Bool focus);
 void WinCallDestroy(Client *cli);
+void WinCallConfig(Display *dpy, WinGeneric *win, XConfigureRequestEvent *pxcre);
 void WinCallDraw(WinGeneric *win);
+void WinAddChild(WinGeneric *parent, WinGeneric *child);
 void WinRemoveChild(WinGeneric *parent, WinGeneric *child);
 void WinRootPos(WinGeneric *win, int *px, int *py);
-void WinCallSelect(Client *cli, Bool sel);
-#else
-void ColorFocusInit();
-void FrameFlashTitleBar();
-void FrameMinSize();
-void FrameSetupGrabs();
-void FrameUnparentPane();
-void FrameUpdateShape();
-void HandleHelpKey();
-void IconUpdateName();
-void LockColormap();
-/*WinPinMenu *MakePinMenu();*/
-void MenuInit();
-int PinMenuInit();
-void PushPinInit();
-void PushPinSetPinState();
-void PushPinTogglePinState();
-void ResizeInit();
-void RootInit();
-void WinAddChild();
-void WinCallConfig();
-void WinCallDestroy();
-void WinCallDraw();
-void WinRemoveChild();
-void WinRootPos();
-void WinCallSelect();
-#endif
+void WinRedrawAllWindows(void);
+Bool WinShowHelp(Display *dpy, WinGeneric *win, int mousex, int mousey);
+int WinDrawFunc(WinGeneric *win);
+int WinEventExpose(Display *dpy, XEvent *event, WinGeneric *win);
+int WinNewPosFunc(WinGeneric *win, int x, int y);
+int WinNewConfigFunc(WinGeneric *win, XConfigureRequestEvent *pxcre);
+int WinSetConfigFunc(Display *dpy, WinGeneric *win);
+void WinAddColorClient(WinGeneric *win, Client *cli);
+void WinRemoveColorClient(Display *dpy, WinGeneric *win, Client *cli);
 
 #endif /* _OLWM_WIN_H */

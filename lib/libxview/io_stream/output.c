@@ -10,9 +10,10 @@ static char     sccsid[] = "@(#)output.c 20.18 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/output_.h>
+#include <xview_private/gettext_.h>
 #include <xview_private/i18n_impl.h>
 #include <xview/xv_error.h>
-#include <xview_private/io_stream.h>
 
 #define Get_Output_Ops \
 	struct output_ops_vector *ops;\
@@ -25,7 +26,7 @@ static char     sccsid[] = "@(#)output.c 20.18 93/06/28";
 	ops = out->ops.output_ops
 
 
-static void stream_putstring();
+static void stream_putstring(char *s, STREAM *out, Bool include_newline);
 
 /* GENERIC OUTPUT FUNCTIONS */
 

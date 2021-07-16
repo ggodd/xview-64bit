@@ -10,19 +10,26 @@ static char     sccsid[] = "@(#)selection.c 1.11 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/selection_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/sel_util_.h>
+#include <xview_private/xv_.h>
 #ifdef __linux__
 /* Kludge to prevent multiple variables with same name */
 #define __DEFINE_SEL_IMPL_VARS
 #endif
-#include <xview_private/sel_impl.h>
 #ifdef __linux__
 #undef __DEFINE_SEL_IMPL_VARS
 #endif
 #include <xview/window.h>
 
-Pkg_private char *xv_sel_atom_to_str(/* display, atom */);
-Pkg_private Atom xv_sel_str_to_atom(/* display, string */);
-
+XContext  selCtx = 0;
+XContext  reqCtx = 0;
+XContext  targetCtx = 0;
+XContext  propCtx = 0;
+XContext  replyCtx = 0;
+XContext  cmpatCtx = 0;
 
 /*ARGSUSED*/
 Pkg_private int
@@ -75,7 +82,7 @@ sel_set_avlist(sel_public, avlist)
     Sel_info	    *sel = SEL_PRIVATE(sel_public);
     XID             xid=0;
     
-    for (attrs = avlist; (int)*attrs; attrs = attr_next(attrs)) {
+    for (attrs = avlist; *attrs; attrs = attr_next(attrs)) {
         switch ((int)attrs[0]) {
 	  case SEL_RANK:
 	    sel->rank = (Atom) attrs[1];

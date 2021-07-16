@@ -26,13 +26,23 @@ static char     sccsid[] = "@(#)txt_e_menu.c 20.50 93/06/28";
  * Much of this code was borrowed from the suntools dynamic rootmenu code.
  */
 
+#include <xview_private/txt_e_menu_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/expandpath_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/txt_again_.h>
+#include <xview_private/txt_event_.h>
+#include <xview_private/txt_filter_.h>
+#include <xview_private/txt_input_.h>
+#include <xview_private/txt_menu_.h>
+#include <xview_private/txt_sel_.h>
+#include <xview_private/whitespace_.h>
+#include <xview_private/xv_.h>
 #include <sys/file.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <errno.h>
 #include <ctype.h>
 #include <xview/openmenu.h>
-#include <xview/defaults.h>
 #include <xview/wmgr.h>
 #include <xview/icon.h>
 #include <xview/icon_load.h>
@@ -58,26 +68,24 @@ extern int errno;
 #define	MAXSTRLEN	256
 #define	MAXARGS		20
 
+static char *check_filename_locale(char *locale, char *filename, int copy);
+static int extras_menufile_changed(void);
+static void textsw_remove_all_menu_items(Menu menu);
+static int walk_getmenu(Textsw_view textsw_view, Menu m, char *file, FILE *mfd, int *lineno);
+static void free_argv(char **argv);
+static char *textsw_savestr(register char *s);
+static char *textsw_save2str(register char *s, register char *t);
+static int any_shell_meta(register char *s);
+
 struct stat_rec {
     char           *name;	/* Dynamically allocated menu file name */
     time_t          mftime;	/* Modified file time */
 };
 
-static char    *textsw_savestr(), *textsw_save2str();
-void            expand_path();
 static struct stat_rec Extras_stat_array[MAX_FILES];
 static int      Textsw_nextfile;
 
-Pkg_private Menu_item	textsw_handle_extras_menuitem();
-Pkg_private int 	textsw_build_extras_menu_items();
-Pkg_private char      **textsw_string_to_argv();
-Pkg_private Textsw_view textsw_from_menu();
-static	int	extras_menufile_changed();
-static	int	walk_getmenu();
-static	void	free_argv();
 static	int	Nargs;
-static	char	*check_filename_locale();
-static	int	any_shell_meta(char *s);
 
 extern int      EXTRASMENU_FILENAME_KEY;
 
@@ -498,7 +506,6 @@ textsw_handle_extras_menuitem(menu, item)
     char           *prog, *args;
     char            command_line[MAXPATHLEN];
     char          **filter_argv;
-    pkg_private char **textsw_string_to_argv();
     Textsw_view     textsw_view = textsw_from_menu(menu);
     register Textsw_view_handle view;
     register Textsw_folio folio;

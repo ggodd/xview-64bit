@@ -10,6 +10,11 @@ static char     sccsid[] = "@(#)frame.c 20.73 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/frame_.h>
+#include <xview_private/screen_.h>
+#include <xview_private/windowutil_.h>
+#include <xview_private/xv_olgx_.h>
+#include <xview_private/xv_usage_.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <xview_private/fm_impl.h>
@@ -18,11 +23,6 @@ static char     sccsid[] = "@(#)frame.c 20.73 93/06/28";
 #include <xview_private/windowimpl.h>
 #include <xview_private/scrn_impl.h>
 
-#ifdef __STDC__
-extern void xv_usage(char *);
-#else
-extern void xv_usage();
-#endif
 
 Xv_private void
 frame_cmdline_help(name)

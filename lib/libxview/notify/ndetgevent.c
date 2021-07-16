@@ -20,7 +20,9 @@ static char     sccsid[] = "@(#)ndetgevent.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * Ndet_g_event.c - Implement the notify_get_event_func interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndetgevent_.h>
+#include <xview_private/ndet_event_.h>
+#include <xview_private/ndetgetfnc_.h>
 #include <xview_private/ndet.h>
 
 extern          Notify_func

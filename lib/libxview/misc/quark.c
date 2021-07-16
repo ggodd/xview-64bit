@@ -10,17 +10,16 @@ static char     sccsid[] = "@(#) quark.c 50.11 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/quark_.h>
+#include <xview_private/db_conv_.h>
+#include <xview_private/xv_.h>
 #include  <X11/X.h>
 #include  <X11/Xlib.h>
 #include  <X11/Xresource.h>
 #include  <xview/xview.h>
 #include  <xview/pkg.h>
 
-#ifdef __STDC__
 static Xv_opaque resource_type_conv(char *str, Attr_base_cardinality xv_type, Xv_opaque def_val);
-#else
-static Xv_opaque resource_type_conv();
-#endif
 
 /* 
  *    Utilities to deal with quark lists and such.

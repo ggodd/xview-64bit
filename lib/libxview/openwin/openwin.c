@@ -19,26 +19,24 @@ static char     sccsid[] = "@(#)openwin.c 1.37 93/06/28";
  * 
  */
 
+#include <xview_private/openwin_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/ow_evt_.h>
+#include <xview_private/ow_resize_.h>
+#include <xview_private/ow_view_.h>
+#include <xview_private/xv_.h>
 #include <stdio.h>
 #include <xview_private/i18n_impl.h>
 #include <xview_private/ow_impl.h>
 #include <xview_private/draw_impl.h>
-#include <xview/defaults.h>
 #include <xview/cms.h>
 
-/*
- * Package private functions
- */ 
-Pkg_private int openwin_init();
-Pkg_private int openwin_destroy();
-#ifndef NO_OPENWIN_PAINT_BG
-Pkg_private void openwin_set_bg_color();
-#endif /* NO_OPENWIN_PAINT_BG */
-
-/*
- * Module private functions
- */
-static int  openwin_layout();
+#if defined(__alpha) || defined(_XV_API_BROKEN_64BIT) || defined(__amd64__)
+static int openwin_layout(Openwin owin_public, Xv_Window child, Window_layout_op op, unsigned long d1, unsigned long d2, unsigned long d3, unsigned long d4, unsigned long d5);
+#else
+static int openwin_layout(Openwin owin_public, Xv_Window child, Window_layout_op op, int d1, int d2, int d3, int d4, int d5);
+#endif
 
 /*
  * Global Data
@@ -174,7 +172,7 @@ openwin_layout(owin_public, child, op, d1, d2, d3, d4, d5)
     Xv_Window       child;
     Window_layout_op op;
 /* Alpha compatibility, mbuck@debian.org, FIXME: I don't understand this */
-#if defined(__alpha) || defined(_XV_API_BROKEN_64BIT)
+#if defined(__alpha) || defined(_XV_API_BROKEN_64BIT) || defined(__amd64__)
     unsigned long   d1, d2, d3, d4, d5;
 #else
     int             d1, d2, d3, d4, d5;
@@ -214,7 +212,7 @@ openwin_layout(owin_public, child, op, d1, d2, d3, d4, d5)
 	    /* must look through data structures since can't */
 	    /* do a get on the sb to get information */
 	    if (openwin_viewdata_for_sb(owin, child, &view, &direction, &last) == XV_OK) {
-		openwin_set_sb(view, direction, NULL);
+		openwin_set_sb(view, direction, (Scrollbar)NULL);
 		/* only re-adjust if last view with sb */
 		if (last) {
 		    if (direction == SCROLLBAR_VERTICAL) {

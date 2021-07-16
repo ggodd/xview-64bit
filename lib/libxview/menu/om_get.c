@@ -12,6 +12,8 @@ static char     sccsid[] = "@(#)om_get.c 20.51 93/06/28";
 
 /* ------------------------------------------------------------------------- */
 
+#include <xview_private/om_get_.h>
+#include <xview_private/om_public_.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <xview/server.h>
@@ -21,13 +23,6 @@ static char     sccsid[] = "@(#)om_get.c 20.51 93/06/28";
 /* ------------------------------------------------------------------------- */
 
 extern Xv_object xv_default_server;
-
-/*
- * Package private
- */
-Pkg_private Xv_opaque menu_gets();
-Pkg_private Xv_opaque menu_item_gets();
-Pkg_private Xv_opaque menu_pullright_return_result();
 
 /* ------------------------------------------------------------------------- */
 
@@ -50,7 +45,7 @@ menu_gets(menu_public, status, attr, args)
 	break;
 
       case MENU_NTH_ITEM:
-	value = va_arg(args, int);
+	value = va_arg(args, Attr_attribute);
 	if ((int) value > 0 && (int) value <= m->nitems)
 	    v = MENU_ITEM_PUBLIC(m->item_list[(int) value - 1]);
 	break;

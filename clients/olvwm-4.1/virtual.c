@@ -3,6 +3,7 @@
  * license
  */
 
+#include <stdlib.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
@@ -36,6 +37,13 @@
 #include "states.h"
 #include "evbind.h"
 #include "info.h"
+#include "winframe.h"
+#include "winnofoc.h"
+#include "wingframe.h"
+#include "images.h"
+#include "winicon.h"
+#include "usermenu.h"
+#include "services.h"
 
 #if defined(__linux__) && defined(__GLIBC__) && 0
 /* GNU libc doesn't use INIT, so we have to define sp ourselves. We have to
@@ -60,21 +68,12 @@
 #define PEEKC()     (*sp)
 #define UNGETC(c)   (--sp)
 #define RETURN(c)   return;
-static regexp_err(int val);
 #define ERROR(val)  regexp_err(val)
 #define TRUE 1
 #define FALSE 0
 
-#ifdef __STDC__
-static void regerr(int val);
-#else
-static void regerr(int val);
-#endif
 
-#include <regexp.h>
-#ifdef REGEXP
-regexp *expbuf;
-#endif
+#include <regex.h>
 
 #ifdef IDENT
 #ident "@(#)virtual.c	1.6 olvwm version 07 Jan 1994"
@@ -95,11 +94,7 @@ static int	lastSelectTime;
 
 extern List	*ScreenInfoList;
 
-extern Button	*MakeUpLeftButton(),*MakeLeftButton(),*MakeDownLeftButton(),
-		*MakeUpButton(),*MakeHomeButton(),*MakeDownButton(),
-		*MakeUpRightButton(),*MakeRightButton(),*MakeDownRightButton();
-
-extern char	*ExpandPath();
+extern int CheckForKeyProg(Display *dpy, XEvent *ev);
 
 /*
  * Semantic action associated with each of the buttons above.  These must
@@ -121,18 +116,53 @@ static SemanticAction	vdmButtonActions[] = {
 
 static unsigned char pixdata[] = { 0xaa, 0x55 };
 
+typedef struct _replacestickyinfo {
+    struct deltas	*deltas;
+    int			screen;
+} replaceStickyInfo;
+
+
+static void drawVDMGrid(Display *dpy, VirtualDesktop *vdm);
+static void *replaceSticky(Client *cli, replaceStickyInfo *c);
+static void moveDesktop(Display *dpy, struct deltas *deltas, VirtualDesktop *vdm);
+static void constrainDeltas(Display *dpy, VirtualDesktop *vdm, struct deltas *deltas);
+static Bool vdmPerformAction(Display *dpy, VirtualDesktop *vdm, SemanticAction a);
+static void translateVirtualCoords(VirtualDesktop *vdm, int *root_x, int *root_y, int *x, int *y);
+static VirtualDesktop *allocVirtualDesktop(Display *dpy, int screen, VirtualResources *rsc);
+static void constrainOutline(Display *dpy, VDMstuff *stuff, int x, int y, int snap);
+static void vdmMoveUpdate(XEvent *ev, VDMstuff *stuff);
+static void vdmMoveDone(XEvent *ev, VDMstuff *stuff);
+static Bool vdmInterposer(Display *dpy, XEvent *event,WinGeneric * w, VDMstuff *stuff);
+static void vdmExpose(Display *dpy, XEvent *event, WinGeneric *winInfo);
+static void vdmKeyPress(Display *dpy, XEvent *ev, WinGeneric *winInfo);
+static void vdmConfigure(Display *dpy, XConfigureEvent *event, WinVirtual *winInfo);
+static int vdmNewConfigure(WinVirtual *winInfo, XConfigureRequestEvent *pxcre);
+static void vdmButtonPress(Display *dpy, XEvent *event, WinGeneric *winInfo);
+static void vdmRedraw(Display *dpy, WinGeneric *win);
+static void vdmExit(void);
+static void vdmButtonRelease(void);
+static void vdmSetConfigure(Display *dpy, WinVirtual *winInfo);
+static void vdmButtonMotion(void);
+static int vdmNewpos(WinVirtual *win, int x, int y);
+static void vdmSelect(void);
+static int vdmSetSize(WinVirtual *win, int  w, int h);
+static void vdmSetupFrame(WinGeneric *win, Client *cli, WinGenericFrame *frame);
+static void vdmComputeWidth(Display *dpy, XEvent *event, WinGeneric *winInfo);
+static void vdmComputeHeight(Display *dpy, XEvent *event, WinGeneric *winInfo);
+static void vdmProperty(Display *dpy, XPropertyEvent *event, WinVirtual *winInfo);
+static XTextProperty *MakeWTitle(VirtualResources *rsc);
+static void *remakeVirtual(Client *cli);
+static void *restickVirtual(Client *cli);
+static void updateVirtualWindow(Client *cli);
+static int cmpButton(Button **b1, Button **b2);
+static void regexp_err(int val);
+static int rexMatch(char *string);
+static void rexInit(char *pattern);
+
 #define VDMSelectMask (ButtonPressMask | ButtonReleaseMask | \
 		       ButtonMotionMask | ExposureMask )
 
 #define CEIL(a,b)	(((a)+(b)-1)/(b))
-
-#ifdef __STDC__
-static int rexMatch(char *string);
-static void rexInit(char *pattern);
-#else
-static int rexMatch();
-static void rexInit();
-#endif
 
 
 /*
@@ -197,11 +227,6 @@ ScreenInfo	*scrInfo = vdm->client->scrInfo;
  *  Function for re-placing (not replacing!) all windows when the view into
  *  the desktop is changed
  */
-typedef struct _replacestickyinfo {
-    struct deltas	*deltas;
-    int			screen;
-} replaceStickyInfo;
-
 static void *
 replaceSticky(cli, c)
     Client		*cli;
@@ -680,7 +705,7 @@ SemanticAction	action;
  *
  * Event functions for the VDM
  */
-static int
+static void
 vdmExpose(dpy, event, winInfo)
     Display	*dpy;
     XEvent	*event;
@@ -770,7 +795,7 @@ WinPaneFrame	*winFrame = cli->framewin;
 
     if (!pxcre)
 	return winInfo->core.dirtyconfig;
-    WinRootPos(winInfo, &oldX, &oldY);
+    WinRootPos((WinGeneric *)winInfo, &oldX, &oldY);
     oldWidth = winInfo->core.width;
     oldHeight = winInfo->core.height;
 
@@ -789,7 +814,7 @@ WinPaneFrame	*winFrame = cli->framewin;
 			    (pxcre->value_mask & CWX) ? (pxcre->x) : oldX,
 			    (pxcre->value_mask & CWY) ? (pxcre->y) : oldY);
     if (pxcre->value_mask & (CWStackMode | CWSibling))
-	GFrameSetStack(winFrame, pxcre->value_mask, pxcre->detail, pxcre->above);
+	GFrameSetStack((WinGenericFrame *)winFrame, pxcre->value_mask, pxcre->detail, pxcre->above);
     return winInfo->core.dirtyconfig;
 }
 	
@@ -874,7 +899,7 @@ XWindowChanges	xwc;
     ce.serial = 0L;
     ce.event = winInfo->core.self;
     ce.window = winInfo->core.self;
-    WinRootPos(winInfo, &ce.x, &ce.y);
+    WinRootPos((WinGeneric *)winInfo, &ce.x, &ce.y);
     ce.width = winInfo->core.width;
     ce.height = winInfo->core.height;
     ce.border_width = 0;
@@ -949,7 +974,7 @@ vdmSetupFrame(win, cli, frame)
     cli->sticky = True;
     cli->flags |= CLOlwmOwned;
     win->core.parent = (WinGeneric *) frame;
-    WinAddChild(frame, win);
+    WinAddChild((WinGeneric *)frame, win);
     XReparentWindow(cli->dpy, win->core.self, frame->core.self,
 		    win->core.x, win->core.y);
     cli->wmHints->icon_pixmap = XCreateBitmapFromData(cli->dpy,
@@ -1047,24 +1072,24 @@ VirtualInit(dpy)
 
 {
     classVirtualPane.core.kind = WIN_VIRTUAL;
-    classVirtualPane.core.xevents[KeyPress] = vdmKeyPress;
-    classVirtualPane.core.xevents[ButtonPress] = vdmButtonPress;
-    classVirtualPane.core.xevents[ButtonRelease] = vdmButtonRelease;
-    classVirtualPane.core.xevents[MotionNotify] = vdmButtonMotion;
-    classVirtualPane.core.xevents[ConfigureNotify] = vdmConfigure;
-    classVirtualPane.core.xevents[Expose] = vdmExpose;
-    classVirtualPane.core.xevents[PropertyNotify] = vdmProperty;
+    classVirtualPane.core.xevents[KeyPress] = (FuncPtr)vdmKeyPress;
+    classVirtualPane.core.xevents[ButtonPress] = (FuncPtr)vdmButtonPress;
+    classVirtualPane.core.xevents[ButtonRelease] = (FuncPtr)vdmButtonRelease;
+    classVirtualPane.core.xevents[MotionNotify] = (FuncPtr)vdmButtonMotion;
+    classVirtualPane.core.xevents[ConfigureNotify] = (FuncPtr)vdmConfigure;
+    classVirtualPane.core.xevents[Expose] = (FuncPtr)vdmExpose;
+    classVirtualPane.core.xevents[PropertyNotify] = (FuncPtr)vdmProperty;
     classVirtualPane.core.focusfunc = NULL;
-    classVirtualPane.core.drawfunc = vdmRedraw;
-    classVirtualPane.core.destroyfunc = vdmExit;
-    classVirtualPane.core.selectfunc = vdmSelect;
-    classVirtualPane.core.newconfigfunc = vdmNewConfigure;
-    classVirtualPane.core.newposfunc = vdmNewpos;
-    classVirtualPane.core.setconfigfunc = vdmSetConfigure;
-    classVirtualPane.core.createcallback = vdmSetupFrame;
-    classVirtualPane.core.heightfunc = vdmComputeHeight;
-    classVirtualPane.core.widthfunc = vdmComputeWidth;
-    classVirtualPane.pcore.setsizefunc = vdmSetSize;
+    classVirtualPane.core.drawfunc = (FuncPtr)vdmRedraw;
+    classVirtualPane.core.destroyfunc = (FuncPtr)vdmExit;
+    classVirtualPane.core.selectfunc = (FuncPtr)vdmSelect;
+    classVirtualPane.core.newconfigfunc = (FuncPtr)vdmNewConfigure;
+    classVirtualPane.core.newposfunc = (FuncPtr)vdmNewpos;
+    classVirtualPane.core.setconfigfunc = (FuncPtr)vdmSetConfigure;
+    classVirtualPane.core.createcallback = (FuncPtr)vdmSetupFrame;
+    classVirtualPane.core.heightfunc = (FuncPtr)vdmComputeHeight;
+    classVirtualPane.core.widthfunc = (FuncPtr)vdmComputeWidth;
+    classVirtualPane.pcore.setsizefunc = (FuncPtr)vdmSetSize;
 }
 
 /*
@@ -1194,7 +1219,7 @@ static XTextProperty	iName = {(unsigned char *) "Desktop",
     WIInstallInfo((WinGeneric *)w);
     scrInfo->vdm = v;
 
-    v->client = StateNew(dpy, RootWindow(dpy, scrInfo->screen), w->core.self, False, w);
+    v->client = StateNew(dpy, RootWindow(dpy, scrInfo->screen), w->core.self, False, (WinPane *)w);
     /*
      * Sigh -- the call back was called before the icon frame was created
      * so we can't do this there like we'd like to.  And it was called
@@ -1305,7 +1330,7 @@ Window	virtual;
 	XSelectInput(cli->dpy, virtual, VDMSelectMask);
     else XSelectInput(cli->dpy, virtual, ExposureMask);
     cli->framewin->core.virtual = virtual;
-    VInstallInfo(cli->framewin);
+    VInstallInfo((WinGeneric *)cli->framewin);
     MakeVirtualIcon(cli);
 }
 
@@ -1335,7 +1360,7 @@ int	x, y;
 				    cli->scrInfo->colorInfo.borderColor,
 				    cli->scrInfo->colorInfo.virtualFgColor);
     XSelectInput(cli->dpy, cli->iconwin->core.virtual, VDMSelectMask);
-    VInstallInfo(cli->iconwin);
+    VInstallInfo((WinGeneric *)cli->iconwin);
 }
 
 /*
@@ -1370,7 +1395,7 @@ int	length;
 /*
  * Refresh the window's virtual representation
  */
-int
+void
 PaintVirtualWindow(win)
     WinGenericFrame	*win;
 {
@@ -1406,7 +1431,7 @@ DispatchVirtual(dpy, event)
     Display	*dpy;
     XEvent	*event;
 {
-WinGeneric	*win, *VGetInfo();
+WinGeneric	*win;
 static SemanticAction	currentVDMAction;
 unsigned int    ignoremask;
 
@@ -1417,7 +1442,7 @@ unsigned int    ignoremask;
 	return False;
     switch(event->xany.type) {
 	case Expose:
-	    PaintVirtualWindow(win);
+	    PaintVirtualWindow((WinGenericFrame *)win);
 	    break;
 
 	/*
@@ -1459,14 +1484,14 @@ unsigned int    ignoremask;
 	    else translateVirtualCoords(win->core.client->scrInfo->vdm,
 				&event->xmotion.x_root, &event->xmotion.y_root,
 				&event->xmotion.x, &event->xmotion.y);
-	    GFrameEventButtonPress(dpy, event, win);
+	    GFrameEventButtonPress(dpy, event, (WinGenericFrame *)win);
 	    break;
 	
 	case MotionNotify:
 	    translateVirtualCoords(win->core.client->scrInfo->vdm,
 				&event->xmotion.x_root, &event->xmotion.y_root,
 				&event->xmotion.x, &event->xmotion.y);
-	    GFrameEventMotionNotify(dpy, event, win);
+	    GFrameEventMotionNotify(dpy, event, (WinGenericFrame *)win);
 	    break;
 
 	case ButtonRelease:
@@ -1479,7 +1504,7 @@ unsigned int    ignoremask;
 	    else translateVirtualCoords(win->core.client->scrInfo->vdm,
 				&event->xmotion.x_root, &event->xmotion.y_root,
 				&event->xmotion.x, &event->xmotion.y);
-	    GFrameEventButtonRelease(dpy, event, win);
+	    GFrameEventButtonRelease(dpy, event, (WinGenericFrame *)win);
 	    if (currentVDMAction == ACTION_SELECT)
 		lastSelectTime = event->xbutton.time;
 	    currentVDMAction = ACTION_NONE;
@@ -1520,7 +1545,7 @@ int	x, y;
 	x = cli->framewin->core.x;
 	y = cli->framewin->core.y;
 	cli->framewin->core.dirtyconfig |= CWX;
-	GFrameSetConfig(cli->framewin, x, y,
+	GFrameSetConfig((WinGenericFrame *)cli->framewin, x, y,
 			cli->framewin->core.width, cli->framewin->core.height);
 
 	x = cli->iconwin->core.x;
@@ -1738,7 +1763,7 @@ void
 VirtualUpdateVirtualWindows(cli)
     Client	*cli;
 {
-    ListApply(ActiveClientList, updateVirtualWindow, 0);
+    ListApply(ActiveClientList, (void * (*)())updateVirtualWindow, 0);
     ClientRefresh(cli);
 }
 
@@ -1782,7 +1807,7 @@ ScreenInfo	*scrInfo = win->core.client->scrInfo;
 	    h = win->core.height;
 	    if (newy > DisplayHeight(dpy, scrInfo->screen) - h)
 		newy = DisplayHeight(dpy, scrInfo->screen) - h;
-	    GFrameSetConfig(win, newx, newy, win->core.width, win->core.height);	   
+	    GFrameSetConfig((WinGenericFrame *)win, newx, newy, win->core.width, win->core.height);	   
 	}
 }
 
@@ -2068,9 +2093,8 @@ struct _menu	*menu;
 DIR	*dir;
 struct dirent	*ent;
 Button	*b;
-char	s[MAXNAMLEN], dirname[MAXPATHLEN - MAXNAMLEN], *newname, *ExpandPath();
+char	s[MAXNAMLEN+10], dirname[MAXPATHLEN - MAXNAMLEN], *newname;
 char	pattern[MAXNAMLEN];
-extern int AppMenuFunc();
 MenuCache	*menuCache;
 int		slot;
 
@@ -2141,12 +2165,13 @@ int		slot;
     }
     closedir(dir);
     if (GRV.VirtualDirSort == SortAlpha || GRV.VirtualDirSort == SortAlphaAll)
-	qsort(menu->buttons, menu->buttonCount, sizeof(Button *), cmpButton);
+	qsort(menu->buttons, menu->buttonCount, sizeof(Button *), (__compar_fn_t)cmpButton);
     menuInfo->buttons[bindex].subMenu =
 				MenuInfoCreate(cache, winInfo, menu, depth, slot);
 }
 
-static regexp_err(val)
+static void
+regexp_err(val)
 int val;
 {
     switch(val) {
@@ -2193,17 +2218,14 @@ int val;
     }
 }
 
-static char expbuf[256];
+/*static char expbuf[256];*/
+regex_t regex;
 
 static int
 rexMatch(string)
     char *string;
 {
-#ifdef REGEXP
-    return regexec(expbuf, string);
-#else
-    return step(string,expbuf);
-#endif
+    return regexec(&regex, string, 0, NULL, 0);
 }
 
 static void
@@ -2236,16 +2258,5 @@ char newPattern[256];
     }
     newPattern[j++] = '$';
     newPattern[j++] = '\0';
-#ifdef REGEXP
-    expbuf = regcomp(newPattern);
-#else
-#if defined(__linux__) && defined(__GLIBC__)
-    /* See comment above.
-     *
-     * martin.buck@bigfoot.com
-     */
-/*    sp = newPattern;*/
-#endif
-    compile(newPattern, expbuf, &expbuf[256], '\0');
-#endif
+    regcomp(&regex, newPattern, REG_NOSUB);
 }

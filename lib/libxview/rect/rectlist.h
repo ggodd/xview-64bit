@@ -98,7 +98,7 @@ EXTERN_FUNCTION (unsigned rl_equal, (Rectlist *rl1, Rectlist *rl2));
 EXTERN_FUNCTION (unsigned rl_boundintersectsrect, (Rect *r, Rectlist *rl));
 EXTERN_FUNCTION (unsigned rl_rectintersects, (Rect *r, Rectlist *rl));
 EXTERN_FUNCTION (unsigned rl_equalrect, (Rect *r, Rectlist *rl));
-EXTERN_FUNCTION (unsigned rl_includespoint, (Rectlist *r, int x, int y));
+EXTERN_FUNCTION (unsigned rl_includespoint, (Rectlist *r, coord x, coord y));
 
 #ifdef xview_other_rl_funcs
 

@@ -34,13 +34,14 @@
 #include "client.h"
 #include "virtual.h"
 #include "evbind.h"
+#include "winframe.h"
+#include "info.h"
 
 /***************************************************************************
 * global data
 ***************************************************************************/
 
 extern int Resize_width, Resize_height;
-extern void FrameAllowEvents();
 
 /***************************************************************************
 * private data
@@ -52,6 +53,14 @@ static int whichgrav[] = {NorthWestGravity, NorthEastGravity,
 	SouthWestGravity, SouthEastGravity};
 
 static ClassResize classResize;
+
+static void resizeCallback(Display* dpy, WinResize *winInfo);
+static void eventButtonPress(Display* dpy, XEvent *event, WinResize *winInfo);
+static int drawResize(Display* dpy, WinResize *winInfo);
+static int destroyResize(Display* dpy, WinGeneric *winInfo);
+static int focusResize(Display* dpy, WinResize *winInfo, Bool selected);
+static int widthfuncResize(WinResize *win, XConfigureRequestEvent *pxcre);
+static int heightfuncResize(WinResize *win, XConfigureRequestEvent *pxcre);
 
 /***************************************************************************
 * private functions
@@ -73,7 +82,7 @@ resizeCallback(dpy, winInfo)
 /* 
  * eventButtonPress - handle button press events on the resize window 
  */
-static int
+static void
 eventButtonPress(dpy, event, winInfo)
 Display	*dpy;
 XEvent	*event;
@@ -299,7 +308,7 @@ int x,y;
 	w->core.helpstring = "olwm:ResizeCorner";
 
 	/* register the window */
-	WIInstallInfo(w);
+	WIInstallInfo((WinGeneric *)w);
 
         MapRaised((WinGeneric *)w);
 
@@ -316,7 +325,7 @@ Display *dpy;
 {
 	classResize.core.kind = WIN_RESIZE;
 	classResize.core.xevents[Expose] = WinEventExpose;
-	classResize.core.xevents[ButtonPress] = eventButtonPress;
+	classResize.core.xevents[ButtonPress] = (FuncPtr)eventButtonPress;
 	classResize.core.focusfunc= focusResize;
 	classResize.core.drawfunc= drawResize;
 	classResize.core.destroyfunc = destroyResize;

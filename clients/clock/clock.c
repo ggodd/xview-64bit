@@ -19,6 +19,7 @@
 	NASA FAR Supplement.
 */
 
+#include  <unistd.h>
 #include  <stdio.h>
 #include  <pwd.h>
 #include  <math.h>
@@ -55,7 +56,6 @@
 #define		NULLPR	(struct pixrect *) NULL
 #define		DIGITAL_ON		0
 
-extern double rint(double);
 
 static int initializing;
 static int centerX, centerY;
@@ -129,31 +129,6 @@ mpr_static(my_fifty_patch, 16, 16, 1, my_fifty_data);
 Server_image gray_patch;
 
 static struct itimerval timer;
-static void draw_circle();
-static void paint_hands();
-static void paint_ticks();
-static void erase_second_hand();
-static void enable_timer();
-static void update_slots();
-static void build_numbers();
-
-static Notify_value clock_resize_proc();
-static Notify_value clock_repaint_proc();
-static void analog_resize_proc();
-static void analog_repaint();
-static void icon_repaint();
-static void dig_repaint();
-static void dig_resize_proc();
-static void backup_values();
-static void show_props();
-static Notify_value timer_expired ();
-static Notify_value analog_timer_expired();
-static Notify_value icon_timer_expired();
-static Notify_value dig_timer_expired();
-static int min (int a, int b);
-static int seconds_on();
-static int date_on();
-static int armwidth();
 
 typedef enum {digital, analog} Face;
 
@@ -214,6 +189,75 @@ typedef struct clckObject {
 	Menu			menu;
 	} ClockObject, *Clock;
 
+void print_event(Xv_window handle, Event *event);
+
+static void readrc(Options o);
+static void writerc(Options o);
+static void cleanup(Clock c);
+
+void grow_font(int factor, struct pr_pos *startingFont[]);
+
+static Notify_value canvas_interpose(Pixwin *pw, Event *event, Notify_arg arg, Notify_event_type type);
+static Notify_value frame_interpose(Frame frame, Event *event, Notify_arg arg, Notify_event_type type);
+static Notify_value icon_interpose(Icon icon, Event *event, Notify_arg arg, Notify_event_type type);
+static Notify_value clock_repaint_proc(Canvas canvas, Pixwin *pw, Rectlist *area);
+static Server_image make_image(int w, int h, caddr_t kd); 
+
+void init_images(Clock c, int w, int h);
+
+static int min(int a, int b);
+static void clock_resize_proc(Canvas canvas, int width, int height);
+static int rotx(int x, int y, int r, int th); 
+static int roty(int x, int y, int r, int th); 
+static void init_numbers(void);
+static void draw_line(Xv_opaque pr, int offset, int x1, int y1, int x2, int y2, int color);
+static int armwidth(int r); 
+static void paint_ticks(Pixwin *pw, int radius, Server_image spotpr);
+static void draw_circle(Server_image pr, int r);
+static void erase_hand(Clock c, int x1, int y1, int x2, int y2, int x3, int y3, int angle,int  diameter);
+
+void erase_hands(Clock c);
+
+static void paint_hand(Server_image pr, int x1, int y1, int x2, int y2, int x3, int y3, int angle, int diameter);
+static void paint_hands(Clock c, Server_image pr, int angle1, int angle2, int w);
+static void erase_date(Clock c);
+static void paint_date(Clock c); 
+static void erase_second_hand(Clock c);
+static void paint_second_hand(Clock c); 
+static Notify_value timer_expired(Frame me, int which); 
+static void center(int cwidth, int cheight, int *x, int *y, int w, int h);
+static void analog_repaint(Canvas canvas, Pixwin *pw, Rectlist *area);
+static void icon_repaint(Icon i, Pixwin *pw, Rectlist *area);
+static Notify_value icon_timer_expired(Frame me, int which);
+static Notify_value analog_timer_expired(Frame me, int which);
+static void paint_dig_seconds(Clock c, struct tm *tm);
+static void dig_repaint(Canvas canvas, Pixwin *pw, Rectlist *area);
+static Notify_value dig_timer_expired(Frame me, int which, int invalidate);
+static Notify_value clock_reset(Panel_item item, Event *event);
+static int date_changed(Options o);
+static int face_changed(Options o);
+static int seconds_changed(Options o);
+static void clock_apply(Panel_item item, Event *event);
+static Notify_value clock_defaults(Panel_item item, Event *event);
+
+void layout_options(Options o);
+
+static int digital_on(Options o);
+static int seconds_on(Options o);
+static int date_on(Options o);
+static void init_options(Clock c);
+static void backup_values(Options o);
+static void show_props(Menu m, Menu_item mi); 
+static void enable_timer(Notify_client clnt, int v1, int v2, int v3, int v4);
+static void disable_timer(Notify_client clnt);
+static void init_icon(Clock c);
+static void init_display(Clock c);
+static void init_gray_patch(void);
+
+void init_clck(int argc, char **argv);
+
+static void update_slots(Clock c);
+static void build_numbers(Clock c);
 Server_image	handspr;
 Server_image	spotpr;
 Server_image	dotspr;
@@ -226,19 +270,6 @@ Server_image	icontempr;
 int		key;		/* squirrled away for KEY_DATA */
 int		lastw;
 int		lasth;
-
-#ifdef __STDC__
-static int seconds_on(Options o);
-static int date_on(Options o);
-static int min(int a, int b);
-static int armwidth(int r);
-#else
-static int seconds_on();
-static int date_on();
-static int min();
-static int armwidth();
-#endif
-
 
 void
 print_event (handle, event)
@@ -303,6 +334,7 @@ readrc(o)
         struct  passwd *pw;
         char    buf[100];
         FILE    *fp;
+        int n;
  
 	if (o==NULL) return;
 	o-> face = analog;
@@ -318,7 +350,7 @@ readrc(o)
         strcat(buf, ".clockrc");
         fp = fopen(buf, "r");
         if (fp == NULL) return;
-        fscanf(fp, "%d %d %d", &o->face, &o->seconds, &o->date);
+        n = fscanf(fp, "%x %d %d", &o->face, &o->seconds, &o->date);
 	backup_values (o);
         fclose(fp);
 }
@@ -357,7 +389,7 @@ cleanup(c)
         free(c);
 }
 
-
+void
 grow_font (factor, startingFont)
 	int factor;
 	struct pr_pos *startingFont[];    
@@ -387,20 +419,20 @@ canvas_interpose(pw, event, arg, type)
 	int id;
 
 	/*print_event(pw, event);   */
-	rc = notify_next_event_func (pw, event, arg, type);
+	rc = notify_next_event_func ((Notify_client)pw, (Notify_event)event, arg, type);
 	id = event_action(event);
 	
-	c = (Clock) xv_get(pw, XV_KEY_DATA, (Attr_attribute)key, NULL);
+	c = (Clock) xv_get((Xv_opaque)pw, XV_KEY_DATA, (Attr_attribute)key, NULL);
 	switch(id) {
 	case WIN_REPAINT:
 		(void)clock_repaint_proc(c->canvas, pw, NULL);
 		break;
 	case WIN_RESIZE:  /* pw doesn't get WIN_RESIZE; more horse shit */
-		(void)clock_resize_proc(pw, (int)xv_get(pw, XV_WIDTH, NULL), (int)xv_get(pw, XV_HEIGHT, NULL));
+		(void)clock_resize_proc((Canvas)pw, (int)xv_get((Xv_opaque)pw, XV_WIDTH, NULL), (int)xv_get((Xv_opaque)pw, XV_HEIGHT, NULL));
 		break;
 	case ACTION_MENU:
 		if (event_is_down(event)) {
-			menu_show((Menu) xv_get(pw, WIN_MENU, 0), pw, event, 0);
+			menu_show((Menu) xv_get((Xv_opaque)pw, WIN_MENU, 0), (Xv_Window)pw, event, 0);
 /*			menu_show(c->menu, c->canvas, event, 0);   */
 /*			xv_set(c->menu, XV_SHOW, TRUE, NULL);	   */
 		}
@@ -422,13 +454,13 @@ frame_interpose (frame, event, arg, type)
 	Notify_value rc;
 	Clock c;
 
-	rc = notify_next_event_func (frame, event, arg, type);
+	rc = notify_next_event_func (frame, (Notify_event)event, arg, type);
 	if (event_action(event) == ACTION_CLOSE) {
 		c = (Clock) xv_get (frame, XV_KEY_DATA, (Attr_attribute)key, NULL);
 		w = (int) xv_get (c->canvas, XV_WIDTH, NULL);
 		h = (int) xv_get (c->canvas, XV_HEIGHT, NULL);
 		centerX=0; centerY=0;
-		pw_write(c->pw, 0, 0, w, h, PIX_CLR, 0, 0, 0);
+		pw_write((Xv_opaque)c->pw, 0, 0, w, h, PIX_CLR, 0, 0, 0);
 		init_images(c, 64, 64);
 		icon_repaint(c->icon, c->iconpw, NULL);
 	}
@@ -453,7 +485,7 @@ icon_interpose (icon, event, arg, type)
 	Notify_value rc;
 	Clock c;
 
-	rc = notify_next_event_func(icon, event, arg, type);
+	rc = notify_next_event_func(icon, (Notify_event)event, arg, type);
 	c = (Clock) xv_get(icon, XV_KEY_DATA, (Attr_attribute)key, NULL);
 
 	if (event_action(event) == WIN_REPAINT) {
@@ -476,7 +508,7 @@ clock_repaint_proc (canvas, pw, area)
 	c = (Clock) xv_get (canvas, XV_KEY_DATA, (Attr_attribute)key, NULL);
 	w = (int) xv_get (canvas, XV_WIDTH, NULL);
 	h = (int) xv_get (canvas, XV_HEIGHT, NULL);
-	pw_write (pw, 0, 0, w, h, PIX_CLR, 0, 0, 0);
+	pw_write ((Xv_opaque)pw, 0, 0, w, h, PIX_CLR, 0, 0, 0);
 	switch (c->options->face) {
 	case analog:
 		analog_repaint (canvas, pw, area);
@@ -506,10 +538,11 @@ make_image (w, h, kd)
 	return (i);
 }
 
+void
 init_images (c, w, h)
 	Clock c; int w, h;
 {
-	int now;
+	time_t now;
 	struct tm *tm;
 
 	/* resize the remote images */
@@ -517,22 +550,22 @@ init_images (c, w, h)
 	now = time(0);
 	tm  = localtime (&now);
 
-	if (tempr != NULL) xv_destroy (tempr);
-	tempr = make_image (w, h, c);
+	if (tempr != (Server_image)NULL) xv_destroy (tempr);
+	tempr = make_image (w, h, (caddr_t)c);
 
-	if (handspr != NULL) xv_destroy (handspr);
-	handspr = make_image (w, h, c);
+	if (handspr != (Server_image)NULL) xv_destroy (handspr);
+	handspr = make_image (w, h, (caddr_t)c);
 	paint_hands (c, handspr, tm-> tm_min*6,
 		tm-> tm_hour*30 + tm-> tm_min/2, min(w, h));
 
-	if (dotspr != NULL) xv_destroy (dotspr);
-	dotspr = make_image (w, h, c);
+	if (dotspr != (Server_image)NULL) xv_destroy (dotspr);
+	dotspr = make_image (w, h, (caddr_t)c);
 
-	if (spotpr != NULL) xv_destroy (spotpr);
-	spotpr = make_image (w/12, h/12, c);
+	if (spotpr != (Server_image)NULL) xv_destroy (spotpr);
+	spotpr = make_image (w/12, h/12, (caddr_t)c);
 	draw_circle (spotpr, armwidth(w)/8);
 
-	paint_ticks (dotspr, w/2, spotpr);
+	paint_ticks ((Pixwin*)dotspr, w/2, spotpr);
 }
 
 static int
@@ -543,7 +576,7 @@ min (a, b)
 }
 	
 
-static Notify_value 
+static void 
 clock_resize_proc (canvas, width, height)
 	Canvas canvas;
 	int width, height;
@@ -563,7 +596,7 @@ clock_resize_proc (canvas, width, height)
 	d	= c-> display;
 	smaller	= min(cwidth,cheight);
 
-	pw_write(c->pw, 0, 0, cwidth, cheight, PIX_CLR, 0, 0, 0);
+	pw_write((Xv_opaque)c->pw, 0, 0, cwidth, cheight, PIX_CLR, 0, 0, 0);
 	switch (c->options->face) {
 		case digital:
 		if (cwidth < MIN_DIG_WIDTH) {
@@ -637,6 +670,8 @@ init_numbers ()
 
 static void
 draw_line(pr, offset, x1,y1,x2,y2,color)
+Xv_opaque pr;
+int offset, x1,y1,x2,y2,color;
 {
 	pw_vector(pr,x1+offset,y1+offset,
 		x2+offset,y2+offset,PIX_SRC,color);
@@ -657,7 +692,8 @@ draw_line(pr, offset, x1,y1,x2,y2,color)
 }
 
 static int
-armwidth (r) 
+armwidth (r)
+int r;
 {
 	int w;
 	float fudge = 1.0 + (20.0/r);
@@ -677,7 +713,7 @@ paint_ticks (pw, radius, spotpr)
 	int arm_width = armwidth (radius);
 
 	for (i=0; i<12; i++)
-	pw_write (pw,  
+	pw_write ((Xv_opaque)pw,  
 		cs[i*30] * 20 * radius/2400+radius-arm_width/4,
 		sn[i*30] * 20 * radius/2400+radius-arm_width/4,
 		arm_width+1,
@@ -715,6 +751,7 @@ draw_circle (pr, r)
 static void
 erase_hand (c, x1, y1, x2, y2, x3, y3, angle, diameter)
         Clock c;
+        int x1, y1, x2, y2, x3, y3, angle, diameter;
 {
         int     nptarr[1];
         struct pr_pos   vlist[3];
@@ -741,15 +778,15 @@ erase_hand (c, x1, y1, x2, y2, x3, y3, angle, diameter)
 
         pw_polygon_2(pw, 0, 0, 1, nptarr, vlist, PIX_CLR,
                 0, 0, 0);
-        pw_vector(pw, vlist[0].x, vlist[0].y, vlist[1].x, vlist[1].y,
+        pw_vector((Xv_opaque)pw, vlist[0].x, vlist[0].y, vlist[1].x, vlist[1].y,
                 PIX_CLR, 1);
-        pw_vector(pw, vlist[0].x, vlist[0].y, vlist[2].x, vlist[2].y,
+        pw_vector((Xv_opaque)pw, vlist[0].x, vlist[0].y, vlist[2].x, vlist[2].y,
                 PIX_CLR, 1);
-        pw_vector(pw, vlist[1].x, vlist[1].y, vlist[2].x, vlist[2].y,
+        pw_vector((Xv_opaque)pw, vlist[1].x, vlist[1].y, vlist[2].x, vlist[2].y,
                 PIX_CLR, 1);
 }
 
-
+void
 erase_hands (c)
         Clock c;
 {
@@ -797,6 +834,7 @@ erase_hands (c)
 static void
 paint_hand (pr, x1, y1, x2, y2, x3, y3, angle, diameter)
         Server_image pr;
+        int x1, y1, x2, y2, x3, y3, angle, diameter;
 {
         int     nptarr[1];
         struct pr_pos   vlist[3];
@@ -819,8 +857,8 @@ paint_hand (pr, x1, y1, x2, y2, x3, y3, angle, diameter)
         vlist[2].x = xx3;
         vlist[2].y = yy3;
  
-        pw_polygon_2(pr, 0, 0, 1, nptarr, vlist, PIX_SRC,
-            gray_patch, 0, 0);
+        pw_polygon_2((Pixwin*)pr, 0, 0, 1, nptarr, vlist, PIX_SRC,
+            (Pixrect*)gray_patch, 0, 0);
         pw_vector(pr, vlist[0].x, vlist[0].y, vlist[1].x, vlist[1].y,
             PIX_SET, 1);
         pw_vector(pr, vlist[0].x, vlist[0].y, vlist[2].x, vlist[2].y,
@@ -879,7 +917,7 @@ erase_date (c)
         Clock c;
 {
 	xv_set(c->frame, FRAME_LABEL, "", NULL);
-	date_buf[0] = NULL;
+	date_buf[0] = '\x0';
 }
 
 
@@ -929,7 +967,7 @@ erase_second_hand (c)
 	y1 = d->secondhand.lastSecY;
 	x2 = d->secondhand.lastSecX1;
 	y2 = d->secondhand.lastSecY1;
-	if (x1 != -1) pw_vector (pw, x1, y1, x2, y2, PIX_SRC ^ PIX_DST, 1); 
+	if (x1 != -1) pw_vector ((Xv_opaque)pw, x1, y1, x2, y2, PIX_SRC ^ PIX_DST, 1); 
 }
 	
 static void
@@ -961,8 +999,8 @@ paint_second_hand (c)
 	}
 	else {
 		pw = c->pw;
-		width = (int)xv_get (pw, XV_WIDTH, NULL);
-		height = (int)xv_get (pw, XV_HEIGHT, NULL);
+		width = (int)xv_get ((Xv_opaque)pw, XV_WIDTH, NULL);
+		height = (int)xv_get ((Xv_opaque)pw, XV_HEIGHT, NULL);
 		diameter= (int)xv_get(handspr, XV_WIDTH, NULL);
 		/*fprintf(stderr, "w=%d, h=%d, di=%d\n", width, height, diameter);*/
 	}
@@ -980,7 +1018,7 @@ paint_second_hand (c)
 	d->secondhand.lastSecY1 = centerY+y;
 
 	/*fprintf(stderr, "centerX=%d, centerY=%d\n", centerX, centerY);*/
-	pw_vector (pw, width/2, height/2,
+	pw_vector ((Xv_opaque)pw, width/2, height/2,
 		centerX+x, centerY+y, PIX_SRC ^ PIX_DST, 1);
 }
 	
@@ -1052,7 +1090,7 @@ analog_repaint (canvas, pw, area)
 		tm-> tm_hour*30 + tm-> tm_min/2, prw);
 	pw_write (handspr, 0, 0, prw, prh, PIX_SRC | PIX_DST, dotspr, 0, 0);  
 	center (w, h, &centerX, &centerY, prw, prh);
-	pw_write (pw, centerX, centerY, prw, prh, PIX_SRC, handspr, 0, 0);
+	pw_write ((Xv_opaque)pw, centerX, centerY, prw, prh, PIX_SRC, handspr, 0, 0);
 	if (seconds_on (c->options)) paint_second_hand(c);
 /*	c->display->secondhand.lastSecX = -1;  */
 }
@@ -1063,7 +1101,7 @@ icon_repaint (i, pw, area)
 	Pixwin *pw;
 	Rectlist *area;
 {
-	int now;
+	time_t now;
 	Font_string_dims size;
 	struct tm *tm;
 	Clock c;
@@ -1089,6 +1127,8 @@ icon_repaint (i, pw, area)
 
 static Notify_value
 icon_timer_expired (me, which)
+Frame me;
+int which;
 {
 	static int	mins, hours;
 /* Alpha compatibility, mbuck@debian.org */
@@ -1194,13 +1234,13 @@ paint_dig_seconds (c, tm)
 	xv_get(d-> font, FONT_STRING_DIMS, "f", &fontSize);
 	y_coord		= ((int) xv_get (canvas, XV_HEIGHT, 0)-fontHeight)/2;
 
-	pw_text (pw, d-> slots[5], 
+	pw_text ((Xv_opaque)pw, d-> slots[5], 
 		fontSize.height + y_coord, 
 		PIX_SRC,
 		font, 
 		nums[tm-> tm_sec]
 		);
-	pw_text (pw, d-> slots[5],
+	pw_text ((Xv_opaque)pw, d-> slots[5],
 		(2*fontSize.height) + y_coord + 3,   /* 3 = fudge factor */
 		PIX_SRC,
 		font,
@@ -1238,32 +1278,32 @@ dig_repaint (canvas, pw, area)
 		tm-> tm_hour = 12;
 	
 	if (majorHour[tm-> tm_hour] == 1)
-		pw_write (pw, d-> slots[0],
+		pw_write ((Xv_opaque)pw, d-> slots[0],
 			y_coord, fontWidth, 
                  	fontHeight, PIX_SRC, 
                   	d-> images[1],
 		  	0, 0);
 	else
-          	pw_write (pw, d-> slots[0],
+          	pw_write ((Xv_opaque)pw, d-> slots[0],
 		  	y_coord, fontWidth, 
                   	fontHeight, PIX_SRC,
                   	d-> images[11],
 		  	0, 0);
 		
-	pw_write (pw, d-> slots[1],
+	pw_write ((Xv_opaque)pw, d-> slots[1],
 		y_coord, fontWidth, 
 		fontHeight, PIX_SRC,
 		d-> images[minorHour[tm-> tm_hour]],
 		0, 0);
-	pw_write (pw, d-> slots[2],
+	pw_write ((Xv_opaque)pw, d-> slots[2],
 		y_coord, fontWidth, 
 		fontHeight, PIX_SRC, 
 		d-> images[10], 0, 0);
-	pw_write (pw, d-> slots[3],
+	pw_write ((Xv_opaque)pw, d-> slots[3],
 		y_coord, fontWidth, 
 		fontHeight, PIX_SRC,
 		d-> images[tm-> tm_min/10], 0, 0);
-	pw_write (pw, d-> slots[4],
+	pw_write ((Xv_opaque)pw, d-> slots[4],
 		y_coord, fontWidth, 
 		fontHeight, PIX_SRC,
 		d-> images[tm-> tm_min % 10], 0, 0);
@@ -1344,12 +1384,13 @@ seconds_changed (o)
 	return (o-> seconds != o-> secondsBAK);
 }
 	
-static Notify_value
+static void
 clock_apply (item, event)
 	Panel_item item;
 	Event *event;
 {
-	int w, h, now;
+	int w, h;
+	time_t now;
 	struct tm *tm;
 	Clock c		= (Clock) xv_get (item, XV_KEY_DATA, (Attr_attribute)key, NULL);
 	ClockDisplay d	= c-> display;
@@ -1373,7 +1414,7 @@ clock_apply (item, event)
 		if (face_changed(o)) {
 			w = (int) xv_get (c->canvas, XV_WIDTH, NULL);
 			h = (int) xv_get (c->canvas, XV_HEIGHT, NULL);
-			pw_write(c->pw, 0, 0, w, h, PIX_CLR, 0, 0, 0);
+			pw_write((Xv_opaque)c->pw, 0, 0, w, h, PIX_CLR, 0, 0, 0);
 		}
 		if (seconds_changed(o)) {
 			switch (o-> face) {
@@ -1382,7 +1423,7 @@ clock_apply (item, event)
 					enable_timer(c->frame, 0, 1, 0, 1);
 				}
 				else {
-					pw_write(c->pw, d->slots[5], d->y_coord, d->fontWidth, 
+					pw_write((Xv_opaque)c->pw, d->slots[5], d->y_coord, d->fontWidth, 
                                 		5000, PIX_CLR, 0, 0, 0);
 					enable_timer (c->frame, 0, 60-tm->tm_sec, 0, 60);
 					dig_repaint(c->canvas, c->pw, NULL); 
@@ -1437,7 +1478,7 @@ clock_defaults(item, event)
 	xv_set(o->frame, XV_SHOW, FALSE, NULL);
 }
 
-
+void
 layout_options (o)
 	Options o;
 {
@@ -1447,7 +1488,7 @@ layout_options (o)
 	Pixfont *pf = (Pixfont *) xv_get (o->panel, XV_FONT, NULL);
 	
 	str	= (char *) xv_get (o-> faceStr, PANEL_LABEL_STRING, NULL);
-	xv_get(pf, FONT_STRING_DIMS, str, &size);
+	xv_get((Xv_opaque)pf, FONT_STRING_DIMS, str, &size);
 	xv_set (o-> faceStr, 
 		XV_X, wd - size.width,	
 		XV_Y, xv_row (o-> panel, 1),
@@ -1457,7 +1498,7 @@ layout_options (o)
 		XV_Y, xv_row (o-> panel, 1),
 		NULL);
 	str	= (char *) xv_get (o-> displayStr, PANEL_LABEL_STRING, NULL);
-	xv_get(pf, FONT_STRING_DIMS, str, &size);
+	xv_get((Xv_opaque)pf, FONT_STRING_DIMS, str, &size);
 	xv_set (o-> displayStr,
 		XV_X, wd - size.width,
 		XV_Y, xv_row (o->panel, 2),
@@ -1635,6 +1676,8 @@ show_props (m, mi)
 
 static void
 enable_timer (clnt, v1, v2, v3, v4)
+Notify_client clnt;
+int v1, v2, v3, v4;
 {
 	timer.it_value.tv_usec		= v1;
 	timer.it_value.tv_sec		= v2; 
@@ -1647,6 +1690,7 @@ enable_timer (clnt, v1, v2, v3, v4)
 
 static void
 disable_timer (clnt)
+Notify_client clnt;
 {
 	timer.it_value.tv_usec		= 0;
 	timer.it_value.tv_sec		= 0; 
@@ -1665,13 +1709,13 @@ init_icon (c)
 	int w		= 64;
 	int h		= 64;
 	int dotsize	= w/12;
-	icontempr	= make_image (w, h, c);
-	iconpr		= make_image (w, h, c);
-	icondotspr	= make_image (w, h, c);
-	iconhandspr	= make_image (w, h, c);
-	iconspotpr	= make_image (dotsize,  dotsize,  c);
+	icontempr	= make_image (w, h, (caddr_t)c);
+	iconpr		= make_image (w, h, (caddr_t)c);
+	icondotspr	= make_image (w, h, (caddr_t)c);
+	iconhandspr	= make_image (w, h, (caddr_t)c);
+	iconspotpr	= make_image (dotsize,  dotsize,  (caddr_t)c);
 	
-	c->icon = (Icon) xv_create (NULL, ICON, 
+	c->icon = (Icon) xv_create ((Xv_opaque)NULL, ICON, 
 		ICON_IMAGE, iconpr,
 /*		WIN_REPAINT, icon_repaint,   */
 		XV_KEY_DATA, (Attr_attribute)key, c,
@@ -1692,7 +1736,7 @@ init_icon (c)
 
 	/*	init round tick marks		*/
 	draw_circle (iconspotpr, armwidth(w)/8);
-	paint_ticks (icondotspr, w/2, iconspotpr);
+	paint_ticks ((Pixwin*)icondotspr, w/2, iconspotpr);
 	/* icon_repaint (c->icon, c->iconpw, NULL);  */
 }
 
@@ -1710,16 +1754,16 @@ init_display (c)
         d->hands.width = -1;
 	d-> fontHeight	= MIN_FONT_HEIGHT;
 	d-> fontWidth	= MIN_FONT_WIDTH;	
-	d-> font = (Xv_Font) xv_create (NULL, FONT, 
+	d-> font = (Xv_Font) xv_create ((Xv_opaque)NULL, FONT, 
 		FONT_FAMILY, FONT_FAMILY_LUCIDA,
 		FONT_SIZE, 10,
 		NULL);
-	if (d->font==NULL) {
-		d->font = (Xv_Font) xv_create (NULL, FONT, 
+	if (d->font==(Font)NULL) {
+		d->font = (Xv_Font) xv_create ((Xv_opaque)NULL, FONT, 
 			FONT_NAME, "fixed",
 			FONT_SIZE, 10,
 			NULL);
-		if (d->font==NULL) {
+		if (d->font==(Font)NULL) {
 			cleanup(c);
 			fprintf(stderr, "%s\n", "Cannot open font");
 			exit(0);
@@ -1730,11 +1774,11 @@ init_display (c)
 static void
 init_gray_patch()
 {
-	gray_patch = make_image(16, 16, key);
+	gray_patch = make_image(16, 16, (caddr_t)(long)key);
 	pw_write (gray_patch, 0, 0, 16, 16, PIX_SRC, &my_fifty_patch, 0, 0);
 }
 
-
+void
 init_clck (argc, argv)
 	int  argc; char **argv;
 {
@@ -1812,13 +1856,13 @@ init_clck (argc, argv)
 		NULL);					
 	clck-> pw = (Pixwin *)
 		 xv_get (clck-> canvas, CANVAS_NTH_PAINT_WINDOW, NULL);       
-	(void)xv_set(clck->pw, 
+	(void)xv_set((Xv_opaque)clck->pw, 
 		WIN_CONSUME_KBD_EVENTS, KEY_LEFT(3), WIN_MOUSE_BUTTONS, 0,
 		XV_KEY_DATA, (Attr_attribute)key, clck,
 		WIN_MENU, clck->menu,
 		WIN_BIT_GRAVITY, ForgetGravity,  /* horse shit */
 		NULL);
-	notify_interpose_event_func(clck->pw, canvas_interpose, 0); 
+	notify_interpose_event_func((Notify_client)clck->pw, canvas_interpose, 0); 
 	init_images (clck, (int) xv_get (clck->canvas, XV_WIDTH, NULL),
 		(int) xv_get (clck->canvas, XV_HEIGHT, NULL));
 	now = time (0);
@@ -1865,7 +1909,7 @@ init_clck (argc, argv)
 	if (seconds_on (clck-> options))
 		enable_timer (clck-> frame, 0, 2, 0, 1);
 	else {
-		timer_expired(clck->frame, NULL);
+		timer_expired(clck->frame, 0);
 		enable_timer (clck-> frame, 0, 60-tm->tm_sec, 0, 60);
 	}
 	if (date_on(clck->options)) {
@@ -1909,10 +1953,10 @@ build_numbers (c)
 	height		= d-> fontHeight;
 
 	for (i = 0; i < 12; i++)  {
-		if (d-> images[i] != NULL)
+		if (d-> images[i] != (Server_image)NULL)
 		(void) xv_destroy (d-> images[i]);
 		d-> images[i] = 
-		  (Server_image) xv_create (NULL, SERVER_IMAGE,
+		  (Server_image) xv_create ((Xv_opaque)NULL, SERVER_IMAGE,
 			XV_WIDTH, width,
 			XV_HEIGHT, height,
 			SERVER_IMAGE_DEPTH, 1,
@@ -1924,185 +1968,186 @@ build_numbers (c)
 	for (i = 0; i < 11; i++)
 		switch (i) {
 		case 0: 
-	          pw_polygon_2 (d-> images[i],
+	          pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[0], PIX_SET,
 			        NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[1], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[2], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[3], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[4], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[5], PIX_SET,
 				NULLPR, 0, 0);
 		  break;
 		case 1:
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[6], PIX_SET,
 			        NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[7], PIX_SET,
 				NULLPR, 0, 0);
 		  break; 
 		case 2:
-	          pw_polygon_2 (d-> images[i],
+	          pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[8], PIX_SET,
 			        NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[2], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[9], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[3], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts2, workingFont[14], PIX_SET,
 				NULLPR, 0, 0);
 		  break;
 		case 3:
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[8], PIX_SET,
 			        NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[2], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[4], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[10], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts2, workingFont[14], PIX_SET,
 				NULLPR, 0, 0);
 		  break;
 		case 4:
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[1], PIX_SET,
 			        NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[2], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[4], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts2, workingFont[14], PIX_SET,
 				NULLPR, 0, 0);
 		  break;
 		case 5:
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[11], PIX_SET,
 			        NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[1], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[4], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[5], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts2, workingFont[14], PIX_SET,
 				NULLPR, 0, 0);
 		  break;
 		case 6:
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[11], PIX_SET,
 			        NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[1], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[3], PIX_SET,
 				NULLPR, 0, 0);
 
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[4], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[5], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts2, workingFont[14], PIX_SET,
 				NULLPR, 0, 0);
 		  break;
 		case 7:
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[8], PIX_SET,
 			        NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[2], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[4], PIX_SET,
 				NULLPR, 0, 0);
 		  break;
 		case 8:
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[0], PIX_SET,
 			        NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[1], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[2], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[3], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[4], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[5], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts2, workingFont[14], PIX_SET,
 				NULLPR, 0, 0);
 		  break;
 		case 9:
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[0], PIX_SET,
 			        NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[1], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[2], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[4], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[5], PIX_SET,
 				NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts2, workingFont[14], PIX_SET,
 				NULLPR, 0, 0);
 		  break;
 		case 10:
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[12], PIX_SET,
 			        NULLPR, 0, 0);
-		  pw_polygon_2 (d-> images[i],
+		  pw_polygon_2 ((Pixwin*)d-> images[i],
 				0, 0, nbnds, npts, workingFont[13], PIX_SET,
 				NULLPR, 0, 0);
 		  break;
 		  
 	  }
 }
-	     
+
+void
 main (argc, argv)
 int  argc; char **argv;
 

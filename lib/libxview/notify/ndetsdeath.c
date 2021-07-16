@@ -14,7 +14,13 @@ static char     sccsid[] = "@(#)ndetsdeath.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * Ndet_s_destroy.c - Implement the notify_set_destroy_func interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndetsdeath_.h>
+#include <xview_private/ndet_loop_.h>
+#include <xview_private/ndisdispch_.h>
+#include <xview_private/nint_set_.h>
+#include <xview_private/ntfyclient_.h>
+#include <xview_private/ntfy_cond_.h>
+#include <xview_private/ntfyprotec_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/ndis.h>
 #include <xview_private/nint.h>

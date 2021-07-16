@@ -14,8 +14,13 @@ static char     sccsid[] = "@(#)txt_tool.c 20.26 93/06/28";
  * Initialization and finalization of text subwindows.
  */
 
+#include <xview_private/txt_tool_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/txt_event_.h>
+#include <xview_private/txt_file_.h>
+#include <xview_private/win_cntral_.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview/notice.h>
 #include <xview/frame.h>
 #include <xview/wmgr.h>
@@ -25,9 +30,6 @@ static char     sccsid[] = "@(#)txt_tool.c 20.26 93/06/28";
 #undef _NOTIFY_MIN_SYMBOLS
 
 #include <xview/win_struct.h>
-
-Xv_public Notify_error win_post_event();
-Pkg_private Textsw_view_handle textsw_init_internal();
 
 Pkg_private void
 textsw_default_notify(abstract, attrs)

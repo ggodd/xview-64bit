@@ -10,6 +10,10 @@ static char     sccsid[] = "@(#)fm_win.c 20.31 90/11/08";
  *	file for terms of the license.
  */
 
+#include <xview_private/fm_win_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/win_geom_.h>
+#include <xview_private/win_treeop_.h>
 #ifdef SVR4
 #include <sys/types.h>
 #endif /* SVR4 */

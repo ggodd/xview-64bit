@@ -12,12 +12,17 @@ static char     sccsid[] = "@(#)p_event.c 20.62 93/06/28";
 
 
 #define xview_other_rl_funcs
-#include <xview_private/panel_impl.h>
+#include <xview_private/p_event_.h>
+#include <xview_private/p_paint_.h>
+#include <xview_private/p_select_.h>
+#include <xview_private/p_set_.h>
+#include <xview_private/p_txt_.h>
+#include <xview_private/p_utl_.h>
 #include <xview/font.h>
 #include <xview_private/draw_impl.h>
 #include <xview/rectlist.h>
 
-static Notify_value panel_itimer_expired();
+static Notify_value panel_itimer_expired(Panel panel_public, int which);
 
 /* ARGSUSED */
 Pkg_private     Notify_value

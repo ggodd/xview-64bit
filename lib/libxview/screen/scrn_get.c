@@ -10,6 +10,11 @@ static char     sccsid[] = "@(#)scrn_get.c 20.54 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/scrn_get_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/screen_.h>
+#include <xview_private/scrn_vis_.h>
+#include <xview_private/xv_.h>
 #include <xview_private/i18n_impl.h>
 #include <xview_private/portable.h>
 #include <xview_private/scrn_impl.h>
@@ -30,9 +35,6 @@ static unsigned short screen_gray50_bitmap[16] = {   /* 50% gray pattern */
     0xAAAA, 0x5555, 0xAAAA, 0x5555, 0xAAAA, 0x5555, 0xAAAA, 0x5555,
     0xAAAA, 0x5555, 0xAAAA, 0x5555, 0xAAAA, 0x5555, 0xAAAA, 0x5555
 };
-
-Xv_private Xv_Window screen_get_cached_window();
-Xv_private GC *screen_get_cached_gc_list();
 
 /* Caller turns varargs into va_list that has already been va_start'd */
 /*ARGSUSED*/
@@ -109,8 +111,8 @@ screen_get_attr(screen_public, status, attr, args)
 	    unsigned int depth;
 	    Display     *display = (Display *)xv_get(screen->server, XV_DISPLAY);
 	    
-	    xid = va_arg(args, XID);
-	    depth = va_arg(args, unsigned int);
+	    xid = (XID)va_arg(args, Attr_attribute);
+	    depth = va_arg(args, Attr_attribute);
 	    value = (Xv_opaque)screen_get_image_visual(display, screen, xid,
 						       depth);
 	}

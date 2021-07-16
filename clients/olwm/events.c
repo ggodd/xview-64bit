@@ -36,8 +36,6 @@
 
 /* ===== externs ========================================================== */
 
-extern void	ReapChildren();
-
 
 /* ===== globals ========================================================== */
 
@@ -64,6 +62,14 @@ static XModifierKeymap *ModMap = NULL;
 
 static Bool explicitPointerGrab = False;
 
+static void dispatchEvent(Display *dpy, XEvent *event, WinGeneric *winInfo);
+static int dispatchInterposer(Display *dpy, XEvent *event);
+static void doTimeout(void);
+static void nextEventOrTimeout(Display *dpy, XEvent *event);
+static void updateModifierMap(Display *dpy);
+static void updateKeyboardMap(Display *dpy);
+static void *redispatchEvent(XEvent *e, void *c);
+static void tvdiff(struct timeval *t1, struct timeval *t2, struct timeval *diff);
 
 /* ===== private functions ================================================ */
 
@@ -340,9 +346,8 @@ updateModifierMap(dpy)
  * already keeps this information around.
  */
 static void
-updateKeyboardMap(dpy, e)
+updateKeyboardMap(dpy)
     Display *dpy;
-    XEvent *e;
 {
     if (KbdMap != NULL )
 	XFree((char *)KbdMap);

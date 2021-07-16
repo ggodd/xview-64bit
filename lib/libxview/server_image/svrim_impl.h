@@ -30,14 +30,4 @@ typedef struct {
 #define  SERVER_IMAGE_DEFAULT_WIDTH	16
 #define  SERVER_IMAGE_DEFAULT_HEIGHT	16
 
-
-/* from server_image_public.c */
-Pkg_private int              server_image_create_internal();
-Pkg_private Xv_opaque        server_image_set_internal();
-Pkg_private Xv_opaque        server_image_get_internal();
-Pkg_private int              server_image_destroy_internal();
-
-Xv_private GC       xv_find_proper_gc();
-Xv_private Pixrect  *xv_mem_create();
-
 #endif  /* _xview_server_image_impl_h_already_included */

@@ -14,8 +14,12 @@ static char     sccsid[] = "@(#)txt_disp.c 20.31 93/06/28";
  * Initialization and finalization of text subwindows.
  */
 
+#include <xview_private/txt_disp_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/txt_event_.h>
+#include <xview_private/txt_scroll_.h>
+#include <xview_private/win_geom_.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <xview/win_notify.h>
 #include <xview/pixwin.h>

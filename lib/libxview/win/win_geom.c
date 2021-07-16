@@ -15,6 +15,8 @@ static char     sccsid[] = "@(#)win_geom.c 20.35 93/06/28";
  * win_struct.h interface.
  */
 
+#include <xview_private/win_geom_.h>
+#include <xview_private/windowutil_.h>
 #include <xview/rect.h>
 #include <xview/win_struct.h>
 #include <xview/window.h>

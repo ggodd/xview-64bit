@@ -14,7 +14,8 @@ static char     sccsid[] = "@(#)ndet_g_out.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * Ndet_g_out.c - Implement notify_get_output_func call.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndet_g_out_.h>
+#include <xview_private/ndet_g_fd_.h>
 #include <xview_private/ndet.h>
 
 extern          Notify_func

@@ -10,12 +10,12 @@
  * ol_sb.c Scrollbar Module
  */
 
+#include <olgx_private/ol_sb_.h>
+#include <olgx_private/ol_init_.h>
 #include <stdio.h>
 #include <malloc.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include "olgx_impl.h"
-
 
 /*
  * olgx_draw_scrollbar() Renders the whole scrollbar including the elevator,
@@ -212,6 +212,7 @@ void
 olgx_draw_elevator(info, win, x, y, state)
     Graphics_info  *info;
     Window          win;
+    int x, y;
     int             state;
 {
     char            string[2];

@@ -81,6 +81,14 @@ typedef struct {
 	Xv_opaque		 private_data;
 }   Xv_icon;
 
+#include <xview/macros.h>
+
+#define icon_create(...) \
+    MACRO_DEF1(_icon_create, Attr_attribute, __VA_ARGS__)
+    
+#define icon_set(a1, ...) \
+    MACRO_DEF1(_icon_set, Icon, __VA_ARGS__)
+
 /*
  ***********************************************************************
  *			Globals
@@ -97,10 +105,10 @@ extern Xv_pkg		xv_icon_pkg;
  * For Sunview 1 Compatibility
  */
 
-EXTERN_FUNCTION (Icon icon_create, (Attr_attribute attr1, DOTDOTDOT));
+EXTERN_FUNCTION (Icon _icon_create, (Attr_attribute attr1, DOTDOTDOT));
 EXTERN_FUNCTION (Xv_opaque icon_get, (Icon icon_public, Icon_attribute attr));
-EXTERN_FUNCTION (int icon_set, (Icon icon, DOTDOTDOT));
-EXTERN_FUNCTION (int icon_destroy, (Icon icon));
+EXTERN_FUNCTION (int _icon_set, (Icon icon, DOTDOTDOT));
+EXTERN_FUNCTION (void icon_destroy, (Icon icon));
 EXTERN_FUNCTION (void icon_display, (Icon icon, int x, int y));
 
 #endif /* ~xview_icon_DEFINED */

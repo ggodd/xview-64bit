@@ -22,7 +22,7 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=     icon.h icon_load.h
-HDRSPRIVATE=    icon_impl.h
+HDRSPRIVATE=    icon_impl.h icon_.h icon_load_.h icon_input_.h icon_obj_.h
 
 DATA_OBJS = icon_data.o
 

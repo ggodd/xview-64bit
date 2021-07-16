@@ -25,13 +25,22 @@ static char     sccsid[] = "@(#)ntfyclient.c 20.18 93/06/28 Copyr 1985 Sun Micro
  */
 #define HAVE_TSEARCH
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ntfyclient_.h>
+#include <xview_private/ndis_d_pri_.h>
+#include <xview_private/ntfy_cond_.h>
+#include <xview_private/ntfy_debug_.h>
+#include <xview_private/ntfy_list_.h>
+#include <xview_private/ntfy_node_.h>
 #include <xview_private/ndis.h>	/* For ndis_default_prioritizer */
 #include <xview_private/ndet.h>	
 #ifdef HAVE_TSEARCH
 #include <search.h>
 #endif
 #include <xview_private/portable.h>
+
+#ifdef HAVE_TSEARCH
+static int ndet_compar(const void *key1, const void *key2);
+#endif 
 
 /* Variables used in paranoid enumerator (see ntfy_condition) */
 pkg_private_data NTFY_CLIENT *ntfy_enum_client = 0;

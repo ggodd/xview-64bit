@@ -10,11 +10,7 @@ static char     sccsid[] = "@(#)site_data.c 1.4 93/06/28";
  *      file for terms of the license.
  */
 
-#include <xview_private/site_impl.h>
-Pkg_private int dnd_site_init();
-Pkg_private Xv_opaque dnd_site_set_avlist();
-Pkg_private Xv_opaque dnd_site_get_attr();
-Pkg_private int dnd_site_destroy();
+#include <xview_private/site_pblc_.h>
 
 Xv_pkg		xv_drop_site_item = {
     "DropSite", ATTR_PKG_DND,

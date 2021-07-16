@@ -14,10 +14,27 @@ static char     sccsid[] = "@(#)txt_selsvc.c 20.64 93/06/29";
  * Textsw interface to selection service.
  */
 
+#include <xview_private/txt_selsvc_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/es_file_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/ev_edit_.h>
+#include <xview_private/ev_once_.h>
+#include <xview_private/ev_op_bdry_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/txt_edit_.h>
+#include <xview_private/txt_event_.h>
+#include <xview_private/txt_file_.h>
+#include <xview_private/txt_find_.h>
+#include <xview_private/txt_getkey_.h>
+#include <xview_private/txt_input_.h>
+#include <xview_private/txt_move_.h>
+#include <xview_private/txt_once_.h>
+#include <xview_private/txt_putkey_.h>
+#include <xview_private/xv_.h>
 #include <errno.h>
 #include <xview_private/portable.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <xview_private/txt_18impl.h>
 #ifdef SVR4
@@ -25,11 +42,22 @@ static char     sccsid[] = "@(#)txt_selsvc.c 20.64 93/06/29";
 #endif /* SVR4 */
 #include <unistd.h>				/* unlink() */
 
+static unsigned holder_flag_from_seln_rank(register Seln_rank rank);
+static unsigned ev_sel_type_from_seln_rank(register Seln_rank rank);
+static unsigned holder_flag_from_textsw_info(register int type);
+static int textsw_should_ask_seln_svc(register Textsw_folio textsw);
+static Seln_result only_one_buffer(Seln_request *request);
+static Seln_result textsw_stuff_all_buffers(register Seln_request *request);
+#ifdef OW_I18N
+static int textsw_copy_wcs_reply(Es_index first, Es_index last_plus_one, register caddr_t *response, int max_length, int flags, caddr_t data);
+#else
+static int textsw_copy_ascii_reply(Es_index first, Es_index last_plus_one, register caddr_t *response, int max_length, int flags, caddr_t data);
+#endif 
+#ifdef OW_I18N
+static Es_index textsw_get_char_in_multibyte (Textsw_folio folio, Es_index first, Es_index last_plus_one, char *buffer, int buffer_size, int *char_count, int flags, caddr_t data);
+#endif 
+static Seln_result textsw_seln_yield(register Textsw_folio folio, register Seln_rank rank);
 
-static int textsw_should_ask_seln_svc(Textsw_folio textsw);
-
-Pkg_private Es_status es_copy();
-static Seln_result textsw_seln_yield();
 
 static char           *shelf_name = "/tmp/textsw_shelf";
 
@@ -47,12 +75,6 @@ typedef struct continuation {
 }               Continuation_object;
 typedef Continuation_object *Continuation;
 static Continuation_object fast_continuation;	/* Default init to zeros */
-
-#ifdef __STDC__
-static int textsw_should_ask_seln_svc(Textsw_folio textsw);
-#else
-static int textsw_should_ask_seln_svc();
-#endif
 
 Pkg_private void
 textsw_clear_secondary_selection(textsw, type)
@@ -202,9 +224,6 @@ static int
 textsw_should_ask_seln_svc(textsw)
     register Textsw_folio textsw;
 {
-    pkg_private void textsw_seln_svc_function();
-    pkg_private Seln_result textsw_seln_svc_reply();
-
     if (textsw->state & TXTSW_DELAY_SEL_INQUIRE) {
 	textsw->state &= ~TXTSW_DELAY_SEL_INQUIRE;
 	return (textsw_sync_with_seln_svc(textsw));
@@ -236,9 +255,6 @@ textsw_should_ask_seln_svc(textsw)
     }
 #endif
     if (textsw->selection_client == TXTSW_NEED_SELN_CLIENT) {
-	/*
-	 * laf seln_use_test_service();
-	 */
 	/* Try to establish the initial connection with Seln. Svc. */
 	textsw->selection_client = seln_create(
 			    textsw_seln_svc_function, textsw_seln_svc_reply,
@@ -392,7 +408,6 @@ Pkg_private void
 textsw_give_shelf_to_svc(folio)
     register Textsw_folio folio;
 {
-    Pkg_private Es_handle es_file_create();
     register Es_handle output;
     Es_status       create_status, copy_status;
 #ifdef OW_I18N 
@@ -563,7 +578,6 @@ textsw_inform_seln_svc(textsw, function, is_down)
 #endif
 
 	    if (textsw->selection_func.function != SELN_FN_ERROR) {
-		pkg_private Seln_response textsw_setup_function();
 		if (SELN_IGNORE !=
 		    textsw_setup_function(textsw,
 					  &textsw->selection_func))
@@ -726,15 +740,6 @@ textsw_es_read(esh, buf, first, last_plus_one)
     }
     return (result);
 }
-
-typedef struct tsfh_object {
-    Textsw_view_handle view;
-    Textsw_selection_handle selection;
-    Seln_attribute  continued_attr;
-    unsigned        flags;
-    int             fill_result;
-}               Tsfh_object;
-typedef Tsfh_object *Tsfh_handle;
 
 Pkg_private int
 textsw_fill_selection_from_reply(context, reply)
@@ -934,7 +939,6 @@ textsw_selection_from_holder(textsw, selection, holder, type, flags)
     int		    flags;
 
 {
-    Pkg_private int      ev_get_selection();
     unsigned        mode;
     register caddr_t *req_attr;
     int             result = type, to_read;
@@ -1305,7 +1309,6 @@ textsw_stuff_selection(view, type)
 	goto Done;
     if (result & TFS_IS_SELF) {
 	/* Selection is local, so copy pieces, not contents. */
-	extern Es_handle textsw_esh_for_span();
 	Es_handle       pieces;
 	pieces = textsw_esh_for_span(view, selection.first,
 				     selection.last_plus_one, ES_NULL);
@@ -1431,7 +1434,6 @@ textsw_seln_svc_function(first_textsw_public, function)
     Textsw_view_handle first_view = VIEW_ABS_TO_REP(first_textsw_public);
     register Textsw_folio textsw = FOLIO_FOR_VIEW(first_view);
     register int    result = 0;
-    pkg_private int textsw_end_quick_move();
 
     response = textsw_setup_function(textsw, function);
     if (!textsw->func_view) {
@@ -1910,7 +1912,7 @@ textsw_seln_svc_reply(attr, context, max_length)
 		else
 		    line_number = ev_newlines_in_esh(textsw->views->esh,
 						     0, cont_data->first);
-		*context->response_pointer++ = (caddr_t) line_number;
+		*context->response_pointer++ = (caddr_t)(long)line_number;
 		break;
 	    }
 	  case EI_SPAN_CHAR:
@@ -1932,7 +1934,7 @@ textsw_seln_svc_reply(attr, context, max_length)
 		func_key_state |= (int) SELN_FN_PUT;
 	    }
 	    *context->response_pointer++ =
-		(caddr_t) func_key_state;
+		(caddr_t)(long)func_key_state;
 	    goto Return;
 	}
       case SELN_REQ_IS_READONLY:

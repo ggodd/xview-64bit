@@ -247,6 +247,14 @@ typedef struct {
 }   Xv_cursor_struct;
 
 
+#include <xview/macros.h>
+
+#define cursor_create(...) \
+    MACRO_DEF1(_cursor_create, Attr_attribute, __VA_ARGS__)
+    
+#define cursor_set(a1, ...) \
+    MACRO_DEF1(_cursor_set, Xv_Cursor, __VA_ARGS__)
+
 /*
  ***********************************************************************
  *			Globals
@@ -264,10 +272,10 @@ EXTERN_FUNCTION (void		cursor_set_cursor, (Xv_object window, Xv_Cursor cursor));
 /*
  * For Sunview 1 compatibility 
  */
-EXTERN_FUNCTION (Xv_Cursor cursor_create, (Attr_attribute attr1, DOTDOTDOT));
+EXTERN_FUNCTION (Xv_Cursor _cursor_create, (Attr_attribute attr1, DOTDOTDOT));
 EXTERN_FUNCTION (void		cursor_destroy, (Xv_Cursor cursor));
 EXTERN_FUNCTION (Xv_Cursor	cursor_copy, (Xv_Cursor cursor));
 EXTERN_FUNCTION (Xv_opaque	cursor_get, (Xv_Cursor cursor, Cursor_attribute  attr));
-EXTERN_FUNCTION (int		cursor_set, (Xv_Cursor cursor, DOTDOTDOT));
+EXTERN_FUNCTION (int		_cursor_set, (Xv_Cursor cursor, DOTDOTDOT));
 
 #endif	/* xview_cursor_DEFINED */

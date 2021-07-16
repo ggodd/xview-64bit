@@ -10,14 +10,14 @@ static char     sccsid[] = "@(#)sel_common.c 20.36 93/06/29";
  *	file for terms of the license.
  */
 
-#include <xview_private/seln_impl.h>
+#include <xview_private/sel_common_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/sel_agent_.h>
 #include <xview/server.h>
 #include <X11/Xlib.h>
 #include <xview/sel_compat.h>
 #include <X11/Xatom.h>
 
-
-Pkg_private void seln_give_up_selection();
 
 /*
  * sel_common.c:	routines which appear in both the service and the

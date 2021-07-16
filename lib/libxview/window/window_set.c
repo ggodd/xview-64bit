@@ -10,8 +10,22 @@ static char     sccsid[] = "@(#)window_set.c 20.148 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/window_set_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/win_cursor_.h>
+#include <xview_private/win_bell_.h>
+#include <xview_private/window_cms_.h>
+#include <xview_private/windowdrop_.h>
+#include <xview_private/window_set_.h>
+#include <xview_private/windowutil_.h>
+#include <xview_private/win_global_.h>
+#include <xview_private/win_input_.h>
+#include <xview_private/win_keymap_.h>
+#include <xview_private/win_treeop_.h>
+#include <xview_private/xv_.h>
 #include <xview_private/i18n_impl.h>
-#include <xview_private/windowimpl.h>
 #include <sys/file.h>
 #include <assert.h>
 #include <xview_private/win_keymap.h>
@@ -20,53 +34,29 @@ static char     sccsid[] = "@(#)window_set.c 20.148 93/06/28";
 #include <xview/notify.h>
 #include <xview/server.h>
 #include <xview/fullscreen.h>
-#include <xview/defaults.h>
 #include <xview/win.h>
 #ifdef SVR4 
 #include <stdlib.h> 
 #endif /* SVR4 */
 
-/*
- * Extern
- */
-extern 	    void	win_insert_in_front();
-Pkg_private void 	win_add_drop_item();
-Pkg_private Xv_opaque 	win_delete_drop_item();
+static Xv_opaque window_set_avlist_tier2(Xv_Window win_public, Attr_avlist attrs, short error, Rect *new_rect, Rect *old_rect, XSetWindowAttributes *win_attrs, unsigned long *win_attrs_mask);
+static Xv_opaque window_set_avlist_tier3(Xv_Window win_public, Attr_avlist attrs, short error, Rect *new_rect, Rect *old_rect, XSetWindowAttributes *win_attrs, unsigned long *win_attrs_mask);
+static void update_rect(Window_info *win, Rect *old_rect, Rect *new_rect);
+static void set_mask_bit(register Inputmask *mask, Window_input_event value);
+static void unset_mask_bit(register Inputmask *mask, Window_input_event value, Xv_Window win_public);
+static void win_map(Window_info *win, int flag);
+static void window_set_event_mask(Xv_Window window, Inputmask *im, XSetWindowAttributes *win_attrs, unsigned long *win_attrs_mask);
+static void window_grab_selectbutton(Xv_Window window, unsigned long oldmask, unsigned long newmask, Inputmask *newim);
+static void window_ungrab_selectbutton (Xv_Window window);
+static void window_set_softkey_labels(Xv_Drawable_info *info, char *string);
 
-
-/*
- * Private
- */
-
-static 		void	set_mask_bit(),
-			unset_mask_bit(),
-			window_set_event_mask(),
-			window_grab_selectbutton(),
-    			window_ungrab_selectbutton(),
-			win_map(),
-			update_rect();
 static		int	do_passive_grab = FALSE;
-Xv_private 	void	window_release_selectbutton();
-Xv_private 	void	window_x_allow_events();
-Pkg_private	void	window_get_grab_flag();
-Pkg_private	void	window_set_cmap_property();
-Pkg_private 	void	sync_rect();
-static     Xv_opaque 	window_set_avlist_tier2();
-static     Xv_opaque 	window_set_avlist_tier3();
-static          void    window_set_softkey_labels(Xv_Drawable_info *info, char *string);
 
 static Defaults_pairs setinput_pairs[] = {
     "select",		FALSE,
     "followmouse",	TRUE,
     NULL,		FALSE
 };
-
-#ifdef __STDC__
-static void window_set_softkey_labels(Xv_Drawable_info *info, char *string);
-#else
-static void window_set_softkey_labels();
-#endif
-
 
 Pkg_private     Xv_opaque
 window_set_avlist(win_public, avlist)
@@ -92,7 +82,7 @@ window_set_avlist(win_public, avlist)
     if (win->created) {
 	win->rect_info = 0;
     }
-    for (attrs = avlist; (int)*attrs; attrs = attr_next(attrs)) {
+    for (attrs = avlist; *attrs; attrs = attr_next(attrs)) {
       /* The following check is done for performance reasons.  The check
        * short-circuits attribute xv_set's for attributes not owned by
        * this class or its' super-class.
@@ -758,7 +748,7 @@ window_set_avlist_tier2(win_public, attrs, error, new_rect, old_rect, win_attrs,
       }
 
       case WIN_CMD_LINE:
-	if (win->cmdline && ((int)win->cmdline != -1))  {
+	if (win->cmdline && ((int)(long)win->cmdline != -1))  {
 	    free(win->cmdline);
 	}
 

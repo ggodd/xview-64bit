@@ -28,7 +28,6 @@
 #include "kbdfuncs.h"
 #include "client.h"
 
-extern unsigned int FindModifierMask();
 extern Atom AtomProtocols;
 extern Atom AtomOlwmNoFocusWin;
 extern Atom AtomTakeFocus;

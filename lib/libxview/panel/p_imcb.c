@@ -11,7 +11,7 @@ static char     sccsid[] = "@(#)p_imcb.c 50.40 93/06/28";
  */
 
 #ifdef OW_I18N
-#include <xview_private/panel_impl.h>
+#include <xview_private/p_imcb_.h>
 
 Xv_private void
 panel_text_start (ic, client_data, callback_data)

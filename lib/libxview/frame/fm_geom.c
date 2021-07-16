@@ -10,6 +10,9 @@ static char     sccsid[] = "@(#)fm_geom.c 20.31 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/fm_geom_.h>
+#include <xview_private/windowutil_.h>
+#include <xview_private/win_geom_.h>
 #include <xview_private/fm_impl.h>
 #include <xview/window.h>
 #include <xview/font.h>
@@ -42,7 +45,7 @@ static char     sccsid[] = "@(#)fm_geom.c 20.31 93/06/28";
 
 extern Pixfont *xv_pf_sys;
 
-static int      frame_sw_size_compute();
+static int frame_sw_size_compute(int request, int avs);
 
 /* ARGSUSED */
 Pkg_private int

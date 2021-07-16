@@ -10,6 +10,10 @@ static char     sccsid[] = "@(#)notice.c 20.110 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/notice_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/win_bell_.h>
+#include <xview_private/xv_.h>
 #include <stdio.h>
 #include <X11/Xlib.h>
 #include <xview_private/i18n_impl.h>
@@ -21,12 +25,6 @@ static char     sccsid[] = "@(#)notice.c 20.110 93/06/28";
 #include <xview/win_input.h>
 #include <xview/cms.h>
 #include <xview/screen.h>
-
-#ifdef OW_I18N
-extern struct pr_size xv_pf_textwidth_wc();
-#else
-extern struct pr_size xv_pf_textwidth();
-#endif
 
 #ifdef  OW_I18N
 static wchar_t notice_default_button_str[8] = {
@@ -42,18 +40,6 @@ static wchar_t notice_default_button_str[8] = {
 #else
 static char *notice_default_button_str = "Confirm";
 #endif
-
-Xv_private void		win_beep();
-
-void			notice_add_default_button();
-void			notice_defaults();
-void			notice_add_button_to_list();
-void			notice_free_button_structs();
-void			notice_do_bell();
-int			notice_determine_font();
-notice_buttons_handle	notice_create_button_struct();
-
-Pkg_private void		notice_button_panel_proc();
 
 Defaults_pairs bell_types[] = {
 	"never",   0,

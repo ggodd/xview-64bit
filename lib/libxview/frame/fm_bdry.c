@@ -14,11 +14,13 @@ static char     sccsid[] = "@(#)fm_bdry.c 20.22 93/06/28";
  * Frame interactive boundary mgt.
  */
 
+#include <xview_private/fm_bdry_.h>
+#include <xview_private/win_geom_.h>
 #include <xview_private/fm_impl.h>
 #include <xview/win.h>
 
-Pkg_private void     frame_compute_constraint();
-static void     compute_shadows();
+
+static void compute_shadows(register Frame_class_info *frame, Xv_Window target_sw, register Rect *left_shadow, register Rect *right_shadow, register Rect *top_shadow, register Rect *bottom_shadow);
 
 /*
  * Constrain target_sw according to its shadows.  rconstrain is computed as

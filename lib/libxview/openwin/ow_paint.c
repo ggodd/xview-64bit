@@ -23,25 +23,12 @@ static char     sccsid[] = "@(#)ow_paint.c 1.22 90/01/19";
 /*
  * Include files:
  */
-#include <xview_private/ow_impl.h>
+#include <xview_private/ow_paint_.h>
+#include <xview_private/scrn_get_.h>
 #include <xview/font.h>
 #include <xview/rectlist.h>
 #include <xview_private/draw_impl.h>
 
-/*
- * External Functions
- */
-extern void screen_adjust_gc_color();
-
-/*
- * Package Private
- */
-Pkg_private void openwin_clear_damage();
-#ifdef SELECTABLE_VIEWS
-Pkg_private void openwin_paint_borders();
-Pkg_private void openwin_hilite_view();
-Pkg_private void openwin_lolite_view();
-#endif /* SELECTABLE_VIEWS */
 
 /******************************************************************/
 
@@ -79,6 +66,7 @@ openwin_clear_damage(window, rl)
  *       will implement selectable views.
  */
 #ifdef SELECTABLE_VIEWS
+void
 openwin_paint_borders(owin_public)
     Openwin         owin_public;
 {

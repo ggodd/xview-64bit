@@ -14,6 +14,7 @@
 #ifndef svr_keymap_data_DEFINED
 #define svr_keymap_data_DEFINED
 
+#include <xview/pkg.h>
 #include <X11/keysym.h>
 #include <xview/win_input.h>
 #include <xview_private/portable.h>

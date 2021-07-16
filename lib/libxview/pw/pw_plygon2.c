@@ -10,7 +10,9 @@ static char     sccsid[] = "@(#)pw_plygon2.c 20.28 89/07/31";
  *	file for terms of the license.
  */
 
-#include <xview_private/pw_impl.h>
+#include <xview_private/pw_plygon2_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_rop_.h>
 #include <pixrect/memvar.h>
 #include <xview/svrimage.h>
 

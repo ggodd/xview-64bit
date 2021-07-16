@@ -15,6 +15,11 @@ static char     sccsid[] = "@(#)ndetitimer.c 20.17 93/06/28 Copyr 1985 Sun Micro
  * NTFY_REAL_ITIMER and NTFY_VIRTUAL_ITIMER.
  */
 
+#include <xview_private/ndetitimer_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/ndisdispch_.h>
+#include <xview_private/nint_get_.h>
+#include <xview_private/ntfy_debug_.h>
 #include <xview_private/i18n_impl.h>
 #include <xview_private/portable.h>
 #include <xview_private/ntfy.h>

@@ -10,18 +10,21 @@ static char     sccsid[] = "@(#)cnvs_set.c 20.48 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/cnvs_set_.h>
+#include <xview_private/cnvs_resze_.h>
+#include <xview_private/cnvs_scrol_.h>
+#include <xview_private/win_input_.h>
+#include <xview_private/window_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/window_cms_.h>
+#include <xview_private/attr_.h>
 #include <xview_private/cnvs_impl.h>
 #include <xview/scrollbar.h>
 #include <xview_private/draw_impl.h>
 #include <X11/Xlib.h>
 
-extern void     window_set_bit_gravity();
-
-static void     canvas_set_bit_gravity();
-static void     canvas_append_paint_attrs();
-
-Attr_avlist attr_copy_avlist();
-
+static void canvas_set_bit_gravity(Canvas_info *canvas);
+static void canvas_append_paint_attrs(Canvas_info *canvas, Attr_avlist argv);
 
 Pkg_private Xv_opaque
 canvas_set_avlist(canvas_public, avlist)
@@ -33,15 +36,15 @@ canvas_set_avlist(canvas_public, avlist)
     int             width = 0;
     int             height = 0;
     int             vsb_set = 0, hsb_set = 0;
-    Scrollbar       vsb = NULL, hsb = NULL;
+    Scrollbar       vsb = (Scrollbar)NULL, hsb = (Scrollbar)NULL;
     short           new_paint_size = FALSE;
     short           recheck_paint_size = FALSE;
     int             ok = TRUE;
     Xv_Window       paint_window;
     Rect            pw_rect;
 
-    for (attr = (int)avlist[0]; attr;
-	 avlist = attr_next(avlist), attr = (int)avlist[0]) {
+    for (attr = avlist[0]; attr;
+	 avlist = attr_next(avlist), attr = avlist[0]) {
 	switch (attr) {
 	  case CANVAS_WIDTH:
 	    if (canvas->width != (int) avlist[1]) {

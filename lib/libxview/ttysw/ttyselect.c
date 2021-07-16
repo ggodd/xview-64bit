@@ -10,6 +10,15 @@ static char     sccsid[] = "@(#)ttyselect.c 20.47 93/06/29";
  *	file for terms of the license.
  */
 
+#include <xview_private/ttyselect_.h>
+#include <xview_private/csr_change_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/getlogindr_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/seln_.h>
+#include <xview_private/tty_main_.h>
+#include <xview_private/tty_ntfy_.h>
+#include <sys/stat.h>
 #include <signal.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -20,7 +29,6 @@ static char     sccsid[] = "@(#)ttyselect.c 20.47 93/06/29";
 #include <pixrect/pixrect.h>
 #include <pixrect/pixfont.h>
 #include <xview_private/i18n_impl.h>
-#include <xview/defaults.h>
 #include <xview/rect.h>
 #include <xview/rectlist.h>
 #include <xview/pixwin.h>
@@ -39,14 +47,35 @@ static char     sccsid[] = "@(#)ttyselect.c 20.47 93/06/29";
 #ifndef XVIEW_USE_INSECURE_TMPFILES
 /* martin.buck@bigfoot.com */
 #include <dirent.h>
-Xv_public char *xv_getlogindir();
 #endif
 
-#ifdef __STDC__
-static void ttysel_resynch(struct ttysubwindow *ttysw, Seln_function_buffer *buffer);
-#else
-static void ttysel_resynch();
+static struct ttyselection *ttysel_from_rank(struct ttysubwindow *ttysw, Seln_rank rank);
+static void ttysel_empty(register struct ttyselection *ttysel);
+static int ttysel_insel(struct ttyselection *ttysel, register struct textselpos *tsp);
+static int ttysel_eq(register struct textselpos *t1, register struct textselpos *t2);
+static void tvsub(register struct timeval *tdiff, register struct timeval *t1, register struct timeval *t0);
+static void ttyenumerateselection(struct ttyselection *ttysel, register void (*proc)(), register char *data);
+static void my_write_string(int start, int end, int row);
+static void ttyhiliteline(int start, int finish, int row, struct pr_size *offsets, struct ttyselection *ttysel);
+static void init_delim_table(void);
+static void ttysel_resolve(register struct textselpos *tb, register struct textselpos *te, int level, struct inputevent *event);
+#ifdef OW_I18N
+static void ttycountbytes(register int start, register int finish, register int row, register int *count);
 #endif
+static void ttycountchars(register int start, register int finish, register int row, register int *count);
+static void ttysel_write(struct selection *sel, FILE *file);
+static void ttyputline(int start, register int finish, register int row, register FILE *file);
+static void ttysel_read(struct selection *sel, register FILE *file);
+static void ttysel_function(register struct ttysubwindow *ttysw, register Seln_function_buffer *buffer);
+static Seln_result ttysel_reply(Seln_attribute request, register Seln_replier_data *context, int buffer_length);
+static void ttysel_end_request(struct ttysubwindow *ttysw, Seln_holder *addressee, Seln_rank rank);
+static Seln_result ttysel_copy_out(register struct ttyselection *ttysel, register Seln_replier_data *context, register int max_length);
+#ifdef OW_I18N
+static Seln_result ttysel_copy_out_wchar(register struct ttyselection *ttysel, register Seln_replier_data *context, register int max_length);
+#endif
+static Seln_result ttysel_copy_in(register Seln_request *buffer);
+static void ttysel_resynch(register struct ttysubwindow *ttysw, register Seln_function_buffer *buffer);
+
 
 /*
  * global which can be used to make a shell tool which doesn't talk to the
@@ -55,40 +84,6 @@ static void ttysel_resynch();
 int             ttysel_use_seln_service = 1;
 
 /* global & private procedures	 */
-void            ttyhiliteselection();
-
-static void     tvsub(),
-                ttycountchars(),
-#ifdef  OW_I18N
-                ttycountbytes(),
-#endif
-                ttyenumerateselection(),
-                ttyhiliteline(),
-                ttysel_empty(),
-                ttysel_resolve(),
-                ttysel_read(),
-                ttysel_write(),
-                ttyputline(),
-                ttysel_function(),
-                ttysel_end_request();
-	     void ttysortextents();
-/* static */ void ttysel_cancel();
-/* static */ void ttysel_get_selection();
-/* static */ void ttyhiliteselection(); /* BUG ALERT: No XView prefix */
-/* static */ void ttygetselection();	/* BUG ALERT: No XView prefix */
-
-static int      ttysel_insel(),
-                ttysel_eq();
-
-static Seln_result ttysel_copy_in(),
-                ttysel_copy_out(),
-#ifdef  OW_I18N
-                ttysel_copy_out_wchar(),
-#endif
-                ttysel_reply();
-
-static struct ttyselection *
-                ttysel_from_rank();
 
 struct ttysel_context {
     unsigned        continued;
@@ -139,7 +134,7 @@ ttysw_is_seln_nonzero(ttysw, rank)
 	req_buf = seln_ask(&holder, SELN_REQ_BYTESIZE, 0, 0);
 	argv = (char **) req_buf->data;
 	if (*argv++ == (char *) SELN_REQ_BYTESIZE) {
-	    bytesize = (int) *argv;
+	    bytesize = (int)(long)*argv;
 	}
     }
     return bytesize;
@@ -163,7 +158,7 @@ ttysel_init_client(ttysw)
     ttysw->ttysw_seln_client =
 	seln_create(ttysel_function, ttysel_reply, (char *) ttysw);
     if (ttysw->ttysw_seln_client == (char *) NULL) {
-	(void) ttysw_setopt(TTY_VIEW_HANDLE_FROM_TTY_FOLIO(ttysw), TTYOPT_SELSVC, FALSE);
+	(void) ttysw_setopt((Ttysw_folio)TTY_VIEW_HANDLE_FROM_TTY_FOLIO(ttysw), TTYOPT_SELSVC, FALSE);
     }
 }
 
@@ -607,7 +602,7 @@ ttysetselection(ttysw)
     selection.sel_pubflags = SEL_PRIMARY;
     selection.sel_privdata = 0;
     (void) selection_set(&selection, (int (*) ()) (ttysel_write),
-	       (int (*) ()) 0, (int) window_get(TTY_PUBLIC(ttysw), WIN_FD));
+	       (int (*) ()) 0, window_get(TTY_PUBLIC(ttysw), WIN_FD));
 }
 
 /*
@@ -619,7 +614,7 @@ ttygetselection(ttysw)
 {
     ttysel_ttysw = ttysw;	/* stash for ttysel_read	 */
     (void) selection_get((int (*) ()) (ttysel_read),
-			 (int) window_get(TTY_PUBLIC(ttysw), WIN_FD));
+			 window_get(TTY_PUBLIC(ttysw), WIN_FD));
 }
 
 
@@ -844,7 +839,7 @@ init_delim_table()
 				       "Text.DelimiterChars", DELIMITERS );
 
     /* print the string into an array to parse the potential octal/special characters */
-    sprintf( delim_chars, delims );
+    sprintf( delim_chars, "%s", delims );
 
     /* mark off the delimiters specified */
     for( delims = delim_chars; *delims; delims++ ) {

@@ -15,20 +15,18 @@ static char     sccsid[] = "@(#)txt_caret.c 20.28 93/06/28";
  */
 
 
+#include <xview_private/txt_caret_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/ev_edit_.h>
+#include <xview_private/txt_again_.h>
+#include <xview_private/txt_attr_.h>
+#include <xview_private/txt_input_.h>
+#include <xview_private/txt_scroll_.h>
+#include <xview_private/txt_sel_.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 
-Pkg_private void textsw_record_caret_motion();
-Pkg_private int ev_get_selection();
-#ifdef OW_I18N
-Xv_public void textsw_set_selection_wcs();
-#else
-Xv_public void textsw_set_selection();
-#endif
-
-Es_index ev_resolve_xy();
-Es_index textsw_get_contents();
+static void textsw_make_insert_visible(Textsw_view_handle view, unsigned visible_status, Es_index old_insert, Es_index new_insert);
 
 static void
 textsw_make_insert_visible(view, visible_status, old_insert, new_insert)
@@ -117,8 +115,6 @@ textsw_move_down_a_line(view, pos, file_length, lt_index, rect)
     int             lower_context, scroll_lines;
     Ev_impl_line_seq line_seq = (Ev_impl_line_seq)
     ev_handle->line_table.seq;
-    Pkg_private int textsw_get_recorded_x();
-
 
     if ((pos >= file_length) ||
 	(line_seq[lt_index + 1].pos == ES_INFINITY) ||
@@ -304,7 +300,6 @@ textsw_move_up_a_line(view, pos, file_length, lt_index, rect)
     int             upper_context, scroll_lines;
     Ev_impl_line_seq line_seq = (Ev_impl_line_seq)
     ev_handle->line_table.seq;
-    pkg_private int textsw_get_recorded_x();
 
     if ((pos == 0) || (line_seq[lt_index].pos == 0))
 	return (ES_CANNOT_SET);

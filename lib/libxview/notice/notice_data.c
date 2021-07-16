@@ -10,6 +10,10 @@ static char     sccsid[] = "@(#)notice_data.c 1.3 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/notice_.h>
+#include <xview_private/notice_dstry_.h>
+#include <xview_private/notice_get_.h>
+#include <xview_private/notice_set_.h>
 #include <xview_private/noticeimpl.h>
 
 Xv_pkg          xv_notice_pkg = {

@@ -14,7 +14,7 @@ static char     sccsid[] = "@(#)nint_get.c 20.12 93/06/28 Copyr 1985 Sun Micro";
  * Nint_get.c - Implement the nint_get_func private interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/nint_get_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/nint.h>
 

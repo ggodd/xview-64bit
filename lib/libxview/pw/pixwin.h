@@ -143,8 +143,8 @@ EXTERN_FUNCTION (int xv_read, (Pixrect *pr, int op, int x, int y, int width, int
 EXTERN_FUNCTION (int xv_replrop, (Xv_opaque window, int op, int xw, int yw, int width, int height, Pixrect *pr, int xr, int yr)); 
 EXTERN_FUNCTION (int xv_rop, (Xv_opaque window, int op, int x, int y, int width, int height, Pixrect *pr, int xr, int yr));
 EXTERN_FUNCTION (int xv_stencil, (Xv_opaque window, int op, int dx, int dy, int width, int height, Pixrect *stpr, int stx, int sty, Pixrect *spr, int sx, int sy));
-EXTERN_FUNCTION (int xv_text, (Xv_opaque window, int op, int xbasew, int ybasew, Xv_opaque font, char *str));
-EXTERN_FUNCTION (int xv_ttext, (Xv_opaque window, int xbasew, int ybasew, int op, Xv_opaque font, char *str));
+EXTERN_FUNCTION (void xv_text, (Xv_opaque window, int op, int xbasew, int ybasew, Xv_opaque font, char *str));
+EXTERN_FUNCTION (void xv_ttext, (Xv_opaque window, int xbasew, int ybasew, int op, Xv_opaque font, char *str));
 EXTERN_FUNCTION (int xv_vector, (Xv_opaque window, int x0, int y0, int x1, int y1, int op, int cms_index));
 EXTERN_FUNCTION (int pw_batchrop, (Pixwin *pw, int x, int y, int op, struct pr_prpos *sbp, int m));
 EXTERN_FUNCTION (int pw_get, (Xv_opaque xv_drawable, int x, int y));
@@ -158,7 +158,7 @@ EXTERN_FUNCTION (int pw_pfsysclose, (void));
 
 
 EXTERN_FUNCTION (int pw_char, (Xv_opaque pw, int xw, int yw, int op,
-struct pixfont *pixfont, int c ));
+struct pixfont *pixfont, char c ));
 EXTERN_FUNCTION (int xv_glyph_char, (Xv_opaque window, int x, int y,
 int width,
 int height, Pixfont *pixfont, int c, int color_index) );

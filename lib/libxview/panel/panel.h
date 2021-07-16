@@ -265,7 +265,7 @@ typedef enum {
 	 * Panel_numeric_text_item, Panel_slider_item and Panel_text_item
 	 * attributes.
 	 */
-#if defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT)
+#if defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT) || defined(__amd64__)
 	/* Watch it! PANEL_VALUE can be INT or PTR or whatever */
 	PANEL_VALUE		= PANEL_ATTR(ATTR_OPAQUE, 		 180),
 #else
@@ -413,7 +413,7 @@ typedef enum {
 	PANEL_CHOICE_STRING_WCS		= PANEL_ATTR(PANEL_INDEX_STRING,          23),
 	PANEL_CHOICE_STRINGS_WCS	= 
 			PANEL_ATTR(ATTR_LIST_INLINE(ATTR_NULL, ATTR_WSTRING),      24),
-#if defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT)
+#if defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT) || defined(__amd64__)
 	PANEL_VALUE_WCS			= PANEL_ATTR(ATTR_OPAQUE,                181),
 #else
 	PANEL_VALUE_WCS			= PANEL_ATTR(ATTR_INT,                   181),
@@ -673,6 +673,17 @@ typedef struct {
  */
 typedef Panel_attr	Panel_attribute;
 
+#include <xview/macros.h>
+
+#define panel_get(...) \
+    MACRO_DEF2(_panel_get, Panel, Panel_attr, __VA_ARGS__)
+    
+#define panel_set(...) \
+    MACRO_DEF1(_panel_set, Panel, __VA_ARGS__)
+    
+#define panel_create_item(...) \
+    MACRO_DEF2(_panel_create_item, Panel, Xv_pkg*, __VA_ARGS__)
+
 /*
  ***********************************************************************
  *		Globals
@@ -712,19 +723,19 @@ EXTERN_FUNCTION (void		panel_show_focus_win, (Panel_item item, Frame frame, int 
 /*
  * event mapping routines 
  */
-EXTERN_FUNCTION (int panel_handle_event, (Panel_item item, Event *event));
+EXTERN_FUNCTION (void panel_handle_event, (Panel_item item, Event *event));
 EXTERN_FUNCTION (void panel_default_handle_event, (Panel_item item, Event *event));
-EXTERN_FUNCTION (int panel_cancel, (Panel_item item, Event *event));
+EXTERN_FUNCTION (void panel_cancel, (Panel_item item, Event *event));
 
 /*
  * Panel_item action routines 
  */
-EXTERN_FUNCTION (int panel_begin_preview, (Panel_item item, Event * event));
-EXTERN_FUNCTION (int panel_update_preview, (Panel_item item, Event *event));
-EXTERN_FUNCTION (int panel_accept_preview, (Panel_item item, Event *event));
-EXTERN_FUNCTION (int panel_cancel_preview, (Panel_item item, Event *event));
-EXTERN_FUNCTION (int panel_accept_menu, (Panel_item item, Event *event));
-EXTERN_FUNCTION (int panel_accept_key, (Panel_item item, Event *event));
+EXTERN_FUNCTION (void panel_begin_preview, (Panel_item item, Event * event));
+EXTERN_FUNCTION (void panel_update_preview, (Panel_item item, Event *event));
+EXTERN_FUNCTION (void panel_accept_preview, (Panel_item item, Event *event));
+EXTERN_FUNCTION (void panel_cancel_preview, (Panel_item item, Event *event));
+EXTERN_FUNCTION (void panel_accept_menu, (Panel_item item, Event *event));
+EXTERN_FUNCTION (void panel_accept_key, (Panel_item item, Event *event));
 
 /*
  * utilities 
@@ -746,12 +757,12 @@ EXTERN_FUNCTION (Event * panel_event, (Panel panel, Event *event));
  * For SunView 1 Compatibility Only
  */
 
-EXTERN_FUNCTION (Panel_attribute_value panel_get, (Panel panel, Panel_attr attr, DOTDOTDOT));
-EXTERN_FUNCTION (int panel_set, (Panel panel, DOTDOTDOT));
+EXTERN_FUNCTION (Panel_attribute_value _panel_get, (Panel panel, Panel_attr attr, DOTDOTDOT));
+EXTERN_FUNCTION (int _panel_set, (Panel panel, DOTDOTDOT));
 EXTERN_FUNCTION (int panel_paint, (Panel panel, Panel_setting flag));
-EXTERN_FUNCTION (int panel_free, (Panel panel));
-EXTERN_FUNCTION (int panel_destroy_item, (Panel_item item));
-EXTERN_FUNCTION (Panel_item panel_create_item, (Panel panel, Xv_pkg *item_type, DOTDOTDOT));
+EXTERN_FUNCTION (void panel_free, (Panel panel));
+EXTERN_FUNCTION (void panel_destroy_item, (Panel_item item));
+EXTERN_FUNCTION (Panel_item _panel_create_item, (Panel panel, Xv_pkg *item_type, DOTDOTDOT));
 
 
 #endif	/* ~xview_panel_DEFINED */

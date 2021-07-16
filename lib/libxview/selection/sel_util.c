@@ -10,6 +10,13 @@ static char     sccsid[] = "@(#)sel_util.c 1.29 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/sel_util_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/sel_agent_.h>
+#include <xview_private/sel_common_.h>
+#include <xview_private/sel_own_.h>
+#include <xview_private/win_treeop_.h>
+#include <xview_private/xv_.h>
 #include <xview_private/sel_impl.h>
 #include <xview_private/svr_impl.h>
 #include <xview/notify.h>
@@ -19,16 +26,11 @@ static char     sccsid[] = "@(#)sel_util.c 1.29 93/06/28";
 #include <stdlib.h> 
 #endif /* SVR4 */
 
-static void tvdiff();
-static void FreeMultiProp();
-static int SelMatchReply();
-static Sel_req_tbl *SelMatchReqTbl();
-static int SelFindReply();
-
-Xv_object win_data();
-
-
+static void tvdiff(struct timeval *t1, struct timeval *t2, struct timeval *diff);
+static int SelMatchReply(XEvent *event, Sel_reply_info *reply);
+static Sel_req_tbl *SelMatchReqTbl(Sel_reply_info *reply);
 static int SelFindReply(Sel_reply_info *r1, Sel_reply_info *r2);
+static void FreeMultiProp(Sel_reply_info *reply);
 
 Pkg_private struct timeval *
 xv_sel_cvt_xtime_to_timeval( XTime )
@@ -72,7 +74,7 @@ Window     xid;
 	sel->atomList = xv_sel_find_atom_list( dpy, xid );
 	sel->dpy = dpy;
 	sel->selection = selection;
-	sel->xid = NULL;
+	sel->xid = (XID)NULL;
 	sel->status = 0;
 	(void)XSaveContext( dpy, (Window)selection, selCtx, (caddr_t)sel );
     }
@@ -607,7 +609,7 @@ Sel_reply_info  *reply;
 	reqTbl->reply = reply;
 	reqTbl->next = NULL;
 	(void)XSaveContext( dpy, DefaultRootWindow(dpy),replyCtx,
-			   (caddr_t *)reqTbl);
+			   (caddr_t)reqTbl);
 	return reqTbl;
     }
     return (Sel_req_tbl *) xv_sel_add_new_req( reqTbl, reply );
@@ -929,7 +931,7 @@ int      clientType;
     infoPtr = cmptInfo;
     
     do {
-	if ( (infoPtr->selection == selection) || (infoPtr->selection == NULL) ) {
+	if ( (infoPtr->selection == selection) || (infoPtr->selection == (Atom)NULL) ) {
 	    infoPtr->selection = selection;
 	    infoPtr->clientType = clientType;
 	    infoPtr->owner = xid; 	    
@@ -971,9 +973,9 @@ Atom     selection;
     
     do {
 	if ( infoPtr->selection == selection ) {
-	    infoPtr->selection = NULL;
-	    infoPtr->owner = NULL;	    
-	    infoPtr->clientType = NULL;
+	    infoPtr->selection = (Atom)NULL;
+	    infoPtr->owner = (Window)NULL;	    
+	    infoPtr->clientType = 0;
 	    return;
 	}
 	if ( infoPtr->next == NULL )

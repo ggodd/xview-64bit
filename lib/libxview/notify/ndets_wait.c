@@ -14,7 +14,14 @@ static char     sccsid[] = "@(#)ndets_wait.c 20.14 93/06/28 Copyr 1985 Sun Micro
  * Ndet_s_wait.c - Implement the notify_set_wait3_func interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndets_wait_.h>
+#include <xview_private/ndet_loop_.h>
+#include <xview_private/ndisdispch_.h>
+#include <xview_private/nint_set_.h>
+#include <xview_private/ntfyclient_.h>
+#include <xview_private/ntfy_cond_.h>
+#include <xview_private/ntfy_ctbl_.h>
+#include <xview_private/ntfyprotec_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/ndis.h>
 #include <xview_private/nint.h>
@@ -41,7 +48,7 @@ notify_set_wait3_func(nclient, func, pid)
 	goto Done;
     /* Find/create condition */
     if ((condition = ntfy_new_condition(&(client->conditions), NTFY_WAIT3,
-	    &(client->condition_latest), (NTFY_DATA) pid, NTFY_USE_DATA)) ==
+	    &(client->condition_latest), (NTFY_DATA)(long)pid, NTFY_USE_DATA)) ==
 	NTFY_CONDITION_NULL)
 	goto Done;
     ntfy_add_to_table(client, condition, NTFY_WAIT3);

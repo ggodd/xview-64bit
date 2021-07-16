@@ -33,7 +33,6 @@ typedef struct {
         XFontSetExtents	*fsx;
 } XFontSetInfo;
 
-extern wchar_t  *mbstowcsdup();
 
 #endif /* OW_I18N_L4 */
 
@@ -105,9 +104,6 @@ typedef enum {	FontWidthOp,
 		FontDescentOp
 		} FontInfoOp;
 
-extern	void	DrawText();
-
-extern	int	FontInfo();
 
 #define	FontWidth(font,text,len)	FontInfo(font,FontWidthOp,text,len)
 #define	FontHeight(font)		FontInfo(font,FontHeightOp,(Text*)0,0)
@@ -141,7 +137,6 @@ extern	int	FontInfo();
 
 #ifdef OW_I18N_L4
 
-extern		char			*gettext();
 #define		GetString(s)		gettext(s)
 #define		GetText(s)		mbstowcsdup(gettext(s))
 #define		FreeText(s)		MemFree(s)
@@ -150,7 +145,6 @@ extern		char			*gettext();
 #elif defined OW_I18N_L3
 
 #ifdef SVR4
-extern		char			*gettext();
 #else
 #define 	gettext(s)		s
 #endif
@@ -183,5 +177,16 @@ extern		char			*gettext();
 #define	TextOLGX		(0)
 
 #endif
+
+#include <X11/Xresource.h>
+
+void DrawText(Display *dpy, Drawable drawable, DisplayFont font, GC gc, int x,int  y, Text *text, int len);
+int FontInfo(DisplayFont font, FontInfoOp op, Text *text, int len);
+#ifdef OW_I18N_L4
+wchar_t *mbstowcsdup(register char *mbs);
+#if DEBUG > 4
+void ascii_dump(register unsigned char *s);
+#endif 
+#endif 
 
 #endif /* _OLWM_I18N_H */

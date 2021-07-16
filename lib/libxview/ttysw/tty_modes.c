@@ -30,7 +30,14 @@ static char     sccsid[] = "@(#)tty_modes.c 20.54 93/06/28";
  * !append_only_log caret anywhere, no interpretation of input.
  */
 
-
+#include <xview_private/tty_modes_.h>
+#include <xview_private/cim_size_.h>
+#include <xview_private/csr_change_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/term_ntfy_.h>
+#include <xview_private/ttyansi_.h>
+#include <xview_private/tty_ntfy_.h>
+#include <xview_private/txt_disp_.h>
 #include <errno.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -50,18 +57,12 @@ static char     sccsid[] = "@(#)tty_modes.c 20.54 93/06/28";
 #include <xview_private/tty_impl.h>
 #include <xview_private/term_impl.h>
 #include <xview_private/txt_impl.h>
-#include <xview/defaults.h>
 
 int             ttysw_waiting_for_pty_input;
-Xv_private Menu_item ttysw_get_scroll_cmd_from_menu_for_ttysw();
-Xv_private Menu_item ttysw_get_scroll_cmd_from_menu_for_textsw();
-/* static */ void ttysw_cooked_echo();
 
 extern Xv_Window csr_pixwin;
 extern CHAR    **image;
 extern char    **screenmode;
-extern void     xv_tty_imagealloc();
-Xv_private void textsw_display_view();
 #ifdef SVR4
 extern int doremote;
 #endif

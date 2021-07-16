@@ -68,4 +68,10 @@ struct message_so {
     char *msgs;				/* actual messages */
 };
 
+char *bindtextdomain(char *domain_name, unsigned char *binding);
+char *textdomain(char *domain_name);
+char *gettext(char *msg_id);
+char *dgettext(char *domain_name, char *msg_id);
+char *_gettext(struct message_so messages, char *key_string );
+
 #endif /* _OLWM_GETTEXT_H */

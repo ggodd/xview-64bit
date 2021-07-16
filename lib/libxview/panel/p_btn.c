@@ -10,7 +10,11 @@ static char     sccsid[] = "@(#)p_btn.c 20.110 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview_private/panel_impl.h>
+#include <xview_private/p_btn_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/om_public_.h>
+#include <xview_private/p_utl_.h>
+#include <xview_private/xv_.h>
 #include <xview/font.h>
 #include <xview/openmenu.h>
 #include <xview/pixwin.h>
@@ -25,11 +29,20 @@ static char     sccsid[] = "@(#)p_btn.c 20.110 93/06/28";
 	XV_PRIVATE(Button_info, Xv_panel_button, item)
 #define BUTTON_FROM_ITEM(ip)	BUTTON_PRIVATE(ITEM_PUBLIC(ip))
 
-
-static void     btn_begin_preview(), btn_cancel_preview(), btn_accept_preview(),
-		btn_accept_menu(), btn_accept_key(), btn_paint(), btn_remove(),
-		btn_accept_kbd_focus(), btn_yield_kbd_focus();
-
+static void btn_begin_preview(Panel_item item_public, Event *event);
+static void btn_cancel_preview(Panel_item item_public, Event *event);
+static void btn_accept_preview(Panel_item item_public, Event *event);
+static void btn_accept_menu(Panel_item item_public, Event *event);
+static void btn_accept_key(Panel_item item_public, Event *event);
+static void btn_paint(Panel_item item_public);
+static void btn_remove(Panel_item item_public);
+static void btn_accept_kbd_focus(Panel_item item_public);
+static void btn_yield_kbd_focus(Panel_item item_public);
+static void button_menu_busy_proc(Menu menu);
+static void button_menu_done_proc(Menu menu, Xv_opaque result);
+static Menu generate_menu(Menu menu);
+static void panel_paint_button_image(Item_info *ip, Panel_image *image, int inactive_button, Xv_opaque menu, int height);
+static void take_down_cmd_frame(Panel panel_public);
 
 static Panel_ops ops = {
     panel_default_handle_event,		/* handle_event() */
@@ -58,19 +71,6 @@ typedef struct button_info {
 }               Button_info;
 
 
-/*
- * Function declarations
- */
-Xv_private void menu_save_pin_window_rect();
-Xv_private void menu_item_set_parent();
-
-Pkg_private int panel_button_init();
-
-static void     button_menu_busy_proc();
-static void     button_menu_done_proc();
-static Menu     generate_menu();
-static void     panel_paint_button_image();
-static void     take_down_cmd_frame();
 int 		panel_item_destroy_flag;
 #ifdef OW_I18N
 extern wchar_t _xv_null_string_wc[];
@@ -384,7 +384,7 @@ btn_accept_menu(item_public, event)
     Item_info      *ip = ITEM_PRIVATE(item_public);
     Xv_Window       paint_window = event_window(event);
 
-    if (ip->menu == NULL || paint_window == (Xv_Window)NULL)
+    if (ip->menu == (Xv_opaque)NULL || paint_window == (Xv_Window)NULL)
 	return;
 
     /*

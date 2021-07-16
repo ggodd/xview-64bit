@@ -24,6 +24,12 @@ static char     sccsid[] = "@(#)sb_event.c 1.67 91/05/23";
  * Include files:
  */
 
+#include <xview_private/sb_event_.h>
+#include <xview_private/help_.h>
+#include <xview_private/sb_paint_.h>
+#include <xview_private/sb_.h>
+#include <xview_private/sb_pos_.h>
+#include <xview_private/sb_scroll_.h>
 #include <stdio.h>
 #include <X11/Xlib.h>
 #include <xview_private/sb_impl.h>
@@ -44,7 +50,6 @@ Xv_private char xv_iso_input_focus_help;
 Xv_private char xv_iso_next_element;
 Xv_private char xv_iso_select;
 
-Xv_private Xv_object xv_input_readevent();
 int	ignore_drag_count;
 int	ignore_drag_max;
 
@@ -55,34 +60,21 @@ int	ignore_drag_max;
 #define JOIN_VIEWS_MENU_ITEM_NBR	6
 #define BORDER_WIDTH			1
 
-/*
- * Declaration of Functions Defined in This File (in order):
- */
-
-Pkg_private Notify_value scrollbar_handle_event();
-Pkg_private void scrollbar_line_to_top();
-Pkg_private void scrollbar_top_to_line();
-Pkg_private void scrollbar_split_view_from_menu();
-Pkg_private void scrollbar_join_view_from_menu();
-Pkg_private void scrollbar_last_position();
-Pkg_private int scrollbar_left_mouse_up();
-Pkg_private Menu scrollbar_gen_menu();
-
-static Notify_value scrollbar_timed_out();
-static int      scrollbar_handle_elevator_event();
-static void     scrollbar_handle_timed_page_event();
-static void     scrollbar_handle_timed_line_event();
-static void     scrollbar_position_mouse();
-static Scroll_motion scrollbar_translate_scrollbar_event_to_motion();
-static void     scrollbar_translate_to_elevator_event();
-static void     scrollbar_timer_start();
-static void     scrollbar_timer_stop();
-static void     scrollbar_set_intransit();
-static int      scrollbar_preview_split();
-static void     scrollbar_invoke_split();
-static void     scrollbar_destroy_split();
-static int      scrollbar_multiclick();
-static int	scrollbar_find_view_nbr();
+static int scrollbar_handle_elevator_event(Xv_scrollbar_info *sb, Event *event, Scroll_motion motion);
+static Notify_value scrollbar_timed_out(Notify_client client, int which);
+static void scrollbar_handle_timed_page_event(Xv_scrollbar_info *sb, Scroll_motion motion);
+static void scrollbar_handle_timed_line_event(Xv_scrollbar_info *sb, Scroll_motion motion);
+static void scrollbar_position_mouse(Xv_scrollbar_info *sb, int x, int y);
+static Scroll_motion scrollbar_translate_scrollbar_event_to_motion(Xv_scrollbar_info *sb, Event *event);
+static void scrollbar_timer_start(Scrollbar scrollbar, int actiontype);
+static void scrollbar_timer_stop(Scrollbar scrollbar);
+static void scrollbar_set_intransit(Xv_scrollbar_info *sb, Scroll_motion motion, Event *event);
+static void scrollbar_translate_to_elevator_event(Xv_scrollbar_info *sb, Event *event);
+static int scrollbar_preview_split(Xv_scrollbar_info *sb, Event *event, Rect *r, Event *completion_event);
+static void scrollbar_invoke_split(Xv_scrollbar_info *sb, Event *event);
+static void scrollbar_destroy_split(Xv_scrollbar_info *sb);
+static int scrollbar_multiclick(Xv_scrollbar_info *sb, Event *event);
+static int scrollbar_find_view_nbr(Xv_scrollbar_info *sb, Openwin openwin);
 
 /*
  * additions for the delay time between repeat action events
@@ -113,9 +105,6 @@ scrollbar_handle_event(sb_public, event, arg, type)
     Xv_Window	      paint_window;
     Rect	      r;
     Xv_scrollbar_info *sb = SCROLLBAR_PRIVATE(sb_public);
-    Pkg_private void  sb_minimum();
-    Pkg_private void  sb_abbreviated();
-    Pkg_private void  sb_full_size();
     Event             split_event;
     int		      view_nbr;
     Xv_Window	      view_window;
@@ -1261,8 +1250,6 @@ scrollbar_invoke_split(sb, event)
 {
     int             split_loc;
     Scroll_motion   motion;
-    extern Notify_arg win_copy_event();
-    extern void     win_free_event();
 
     /* make sure the event is in the scrollbar */
     split_loc = (sb->direction == SCROLLBAR_VERTICAL) ? event_y(event)
@@ -1290,9 +1277,6 @@ static void
 scrollbar_destroy_split(sb)
     Xv_scrollbar_info *sb;
 {
-    extern Notify_arg win_copy_event();
-    extern void     win_free_event();
-
     win_post_id_and_arg(sb->managee,
 			ACTION_SPLIT_DESTROY, NOTIFY_SAFE, 0,
 			win_copy_event, win_free_event);

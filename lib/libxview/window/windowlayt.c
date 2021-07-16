@@ -10,12 +10,16 @@ static char     sccsid[] = "@(#)windowlayt.c 20.22 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/windowlayt_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/windowutil_.h>
+#include <xview_private/win_geom_.h>
+#include <xview_private/win_treeop_.h>
 #include <stdio.h>
 #include <xview_private/i18n_impl.h>
 #include <xview/pkg.h>
 #include <xview/window.h>
 #include <xview/rect.h>
-#include <xview_private/windowimpl.h>
 #include <xview/win.h>
 
 

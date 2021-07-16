@@ -10,6 +10,12 @@ static char     sccsid[] = "@(#)p_drop.c 1.22 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/p_drop_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/p_select_.h>
+#include <xview_private/p_utl_.h>
+#include <xview_private/xv_.h>
 #include <malloc.h>
 #include <xview_private/draw_impl.h>
 #include <xview_private/i18n_impl.h>
@@ -33,22 +39,31 @@ static char     sccsid[] = "@(#)p_drop.c 1.22 93/06/28";
 #define FREE_GLYPH	0x00000008
 #define FREE_BUSY_GLYPH	0x00000010
 
-/* XView functions */
-Pkg_private int panel_drop_init();
-Pkg_private Xv_opaque panel_drop_set_avlist();
-Pkg_private Xv_opaque panel_drop_get_attr();
-Pkg_private int panel_drop_destroy();
+typedef struct drop_info {
+    Panel_item      public_self;/* back pointer to object */
+    /*
+     * Drop private data
+     */
+    Server_image    busy_glyph;
+    Drag_drop	    dnd;	/* Drag and Drop object */
+    Drop_site_item  drop_site;  /* Drag and Drop drop site item */
+    Server_image    glyph;	/* normal glyph */
+    Selection_requestor sel_req; /* Selection requestor object */
+    int		    select_down_x; /* x coordinate of SELECT-down event */
+    int		    select_down_y; /* y coordinate of SELECT-down event */
+    unsigned long   status;
+    int		    del_move; /* boolean for delete on drag move */
+    Panel_drop_dnd_type       dndtype;
+} Drop_info;
 
-/* Panel Item Operations */
-static void	drop_handle_event();
-static void	drop_cancel_preview();
-static void	drop_paint();
-static void	drop_remove();
-static void	drop_restore();
-static void	drop_layout();
+static void drop_handle_event(Panel_item item_public,Event *event);
+static void drop_cancel_preview(Panel_item item_public,Event *event);
+static void drop_paint(Panel_item item_public);
+static void drop_remove(Panel_item item_public);
+static void drop_restore(Panel_item item_public);
+static void drop_layout(Panel_item item_public, Rect *deltas);
+static void drop_paint_value(Item_info *ip, Drop_info *dp);
 
-/* Local functions */
-static void	drop_paint_value();
 
 /* Local data */
 static unsigned short normal_glyph_bits[] = {
@@ -87,24 +102,6 @@ static Panel_ops ops = {
     NULL,				/* yield_kbd_focus() */
     NULL				/* extension: reserved for future use */
 };
-
-typedef struct drop_info {
-    Panel_item      public_self;/* back pointer to object */
-    /*
-     * Drop private data
-     */
-    Server_image    busy_glyph;
-    Drag_drop	    dnd;	/* Drag and Drop object */
-    Drop_site_item  drop_site;  /* Drag and Drop drop site item */
-    Server_image    glyph;	/* normal glyph */
-    Selection_requestor sel_req; /* Selection requestor object */
-    int		    select_down_x; /* x coordinate of SELECT-down event */
-    int		    select_down_y; /* y coordinate of SELECT-down event */
-    unsigned long   status;
-    int		    del_move; /* boolean for delete on drag move */
-    Panel_drop_dnd_type       dndtype;
-} Drop_info;
-
 
 
 /* ========================================================================= */
@@ -607,7 +604,7 @@ drop_paint_value(ip, dp)
 		      ip->value_rect.r_width, ip->value_rect.r_height,
 		      OLGX_INVOKED, ip->panel->status.three_d);
 	if (glyph)
-	    panel_paint_svrim(pw, glyph,
+	    panel_paint_svrim(pw, (Pixrect *)glyph,
 		ip->value_rect.r_left + GLYPH_MARGIN + BORDER_WIDTH,
 		ip->value_rect.r_top + GLYPH_MARGIN + BORDER_WIDTH,
 		ip->color_index, (Pixrect *)NULL);

@@ -78,17 +78,4 @@ typedef	struct	{
 
 #define	Frame_props_info	Frame_cmd_info
 
-/* frame_cmd.c */
-Pkg_private Notify_value	frame_cmd_input();
-Pkg_private int		frame_cmd_init();
-
-/* frame_cmd_get.c */
-Pkg_private Xv_opaque	frame_cmd_get_attr();
-
-/* frame_cmd_set.c */
-Pkg_private Xv_opaque	frame_cmd_set_avlist();
-
-/* frame_cmd_destroy.c */
-Pkg_private int			frame_cmd_destroy();
-
 #endif

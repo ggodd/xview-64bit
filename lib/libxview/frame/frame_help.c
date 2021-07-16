@@ -10,6 +10,8 @@ static char     sccsid[] = "@(#)frame_help.c 1.27 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/frame_help_.h>
+#include <xview_private/xv_.h>
 #include <X11/Xlib.h>
 #include <xview_private/fm_impl.h>
 #include <xview_private/frame_help.h>
@@ -24,9 +26,6 @@ static char     sccsid[] = "@(#)frame_help.c 1.27 93/06/28";
 /* 3.x - 4.0 libc transition code; old (pre-4.0) code must define the symbol */
 #define jcsetpgrp(p)  setpgrp((p),(p))
 #endif
-
-extern Attr_avlist attr_find();
-
 
 /* ARGSUSED */
 Pkg_private int

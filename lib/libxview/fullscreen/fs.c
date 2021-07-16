@@ -10,15 +10,20 @@ static char     sccsid[] = "@(#)fs.c 20.45 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/fs_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/svr_set_.h>
+#include <xview_private/win_compat_.h>
+#include <xview_private/win_global_.h>
+#include <xview_private/xv_.h>
 #include <xview_private/i18n_impl.h>
 #include <xview_private/fs_impl.h>
 #include <xview/notify.h>
 #include <xview/screen.h>
 #include <xview/window.h>
 #include <X11/Xlib.h>
-
-Xv_private char *fullscreen_translate_report_code();
-Pkg_private void fullscreen_update_globals();
 
 /*
  * owner of fullscreen object is any "Window". default root window is xv_root
@@ -156,7 +161,7 @@ fullscreen_init_internal(owner, fullscreen_public, avlist, offset_ptr)
     }
     /* check if we are already in fullscreen mode on this window */
     if (xv_get(fullscreen->input_window, WIN_IS_IN_FULLSCREEN_MODE)) {
-	xv_error(NULL,
+	xv_error(0,
 		 ERROR_STRING, 
 		 XV_MSG("Already in fullscreen mode!"),
 		 ERROR_PKG, FULLSCREEN,

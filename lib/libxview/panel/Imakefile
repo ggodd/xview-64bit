@@ -29,7 +29,13 @@ OFILES.panel.3	= ${CFILES.panel.3:%.c=%.o}
 OFILES.panel.4	= ${CFILES.panel.4:%.c=%.o}
 
 HDRSPUBLIC=     panel.h
-HDRSPRIVATE=    panel_impl.h item_impl.h p_lst_impl.h
+HDRSPRIVATE=    panel_impl.h item_impl.h p_lst_impl.h item_.h item_get_.h \
+                item_set_.h p_ambtn_.h panel_.h  p_btn_.h p_choice_.h \
+                p_compat_.h p_drop_.h p_event_.h p_gauge_.h p_get_.h \
+                p_image_.h p_imcb_.h p_list_.h p_list2_.h p_mlinetxt_.h \
+                p_msg_.h p_num_txt_.h p_paint_.h p_public_.h p_scroll_.h \
+                p_select_.h p_set_.h p_slider_.h p_txt_.h p_utl_.h \
+                p_view_.h
 
 DATA_OBJS =\
 	p_utl_data.o panel_data.o item_data.o p_btn_data.o p_chcedata.o	\

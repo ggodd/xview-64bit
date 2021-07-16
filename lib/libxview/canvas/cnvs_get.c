@@ -10,6 +10,7 @@ static char     sccsid[] = "@(#)cnvs_get.c 20.26 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/cnvs_get_.h>
 #include <xview_private/cnvs_impl.h>
 
 /* ARGSUSED */
@@ -27,8 +28,8 @@ canvas_get_attr(canvas_public, stat, attr, valist)
 
     switch ((int)attr) {
       case CANVAS_NTH_PAINT_WINDOW:
-	view_public = (Xv_Window) xv_get(canvas_public, OPENWIN_NTH_VIEW, va_arg(valist, int));
-	if (view_public != NULL) {
+	view_public = (Xv_Window) xv_get(canvas_public, OPENWIN_NTH_VIEW, va_arg(valist, Attr_attribute));
+	if (view_public != (Xv_Window)NULL) {
 	    return ((Xv_opaque) CANVAS_VIEW_PRIVATE(view_public)->paint_window);
 	} else {
 	    return ((Xv_opaque) NULL);
@@ -65,7 +66,7 @@ canvas_get_attr(canvas_public, stat, attr, valist)
 
       case CANVAS_VIEWABLE_RECT:
 	paint_window = va_arg(valist, Xv_Window);
-	if (paint_window != NULL) {
+	if (paint_window != (Xv_Window)NULL) {
 	    view = CANVAS_VIEW_PRIVATE((Canvas_view) xv_get(paint_window, XV_OWNER));
 	    if (view == NULL) {
 		return (Xv_opaque) NULL;

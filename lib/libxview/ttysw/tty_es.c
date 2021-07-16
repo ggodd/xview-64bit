@@ -15,6 +15,10 @@ static char     sccsid[] = "@(#)tty_es.c 20.23 93/06/28";
  * stream.
  */
 
+#include <xview_private/tty_es_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/ps_impl_.h>
+#include <xview_private/tty_ntfy_.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -24,13 +28,16 @@ static char     sccsid[] = "@(#)tty_es.c 20.23 93/06/28";
 #include <xview/termsw.h>
 #include <xview_private/primal.h>
 #include <xview_private/es.h>
-#include <xview_private/tty_impl.h>
 #include <xview_private/term_impl.h>
 #include <xview_private/portable.h>
 #include <xview_private/i18n_impl.h>
 
-static Es_index ts_replace();
-static int      ts_set();
+#ifdef OW_I18N
+static Es_index ts_replace(Es_handle esh, int last_plus_one, int count, CHAR *buf, int *count_used);
+#else
+static Es_index ts_replace(Es_handle esh, int last_plus_one, int count, unsigned char *buf, int *count_used);
+#endif
+static int ts_set(Es_handle esh, Attr_attribute *attr_argv);
 
 static struct es_ops *ps_ops;
 static struct es_ops ts_ops;
@@ -47,7 +54,6 @@ ts_create(ttysw, original, scratch)
     Ttysw          *ttysw;
     Es_handle       original, scratch;
 {
-    extern Es_handle ps_create();
     Es_handle       piece_stream;
 
     piece_stream = ps_create((Xv_opaque)ttysw, original, scratch);

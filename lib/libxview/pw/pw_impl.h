@@ -38,9 +38,6 @@ Xv_private int			xv_to_xop[];
 #define PR_TYPE(pr)		PR_IS_MPR(pr) ? MEMORY_PR : \
 				(PR_IS_SERVER_IMAGE(pr) ? SERVER_IMAGE_PR :  OTHER_PR)
 
-Xv_private void		xv_set_gc_op();
-Xv_private GC		xv_find_proper_gc();
-
 struct gc_chain {
         struct gc_chain *next;
         GC               gc;

@@ -19,24 +19,12 @@ static char     sccsid[] = "@(#)ow_resize.c 1.40 93/06/28";
  * 
  */
 
-#include <xview_private/ow_impl.h>
+#include <xview_private/ow_resize_.h>
 #include <xview/font.h>
 
-/*
- * Package private functions
- */
-Pkg_private int	 openwin_adjust_views();
-Pkg_private void openwin_adjust_view();
-Pkg_private void openwin_place_scrollbar();
-Pkg_private int  openwin_border_width();
-Pkg_private void openwin_view_rect_from_avail_rect();
-
-/*
- * Module private functions
- */
-static void openwin_adjust_view_rect();
-static void openwin_adjust_view_scrollbars();
-static void openwin_adjust_view_by_margins();
+static void openwin_adjust_view_rect(Xv_openwin_info *owin, Openwin_view_info *view, Rect *view_rect);
+static void openwin_adjust_view_scrollbars(Xv_openwin_info *owin, Openwin_view_info *view, Rect *avail_rect);
+static void openwin_adjust_view_by_margins(Xv_openwin_info *owin, Openwin_view_info *view, int margin, Rect *view_rect);
 
 /*-------------------Function Definitions-------------------*/
 
@@ -104,13 +92,13 @@ openwin_adjust_view(owin, view, view_rect)
 	r.r_height = view_rect->r_height;
     }
     /* place the scrollbars */
-    if ((sb = openwin_sb(view, SCROLLBAR_VERTICAL)) != NULL) {
+    if ((sb = openwin_sb(view, SCROLLBAR_VERTICAL)) != (Scrollbar)NULL) {
 	openwin_place_scrollbar(OPENWIN_PUBLIC(owin), view->view,
 		   openwin_sb(view, SCROLLBAR_VERTICAL), SCROLLBAR_VERTICAL,
 				&r, &sb_r);
 	xv_set(sb, WIN_RECT, &sb_r, 0);
     }
-    if ((sb = openwin_sb(view, SCROLLBAR_HORIZONTAL)) != NULL) {
+    if ((sb = openwin_sb(view, SCROLLBAR_HORIZONTAL)) != (Scrollbar)NULL) {
 
 	openwin_place_scrollbar(OPENWIN_PUBLIC(owin), view->view,
 	       openwin_sb(view, SCROLLBAR_HORIZONTAL), SCROLLBAR_HORIZONTAL,
@@ -139,7 +127,7 @@ openwin_place_scrollbar(owin_public, view_public, sb, direction, r, sb_r)
     Xv_openwin_info *owin = OPENWIN_PRIVATE(owin_public);    
     int             border_width;
 
-    if (sb == NULL)
+    if (sb == (Scrollbar)NULL)
 	return;
     border_width = openwin_border_width(owin_public, view_public);
 
@@ -223,13 +211,13 @@ openwin_adjust_view_rect(owin, view, view_rect)
 	openwin_paint_border(OPENWIN_PUBLIC(owin), view, TRUE);
 #endif /* SELECTABLE_VIEWS */
 
-    if (vsb != NULL) {
+    if (vsb != (Scrollbar)NULL) {
 	xv_set(vsb,
 	       SCROLLBAR_VIEW_LENGTH, 
 	       view_rect->r_height / (int) xv_get(vsb, SCROLLBAR_PIXELS_PER_UNIT),
 	       0);
     }
-    if (hsb != NULL) {
+    if (hsb != (Scrollbar)NULL) {
 	xv_set(hsb,
 	       SCROLLBAR_VIEW_LENGTH, 
 	       view_rect->r_width / (int) xv_get(hsb, SCROLLBAR_PIXELS_PER_UNIT),
@@ -294,11 +282,11 @@ openwin_adjust_view_by_margins(owin, view, margin, view_rect)
      * a scrollbar 
      */
     if (view->right_edge ||
-	(openwin_sb(view, SCROLLBAR_VERTICAL) != NULL) ||
+	(openwin_sb(view, SCROLLBAR_VERTICAL) != (Scrollbar)NULL) ||
 	STATUS(owin, adjust_vertical)) 
       n_vmargins = 0;
     if (view->bottom_edge ||
-	(openwin_sb(view, SCROLLBAR_HORIZONTAL) != NULL) ||
+	(openwin_sb(view, SCROLLBAR_HORIZONTAL) != (Scrollbar)NULL) ||
 	STATUS(owin, adjust_horizontal))
       n_hmargins = 0;
     

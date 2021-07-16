@@ -93,11 +93,4 @@ extern const char *xv_draw_info_str;
    } else _info = 0;\
 }
         
-extern GC		xv_private_gc();
-extern Xv_Drawable_info	*drawable_info();
-/* drawable.c */
-Pkg_private Xv_opaque        drawable_get_attr();
-Pkg_private int              drawable_init();
-Pkg_private int              drawable_destroy();
-
 #endif

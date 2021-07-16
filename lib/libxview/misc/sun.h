@@ -13,7 +13,7 @@
 #include <sys/types.h>
 #include <stdio.h> 
 
-#if defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT)
+#if defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT) || defined(__amd64__)
 
 #ifndef FALSE
 #define FALSE 0L

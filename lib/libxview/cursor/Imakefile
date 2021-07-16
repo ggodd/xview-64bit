@@ -22,7 +22,7 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=	cursor.h
-HDRSPRIVATE=	curs_impl.h
+HDRSPRIVATE=	curs_impl.h curs_cmpat_.h cursor_.h curs_pri_.h
 
 DATA_OBJS=\
 	curs_data.o

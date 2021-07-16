@@ -198,14 +198,6 @@ typedef struct item_info {
 
 
 /************************************************************************
- * Panel Package private functions					*
- ************************************************************************/
-Pkg_private	int 			item_init();
-Pkg_private  	Xv_opaque		item_set_avlist();
-Pkg_private  	Xv_opaque		item_get_attr();
-Pkg_private	int			item_destroy();
-
-/************************************************************************
  * Panel text item private macros, constants, and data structures	*
  ************************************************************************/
 

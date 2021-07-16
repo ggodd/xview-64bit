@@ -14,7 +14,10 @@ static char     sccsid[] = "@(#)ndet_g_pri.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * Ndet_g_pri.c - Implement the notify_get_prioritizer_func interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndet_g_pri_.h>
+#include <xview_private/ntfyclient_.h>
+#include <xview_private/ntfy_debug_.h>
+#include <xview_private/ntfyprotec_.h>
 #include <xview_private/ndet.h>
 
 extern          Notify_func

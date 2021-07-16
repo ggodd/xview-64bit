@@ -30,12 +30,6 @@
 #define LC_MESSAGES LC_RESPONSE
 #endif
 
-#ifdef __STDC__
-extern char	*dgettext(char *, char *);
-#else
-extern char	*dgettext();
-#endif
-
 #define XV_I18N_MSG(d,s)	(dgettext(d,s))
 
 #ifndef XV_14_CHARS_FILE_NAME

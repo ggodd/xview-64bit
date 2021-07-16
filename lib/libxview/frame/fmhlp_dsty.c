@@ -10,10 +10,11 @@ static char     sccsid[] = "@(#)fmhlp_dsty.c 1.15 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/fmhlp_dsty_.h>
 #include <xview_private/fm_impl.h>
 #include <xview_private/frame_help.h>
 
-static void     frame_help_free();
+static void frame_help_free(Frame_help_info *frame);
 
 /* Destroy the frame struct */
 Pkg_private int

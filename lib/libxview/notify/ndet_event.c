@@ -15,7 +15,8 @@ static char     sccsid[] = "@(#)ndet_event.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * NTFY_SAFE_EVENT and NTFY_IMMEDIATE_EVENT.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndet_event_.h>
+#include <xview_private/ntfy_debug_.h>
 #include <xview_private/ndet.h>
 
 pkg_private int

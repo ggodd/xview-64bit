@@ -16,7 +16,7 @@ static char     sccsid[] = "@(#)ndet_nodis.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * when a read or select is called before calling notify_start.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndet_nodis_.h>
 #include <xview_private/ndet.h>
 
 extern          Notify_error

@@ -10,8 +10,9 @@ static char     sccsid[] = "@(#)fs_get.c 20.18 90/06/21";
  *	file for terms of the license.
  */
 
+#include <xview_private/fs_get_.h>
+#include <xview_private/win_compat_.h>
 #include <xview/win_input.h>
-#include <xview_private/fs_impl.h>
 #include <xview_private/portable.h>
 
 /*VARARGS3*/ /*ARGSUSED*/

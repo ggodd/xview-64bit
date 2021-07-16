@@ -10,6 +10,13 @@ static char     sccsid[] = "@(#)font.c 20.119 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/font_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/font_x_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/mem_.h>
+#include <xview_private/xv_.h>
 #include <sys/types.h>
 #include <string.h>
 #include <pixrect/pixrect.h>
@@ -32,44 +39,16 @@ static char     sccsid[] = "@(#)font.c 20.119 93/06/28";
  * Public
  */
 
-extern Pixfont	*xv_pf_sys;
-extern char	*defaults_get_string();
-extern Xv_opaque xv_default_server;
-extern Display *xv_default_display;
-extern int	xv_mem_destroy();
-
 #ifdef OW_I18N 
-extern char     *getenv();
-extern char     *xv_app_name;
-static char 	**construct_font_set_list();
-static char	*get_attr_str_from_opened_names();
-
 #define FONT_FIND_DEFAULT_FAMILY(linfo) \
                 (linfo) ? (linfo)->default_family : DEFAULT_FONT_FAMILY
 #define FONT_FIND_DEFAULT_SIZE(linfo) \
                 (linfo) ? (linfo)->medium_size : DEFAULT_MEDIUM_FONT_SIZE
 
-Pkg_private  XFontSet	xv_load_font_set();
 #define IS_C_LOCALE(_locale) \
 	(strcmp(_locale, "C") == 0)
 
 #endif /*OW_I18N*/ 
-
-
-/*
- * Private
- */
-Xv_private void xv_x_char_info();
-Xv_private Xv_Font xv_find_olglyph_font();
-Pkg_private XID xv_load_x_font();
-Pkg_private void xv_unload_x_font();
-Pkg_private int font_free_font_return_attr_strings();
-Xv_private char *xv_font_regular();
-Xv_private char *xv_font_regular_cmdline();
-Xv_private char *xv_font_scale_cmdline();
-Xv_private char *xv_font_scale();
-
-
 
 /*
  * delimiters
@@ -130,6 +109,55 @@ Xv_private char *xv_font_scale();
 #define DEFAULT_FONT_SCALE_STR          "Medium"
 #endif /*OW_I18N*/
 
+
+static char *normalize_font_name(register char *name, Font_locale_info *linfo);
+static char *font_default_font_from_scale(register char *scale, Font_locale_info *linfo);
+static void initialize_locale_info(Font_locale_info *linfo);
+static void font_list_free(Xv_object server,  Font_attribute key,  Xv_opaque data);
+static char *font_determine_font_name(Font_return_attrs my_attrs);
+static int font_size_from_scale(Font_return_attrs font_attrs, int scale);
+static int font_scale_from_size(Font_return_attrs font_attrs, int size);
+static int font_get_default_scale(Font_locale_info *linfo);
+static char *font_rescale_from_font(Font_info *font,  int scale,  struct font_return_attrs *attrs);
+static int font_string_compare(char *str1, char *str2);
+static int font_string_compare_nchars(char *str1, char *str2,  int n_chars);
+static void font_check_style_less(Font_return_attrs return_attrs);
+static void font_check_size_less(Font_return_attrs return_attrs);
+static void font_reduce_wildcards(Font_return_attrs return_attrs);
+static int font_read_attrs(Font_return_attrs return_attrs, int consume_attrs, Attr_avlist avlist);
+static void font_default_font(Font_return_attrs return_attrs);
+static Family_defs *font_match_family(char *family, Family_defs *known_families);
+static int font_convert_family(Font_return_attrs return_attrs);
+static int font_decrypt_xlfd_name(Font_return_attrs my_attrs);
+static int font_decrypt_misc_name(Font_return_attrs my_attrs);
+static int font_construct_name(Font_return_attrs font_attrs);
+static int font_delim_count(char *str, char delim);
+static char *font_strip_name(char *str, int pos, char delim);
+static void font_init_sizes(Font_locale_info *linfo);
+static void font_setup_known_families(Font_locale_info *linfo);
+static void font_setup_known_styles(Font_locale_info *linfo);
+static void font_setup_defaults(Font_locale_info *linfo);
+static Font_locale_info *find_font_locale_info(void);
+static void font_init_create_attrs(Font_return_attrs font_attrs);
+static XID font_try_misc_name(Font_return_attrs font_attrs, Display *display, XFontStruct **x_font_info, int *default_x, int *default_y, int *max_char, int *min_char);
+
+#ifdef OW_I18N
+static Font_locale_info *find_font_locale_info(Xv_opaque server, Attr_avlist avlist);
+static char *skip_space(register char *p);
+static char *skip_space_back(register char *p);
+static char *parse_font_list(XrmDatabase db, register char *list, int count);
+static char *get_font_set_list(XrmDatabase db,  char *key);
+static void free_font_set_list(char **list);
+static char **construct_font_set_list(char *str);
+static char *find_font_locale(Xv_opaque server, Attr_avlist avlist);
+static int font_name_is_equivalent(Font_return_attrs my_attrs,  struct font_info *finfo);
+static void font_init_known_families(Font_locale_info *linfo);
+static void font_init_known_styles(Font_locale_info *linfo);
+static int font_construct_names(Display *display,  Font_return_attrs font_attrs);
+#endif /*OW_I18N*/
+
+extern Pixfont *xv_pf_sys;
+
 static char    *sunview1_prefix = "/usr/lib/fonts/fixedwidthfonts/";
 
 #ifndef OW_I18N
@@ -152,42 +180,7 @@ typedef struct wildcards{
     char	*encoding;
 }Wildcards;
 
-struct font_return_attrs {
-    char	*name;
-    char	*orig_name;
-    char	*family;
-    char	*style;
-    char	*foundry;
-    char	*weight;
-    char	*slant;
-    char	*setwidthname;
-    char	*addstylename;
-    int		size;
-    int		small_size;
-    int		medium_size;
-    int		large_size;
-    int		extra_large_size;
-    int		scale;
-    Font_info	*resize_from_font;
-    int		rescale_factor;
-    int		free_name, free_family, free_style, 
-		free_weight, free_slant, free_foundry, 
-		free_setwidthname, free_addstylename;
-    char	delim_used;
-#ifdef OW_I18N
-    int		    type;
-    char            *locale;
-    char            **names;
-    short	    free_names;
-    char            *specifier;
-#endif /*OW_I18N*/ 
-    char	*encoding;
-    char	*registry;
-    Font_locale_info	*linfo;
-    unsigned	no_size:1;
-    unsigned	no_style:1;
-};
-typedef struct font_return_attrs *Font_return_attrs;
+extern Display *xv_default_display;
 
 /*
  * Known delimeters
@@ -255,7 +248,7 @@ static Style_defs	default_style_translation[] = {
 	"i", "medium", "i", "italic",
 	"o", "medium", "o", "oblique",
 
-	/*
+	/*xv_font_scale
 	 * 'real' entries
 	 */
 	"normal", "medium", "r", "normal",
@@ -283,7 +276,7 @@ static Style_defs	default_style_translation[] = {
 #define FONT_NUM_KNOWN_STYLES		20
 #ifdef OW_I18N
 static Font_locale_info		C_locale = {
-	"C",
+	"C",xv_font_scale
 	NULL,
 	10, 
 	12,
@@ -340,30 +333,6 @@ static Wildcards known_wildcards[] = {
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
-static void font_setup_defaults(Font_locale_info	*linfo);
-static int font_construct_name(Font_return_attrs font_attrs);
-static void font_init_create_attrs(Font_return_attrs font_attrs);
-
-
-Xv_private Xv_Font xv_font_with_name();
-static char    *normalize_font_name();
-static void     font_default_font();
-static char    *font_default_font_from_scale();
-static char    *font_determine_font_name();
-static char    *font_rescale_from_font();
-static int      font_read_attrs();
-static int      font_string_compare();
-static int      font_string_compare_nchars();
-static char	*font_strip_name();
-static int	font_delim_count();
-static XID font_try_misc_name();
-static Font_locale_info *find_font_locale_info();
-static void	font_setup_known_families();
-static void	font_setup_known_styles();
-static void	font_init_known_families();
-static void	font_init_known_styles();
-static void	font_init_sizes();
-static void	font_reduce_wildcards();
 
 /*
  * Normalize font name.
@@ -522,7 +491,7 @@ get_font_set_list(db, key)
     return(NULL);
 }
  
-static
+static void
 free_font_set_list(list)
     char    **list;
 {
@@ -1916,7 +1885,7 @@ font_determine_font_name(my_attrs)
     Font_return_attrs my_attrs;
 {
     char	name[512];
-    char	sizestr[10];
+    char	sizestr[16];
 
     /*
      * Return null if no family/style specified
@@ -4332,7 +4301,7 @@ int			*min_char;
                  */
                 xid = xv_load_x_font((Display *) display,
                         cur_name,
-                        x_font_info, default_x, default_y,
+                        (Xv_opaque*)x_font_info, default_x, default_y,
                         max_char, min_char);
 
                 if (xid)  {
@@ -4381,7 +4350,7 @@ int			*min_char;
                      */
                     xid = xv_load_x_font((Display *) display,
 			     cur_name,
-			     x_font_info, default_x, default_y,
+			     (Xv_opaque*)x_font_info, default_x, default_y,
 			     max_char, min_char);
 
 		    if (xid)  {

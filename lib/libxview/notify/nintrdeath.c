@@ -14,7 +14,8 @@ static char     sccsid[] = "@(#)nintrdeath.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * Nint_r_death.c - Implement the notify_remove_destroy_func interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/nintrdeath_.h>
+#include <xview_private/nintremove_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/nint.h>
 

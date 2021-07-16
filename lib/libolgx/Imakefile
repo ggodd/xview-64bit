@@ -26,7 +26,7 @@ PUB_INCDIR = $(OLPUB_INCDIR)
 PRI_HEADER_DEST = $(OLPRI_HEADER_DEST)
 PUB_HEADER_DEST = $(OLPUB_HEADER_DEST)
 HDRSPUBLIC = olgx.h
-HDRSPRIVATE = busy.h grey.h olgx_impl.h
+HDRSPRIVATE = busy.h grey.h olgx_impl.h ol_button_.h ol_color_.h ol_draw_.h ol_init_.h ol_misc_.h ol_sb_.h ol_slider_.h
 
 SRCS = \
 	ol_button.c ol_color.c ol_draw.c ol_init.c ol_misc.c \

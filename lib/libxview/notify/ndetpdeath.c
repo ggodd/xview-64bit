@@ -14,6 +14,13 @@ static char     sccsid[] = "@(#)ndetpdeath.c 20.15 93/06/28 Copyr 1985 Sun Micro
  * Ndet_p_death.c - Notify_post_destroy implementation.
  */
 
+#include <xview_private/ndetpdeath_.h>
+#include <xview_private/ndet_death_.h>
+#include <xview_private/ndisdispch_.h>
+#include <xview_private/ntfyclient_.h>
+#include <xview_private/ntfy_cond_.h>
+#include <xview_private/ntfy_debug_.h>
+#include <xview_private/ntfyprotec_.h>
 #include <xview_private/ntfy.h>
 #include <xview_private/ndet.h>
 #include <xview_private/ndis.h>
@@ -24,7 +31,6 @@ notify_post_destroy(nclient, status, when)
     Destroy_status  status;
     Notify_event_type when;
 {
-    NTFY_ENUM       ndet_immediate_destroy();
     NTFY_ENUM       enum_code;
     register NTFY_CLIENT *client;
     register NTFY_CONDITION *condition;

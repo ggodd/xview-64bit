@@ -10,6 +10,8 @@ static char     sccsid[] = "@(#)fm_rescale.c 20.21 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/fm_rescale_.h>
+#include <xview_private/windowutil_.h>
 #include <xview_private/fm_impl.h>
 #include <xview/font.h>
 
@@ -62,7 +64,7 @@ frame_rescale_subwindows(frame_public, scale)
     window_add_to_rect_list(rect_obj_list, sw, (Rect *) xv_get(sw, WIN_RECT), i);
     i++;
     FRAME_END_EACH
-	window_adjust_rects(rect_obj_list, num_sws, frame_width, frame_height);
+	window_adjust_rects(rect_obj_list, frame->public_self, num_sws, frame_width, frame_height);
     FRAME_EACH_SUBWINDOW(frame, sw)
 	if (!window_rect_equal_ith_obj(rect_obj_list, &new_rect, i))
 	xv_set(sw, WIN_RECT, &new_rect, 0);

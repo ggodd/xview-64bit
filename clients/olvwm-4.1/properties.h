@@ -14,6 +14,11 @@
 #ifndef _OLWM_PROPERTIES_H
 #define _OLWM_PROPERTIES_H
 
+#include <X11/Xutil.h>
+#include "i18n.h"
+#include "olwm.h"
+#include "win.h"
+
 /*
  * Open Look Window Attribute structure
  */
@@ -59,32 +64,29 @@ typedef struct {
 
 #define ENTIRE_CONTENTS		(10000000L)
 
-extern	void	*GetWindowProperty();
-
-extern	long	PropListAvailable();
-extern	void	PropSetAvailable();
-extern	void	PropClearAvailable();
-
-extern	Bool	PropGetWMName();
-extern	Bool	PropGetWMIconName();
-extern	Bool	PropGetWMClass();
-extern	Bool	PropGetWMNormalHints();
-extern	Bool	PropGetWMHints();
-extern	Bool	PropGetWMProtocols();
-extern	Bool	PropGetWMTransientFor();
-extern	Bool	PropGetWMState();
-extern	void	PropSetWMState();
-extern	Bool	PropGetOLWindowState();
-extern	Bool	PropGetOLWinAttr();
-extern	Bool	PropGetOLDecorAdd();
-extern	Bool	PropGetOLDecorDel();
-extern	Bool	PropGetOLLeftFooter();
-extern	Bool	PropGetOLRightFooter();
-extern	Bool	PropGetOLWindowState();
+void *GetWindowProperty(Display* dpy, Window w, Atom property, long long_offset, long long_length, Atom req_type, int req_fmt, unsigned long *nitems, unsigned long *bytes_after);
+long PropListAvailable(Display* dpy, Window win);
+void PropSetAvailable(Display* dpy, Window win);
+void PropClearAvailable(void);
+Bool PropGetWMName(Display* dpy, Window win, Text **winName);
+Bool PropGetWMIconName(Display* dpy, Window win, Text **iconName);
+Bool PropGetWMClass(Display* dpy, Window win, char **class, char **instance);
+Bool PropGetWMHints(Display* dpy, Window win, XWMHints *wmHints);
+Bool PropGetWMNormalHints(Display* dpy, Window win, XSizeHints *sizeHints, Bool *preICCCM);
+Bool PropGetWMProtocols(Display* dpy, Window win, int *protocols);
+Bool PropGetWMTransientFor(Display* dpy, Window win, Window root, Window *transientFor);
+Bool PropGetWMColormapWindows(Display* dpy, Window win, Window **wins, int *count);
+Bool PropGetWMState(Display* dpy, Window win, int *state, Window *iconwin);
+void PropSetWMState(Display* dpy, Window win, int state, Window iconwin);
+Bool PropGetOLWindowState(Display* dpy, Window win, OLWindowState *winState);
+Bool PropGetOLWinAttr(Display* dpy, Window win, OLWinAttr *winAttr, Bool *oldVersion);
+Bool PropGetOLDecorAdd(Display* dpy, Window win, int *decorFlags);
+Bool PropGetOLDecorDel(Display* dpy, Window win, int *decorFlags);
+Bool PropGetOLLeftFooter(Display* dpy, Window win, Text **footer);
+Bool PropGetOLRightFooter(Display* dpy, Window win, Text **footer);
 #ifdef OW_I18N_L4
-extern	Bool	PropGetOLLeftIMStatus();
-extern	Bool	PropGetOLRightIMStatus();
+Bool PropGetOLLeftIMStatus(Display* dpy, Window win, Text **status);
+Bool PropGetOLRightIMStatus(Display* dpy, Window win, Text **status);
 #endif
-
 
 #endif /* _OLWM_PROPERTIES_H */

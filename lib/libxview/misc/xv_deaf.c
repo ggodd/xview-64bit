@@ -29,6 +29,9 @@ static char     sccsid[] = "@(#)xv_deaf.c 1.13 93/06/28";
  * Returns XV_OK if success, XV_ERROR otherwise.
  *
  */
+#include <xview_private/xv_deaf_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/windowutil_.h>
 #include <stdio.h>
 #include <X11/Xlib.h>
 #include <xview_private/i18n_impl.h>

@@ -10,10 +10,10 @@ static char     sccsid[] = "@(#)windowdata.c 1.16 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview_private/windowimpl.h>
+#include <xview_private/window_.h>
+#include <xview_private/window_get_.h>
+#include <xview_private/window_set_.h>
 
-Pkg_private int window_init();
-Pkg_private int window_destroy_win_struct();
 Xv_pkg          xv_window_pkg = {
     "Window", ATTR_PKG_WIN,
     sizeof(Xv_window_struct),

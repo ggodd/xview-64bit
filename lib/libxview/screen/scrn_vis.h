@@ -31,7 +31,3 @@ typedef struct screen_visual {
 
 #endif
 
-/* Functions defined in scrn_vis.c */
-Pkg_private Screen_visual *screen_get_visual();
-Pkg_private Screen_visual *screen_get_image_visual();
-Pkg_private Screen_visual *screen_new_visual();

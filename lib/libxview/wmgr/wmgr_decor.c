@@ -14,8 +14,9 @@ static char     sccsid[] = "@(#)wmgr_decor.c 1.27 93/06/28";
  * Window mgr decoration handling. handling.
  */
 
+#include <xview_private/wmgr_decor_.h>
+#include <xview_private/screen_.h>
 #include <X11/Xlib.h>
-#include <xview_private/wmgr_decor.h>
 #include <xview/server.h>
 #include <xview_private/fm_impl.h>
 #include <xview_private/draw_impl.h>

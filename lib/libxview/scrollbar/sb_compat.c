@@ -17,15 +17,15 @@ static char     sccsid[] = "@(#)sb_compat.c 1.19 91/03/19";
  * Include files:
  */
 
-#include <xview_private/sb_impl.h>
+#include <xview_private/sb_compat_.h>
 #include <xview_private/portable.h>
 
 
 Sv1_public      Scrollbar
 #ifdef ANSI_FUNC_PROTO
-scrollbar_create(Attr_attribute attr1, ...)
+_scrollbar_create(Attr_attribute attr1, ...)
 #else
-scrollbar_create(attr1, va_alist)
+_scrollbar_create(attr1, va_alist)
     Attr_attribute attr1;
 va_dcl
 #endif
@@ -41,7 +41,7 @@ va_dcl
         va_end(args);
     }
     else
-        avlist[0] = NULL;
+        avlist[0] = (Attr_attribute)NULL;
 
     return (Scrollbar) xv_create((Xv_object)NULL, SCROLLBAR,
 				 ATTR_LIST, avlist,
@@ -50,9 +50,9 @@ va_dcl
 
 Sv1_public int
 #ifdef ANSI_FUNC_PROTO
-scrollbar_set(Scrollbar sb_public, ...)
+_scrollbar_set(Scrollbar sb_public, ...)
 #else
-scrollbar_set(sb_public, va_alist)
+_scrollbar_set(sb_public, va_alist)
     Scrollbar       sb_public;
 va_dcl
 #endif

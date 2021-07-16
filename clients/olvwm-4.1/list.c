@@ -34,6 +34,14 @@ typedef struct _cellBlock {
 static pcellBlock cellList = NULL;
 static List *freeList = NULL;
 
+static pcellBlock mkCellBlock(void);
+static void initCellBlock(pcellBlock pcb);
+static List *allocCell(void);
+static void freeCell(List *cell);
+#ifdef DEBUG
+static void listPrint(List *list);
+#endif
+
 /***************************************************************************
 * Local functions
 ***************************************************************************/

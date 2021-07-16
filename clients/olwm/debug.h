@@ -12,7 +12,7 @@
 #ifndef _OLWM_DEBUG_H
 #define _OLWM_DEBUG_H
 
-extern void DebugEvent();
-extern void DebugWindow();
+void DebugEvent(XEvent *ep, char *str);
+void DebugWindow(WinGeneric *win);
 
 #endif /* _OLWM_DEBUG_H */

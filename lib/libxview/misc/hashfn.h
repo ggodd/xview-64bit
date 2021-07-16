@@ -30,24 +30,11 @@ struct ht_ {
     int            ht_size;
     
     /* hash func: int f(caddr_t) */
-    int            (*ht_hash_fn)();
+    int            (*ht_hash_fn)(caddr_t);
 
     /* compare func: int f(caddr_t, caddr_t) returns 0 for equal */
-    int            (*ht_cmp_fn)();
+    int            (*ht_cmp_fn)(caddr_t, caddr_t);
     HashEntry    **ht_table;
 };
 
-#ifndef hashfn_c
-
-extern HashTable *hashfn_new_table();
-extern void hashfn_dispose_table();
-
-extern caddr_t /* payload pointer */ hashfn_lookup();
-extern caddr_t /* payload pointer */ hashfn_install();
-extern caddr_t /* payload pointer */ hashfn_delete();
-
-extern caddr_t /* key pointer */ hashfn_first_key();
-extern caddr_t /* key pointer */ hashfn_next_key();
-
-#endif /* hashfn_c */
 #endif /* hashfn_h */

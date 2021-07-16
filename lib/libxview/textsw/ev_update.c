@@ -13,7 +13,15 @@ static char     sccsid[] = "@(#)ev_update.c 20.49 93/06/28";
 /*
  * Initialization and finalization of entity views.
  */
-#include <xview/pkg.h>
+#include <xview_private/ev_update_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/ev_edit_.h>
+#include <xview_private/ev_op_bdry_.h>
+#include <xview_private/finger_tbl_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/tty_newtxt_.h>
+#include <xview_private/txt_scroll_.h>
+#include <xview_private/xv_.h>
 #include <xview/attrol.h>
 #include <xview_private/primal.h>
 #include <xview_private/ev_impl.h>
@@ -36,7 +44,9 @@ static char     sccsid[] = "@(#)ev_update.c 20.49 93/06/28";
 #include <stdlib.h> 
 #endif /* SVR4 */
 
-Es_index ev_line_start();
+static void ev_set_up_rect(Ev_handle view, Rect *new_rect, Rect *old_rect, int new_top, int old_top, int new_bot);
+static int ev_get_width(register Ev_handle view, Es_index first, Es_index last_plus_one, int lt_index);
+static void ev_copy_and_fix(Ev_handle view, Rect *new_rect, Rect *old_rect);
 
 /* for ev_lt_format ... */
 static struct ev_impl_line_data line_data = {-1, -1, -1, -1};
@@ -164,7 +174,7 @@ ev_lt_format(view, new_lt, old_lt)
     register int    lpo = old_lt->last_plus_one;
     register Es_index length = es_get_length(view->view_chain->esh);
     int             save_old_ix;
-    struct ei_process_result line_lpo, ev_line_lpo();
+    struct ei_process_result line_lpo;
 
     ev_lt_fmt_find_damage(new, old, new_ix, old_ix, lpo);
 
@@ -178,7 +188,7 @@ ev_lt_format(view, new_lt, old_lt)
 	new->blit_up = -1;
 	if (new->pos == ES_INFINITY) {
 	    if (new_lt->last_plus_one > new_ix)
-		ft_set(*new_lt, new_ix, lpo, ES_INFINITY, &line_data);
+		ft_set(*new_lt, new_ix, lpo, ES_INFINITY, (char*)&line_data);
 	    old = &((Ev_impl_line_seq) old_lt->seq)[new_ix];
 	    if (old->pos < ES_INFINITY
 		&& old->pos + old->considered > length)
@@ -289,7 +299,6 @@ ev_set_up_rect(view, new_rect, old_rect, new_top, old_top, new_bot)
     int             new_bot;
 {
     Rect            tmp_rect;
-    Pkg_private Rect ev_rect_for_line();
 
     tmp_rect = ev_rect_for_line(view, new_top);
     new_rect->r_top = tmp_rect.r_top;
@@ -307,13 +316,11 @@ ev_get_width(view, first, last_plus_one, lt_index)
     int             lt_index;
 {
     struct ei_process_result ei_measure;
-    struct ei_process_result ev_ei_process();
     Ev_pos_info    *cache;
     Ev_chain        chain = view->view_chain;
     Ev_chain_pd_handle private = EV_CHAIN_PRIVATE(chain);
     Ev_pd_handle    view_private = EV_PRIVATE(view);
     Rect            new_rect;
-    Pkg_private Rect ev_rect_for_line();
 
     if (first == last_plus_one)
 	return 0;
@@ -353,9 +360,7 @@ ev_display_line(view, width_before, lt_index, first, last_plus_one)
     Ev_chain_pd_handle chain_private = EV_CHAIN_PRIVATE(chain);
     Ei_handle       eih = chain->eih;
     struct ei_process_result result;
-    struct ei_process_result ev_ei_process();
     Rect            rect;
-    Rect            ev_rect_for_line();
     Es_buf_object   esbuf;
     struct range    range;
     int             rc = -1;
@@ -446,7 +451,6 @@ ev_display_line(view, width_before, lt_index, first, last_plus_one)
 	    result.bounds = rect;
 
 	    if (range.ei_op & EI_OP_EV_OVERLAY) {
-		Pkg_private Op_bdry_handle ev_find_glyph();
 		Op_bdry_handle  glyph_op_bdry;
 
 		range.ei_op &= ~EI_OP_EV_OVERLAY;
@@ -464,11 +468,8 @@ ev_display_line(view, width_before, lt_index, first, last_plus_one)
 				eih, range.ei_op | EI_OP_CLEAR_BACK,
 				&esbuf, result.pos.x, result.pos.y, PIX_SRC,
 		       view->pw, &rect, /* tab_origin */ view->rect.r_left);
-	    if (esbuf.last_plus_one == glyph_pos) {
-		Pkg_private void     ev_do_glyph();
-
+	    if (esbuf.last_plus_one == glyph_pos)
 		ev_do_glyph(view, &glyph_pos, &glyph, &result);
-	    }
 	    if (esbuf.last_plus_one < last_plus_one) {
 		esbuf.buf += esbuf.sizeof_buf;
 		esbuf.first = esbuf.last_plus_one;
@@ -493,7 +494,6 @@ ev_copy_and_fix(view, new_rect, old_rect)
     Window          win;
     Xv_Drawable_info *info;
     XEvent          xevent;
-    void            ev_paint_view();
 #if 0
     extern int      textsw_doing_refresh;
     extern int      ttysw_view_obscured;
@@ -563,7 +563,6 @@ ev_lt_paint(view, new_lt, old_lt)
     int             lpo = old_lt->last_plus_one;
     Es_index        length = es_get_length(view->view_chain->esh);
     Es_index        next_pos;
-    Pkg_private Rect ev_rect_for_line();
 
     new_rect = view->rect;
     ev_add_margins(view, &new_rect);

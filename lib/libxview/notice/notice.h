@@ -47,7 +47,7 @@
 #define NOTICE_ATTR(type, ordinal)	ATTR(ATTR_PKG_NOTICE, type, ordinal)
 #define NOTICE_ATTR_LIST(ltype, type, ordinal) \
 	NOTICE_ATTR(ATTR_LIST_INLINE((ltype), (type)), (ordinal))
-#if defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT)
+#if defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT) || defined(__amd64__)
 #define NOTICE_BUTTON_VALUE_PAIR	ATTR_OPAQUE_PAIR
 #else
 #define NOTICE_BUTTON_VALUE_PAIR	ATTR_INT_PAIR
@@ -106,6 +106,11 @@ typedef struct  {
     Xv_opaque		private_data;
 } Xv_notice_struct;
 
+#include <xview/macros.h>
+
+#define notice_prompt(...) \
+    MACRO_DEF2(_notice_prompt, Xv_Window, Event*, __VA_ARGS__)
+
 /*
  ***********************************************************************
  *				Globals
@@ -115,7 +120,7 @@ typedef struct  {
 /*
  * Public Functions 
  */
-EXTERN_FUNCTION (int		notice_prompt, (Xv_Window window,
+EXTERN_FUNCTION (int		_notice_prompt, (Xv_Window window,
 					Event *return_event,
 					DOTDOTDOT));
 

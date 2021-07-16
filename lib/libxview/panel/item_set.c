@@ -11,23 +11,20 @@ static char     sccsid[] = "@(#)item_set.c 20.104 93/06/28";
  */
 
 
-#include <xview_private/panel_impl.h>
+#include <xview_private/item_set_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/pf_text_.h>
+#include <xview_private/p_paint_.h>
+#include <xview_private/p_select_.h>
+#include <xview_private/p_txt_.h>
+#include <xview_private/p_utl_.h>
+#include <xview_private/win_input_.h>
+#include <xview_private/xv_olgx_.h>
 #include <xview_private/draw_impl.h>
 #include <xview/openmenu.h>
 
-Xv_public struct pr_size xv_pf_textwidth();
-#ifdef  OW_I18N
-extern struct pr_size xv_pf_textwidth_wc();
-#endif  /* OW_I18N */
-
-Xv_private int	    panel_item_parent();
-Xv_private void	    win_set_no_focus();
-Xv_private Graphics_info *xv_init_olgx();
-
-static void item_adjust_label_size();
-static void fix_positions(Item_info *ip);
-
-extern Notify_value panel_base_event_handler();
+static void item_adjust_label_size(Panel_item_type item_type, int label_type, struct pr_size *size, int menu_attached, Graphics_info *ginfo);
+static void fix_positions(register Item_info *ip);
 
 Pkg_private     Xv_opaque
 item_set_avlist(item_public, avlist)
@@ -783,7 +780,7 @@ then the item will be reparented to parent
 
 ****************************************************************/
 
-Xv_private
+Xv_private void
 panel_item_parent(item, parent)
     Panel_item      item;
     Panel           parent;
@@ -792,7 +789,7 @@ panel_item_parent(item, parent)
     register Panel_info *new_panel = NULL;
     register Panel_info *current_panel = ip->panel;
 
-    if (parent != NULL) {
+    if (parent != (Panel)NULL) {
 	new_panel = PANEL_PRIVATE(parent);
     }
     if (current_panel != NULL) {

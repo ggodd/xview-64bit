@@ -14,6 +14,7 @@ static char     sccsid[] = "@(#)sys_fcntl.c 20.13 93/06/28 Copyr 1985 Sun Micro"
  * Sys_fcntl.c - Real system call to fcntl.
  */
 
+#include <xview_private/sys_fcntl_.h>
 #ifndef SVR4
 #ifndef __linux__
 #include <syscall.h>
@@ -24,6 +25,9 @@ static char     sccsid[] = "@(#)sys_fcntl.c 20.13 93/06/28 Copyr 1985 Sun Micro"
 #include <sys/syscall.h>
 #endif /* SVR4 */
 #include <xview_private/ntfy.h>
+
+
+extern int __fcntl(int fd, int cmd, ... /* arg */ );
 
 pkg_private int
 notify_fcntl(fd, cmd, arg)

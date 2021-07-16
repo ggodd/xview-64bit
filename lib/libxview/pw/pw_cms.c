@@ -13,6 +13,8 @@ static char     sccsid[] = "@(#)pw_cms.c 20.31 93/06/28";
 /*
  * Implements the color interface of the pixwin layer.
  */
+#include <xview_private/pw_cms_.h>
+#include <xview_private/window_cms_.h>
 #include <stdio.h>
 #include <xview/window.h>
 #include <xview_private/draw_impl.h>

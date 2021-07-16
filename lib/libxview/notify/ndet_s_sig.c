@@ -14,7 +14,16 @@ static char     sccsid[] = "@(#)ndet_s_sig.c 20.13 93/06/28 Copyr 1985 Sun Micro
  * Ndet_s_sig.c - Implement the notify_set_signal_func interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndet_s_sig_.h>
+#include <xview_private/ndet_sig_.h>
+#include <xview_private/ndet_loop_.h>
+#include <xview_private/ndisdispch_.h>
+#include <xview_private/nint_set_.h>
+#include <xview_private/nint_stack_.h>
+#include <xview_private/ntfyclient_.h>
+#include <xview_private/ntfy_cond_.h>
+#include <xview_private/ntfy_ctbl_.h>
+#include <xview_private/ntfyprotec_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/ndis.h>
 #include <xview_private/nint.h>
@@ -45,7 +54,7 @@ notify_set_signal_func(nclient, func, sig, mode)
 	goto Done;
     /* Find/create condition */
     if ((condition = ntfy_new_condition(&(client->conditions), type,
-	    &(client->condition_latest), (NTFY_DATA) sig, NTFY_USE_DATA)) ==
+	    &(client->condition_latest), (NTFY_DATA)(long)sig, NTFY_USE_DATA)) ==
 	NTFY_CONDITION_NULL)
 	goto Done;
     ntfy_add_to_table(client, condition, type);
@@ -54,7 +63,7 @@ notify_set_signal_func(nclient, func, sig, mode)
     /* Remove condition if func is null */
     if (func == NOTIFY_FUNC_NULL) {
 	ndis_flush_condition(nclient, type,
-			     (NTFY_DATA) sig, NTFY_USE_DATA);
+			     (NTFY_DATA)(long)sig, NTFY_USE_DATA);
 	ntfy_unset_condition(&ndet_clients, client, condition,
 			     &ndet_client_latest, NTFY_NDET);
     } else

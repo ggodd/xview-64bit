@@ -14,10 +14,14 @@ static char     sccsid[] = "@(#)ntfy_dump.c 20.12 93/06/28 Copyr 1985 Sun Micro"
  * Ntfy_dump.c - Calls to dump notifier state.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ntfy_dump_.h>
+#include <xview_private/ntfy_cond_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/ndis.h>
 #include <stdio.h>		/* For output */
+
+
+static NTFY_ENUM ntfy_dump(register NTFY_CLIENT *client, register NTFY_CONDITION *cond, NTFY_ENUM_DATA context);
 
 typedef struct ntfy_dump_data {
     Notify_dump_type type;
@@ -25,8 +29,6 @@ typedef struct ntfy_dump_data {
     FILE           *file;
     NTFY_CLIENT    *client_latest;
 }               Ntfy_dump_data;
-
-static NTFY_ENUM ntfy_dump();
 
 extern void
 notify_dump(nclient, type, file)
@@ -72,7 +74,7 @@ ntfy_dump(client, cond, context)
     if (data->nclient && client->nclient != data->nclient)
 	return (NTFY_ENUM_NEXT);
     if (data->client_latest != client) {
-	(void) fprintf(data->file, "Client handle %lx, prioritizer %lx",
+	(void) fprintf(data->file, "Client handle %lx, prioritizer %p",
 		       client->nclient, client->prioritizer);
 	if (data->type == NOTIFY_DISPATCH &&
 	    client->flags & NCLT_EVENT_PROCESSING)
@@ -86,28 +88,28 @@ ntfy_dump(client, cond, context)
     switch (cond->type) {
       case NTFY_INPUT:
 	(void) fprintf(data->file,
-		       "input pending on fd %ld", cond->data.fd);
+		       "input pending on fd %d", cond->data.fd);
 	break;
       case NTFY_OUTPUT:
-	(void) fprintf(data->file, "output completed on fd %ld",
+	(void) fprintf(data->file, "output completed on fd %d",
 		       cond->data.fd);
 	break;
       case NTFY_EXCEPTION:
-	(void) fprintf(data->file, "exception occured on fd %ld",
+	(void) fprintf(data->file, "exception occured on fd %d",
 		       cond->data.fd);
 	break;
       case NTFY_SYNC_SIGNAL:
-	(void) fprintf(data->file, "signal (synchronous) %ld",
+	(void) fprintf(data->file, "signal (synchronous) %d",
 		       cond->data.signal);
 	break;
       case NTFY_ASYNC_SIGNAL:
-	(void) fprintf(data->file, "signal (asynchronous) %ld",
+	(void) fprintf(data->file, "signal (asynchronous) %d",
 		       cond->data.signal);
 	break;
       case NTFY_REAL_ITIMER:
 	(void) fprintf(data->file, "interval timer (real time) ");
 	if (data->type == NOTIFY_DETECT) {
-	    (void) fprintf(data->file, "waiting (%lx)",
+	    (void) fprintf(data->file, "waiting (%p)",
 			   cond->data.ntfy_itimer);
 	} else
 	    (void) fprintf(data->file, "expired");
@@ -115,17 +117,17 @@ ntfy_dump(client, cond, context)
       case NTFY_VIRTUAL_ITIMER:
 	(void) fprintf(data->file, "interval timer (virtual time) ");
 	if (data->type == NOTIFY_DETECT) {
-	    (void) fprintf(data->file, "waiting (%lx)",
+	    (void) fprintf(data->file, "waiting (%p)",
 			   cond->data.ntfy_itimer);
 	} else
 	    (void) fprintf(data->file, "expired");
 	break;
       case NTFY_WAIT3:
 	if (data->type == NOTIFY_DETECT)
-	    (void) fprintf(data->file, "wait3 pid %ld",
+	    (void) fprintf(data->file, "wait3 pid %d",
 			   cond->data.pid);
 	else
-	    (void) fprintf(data->file, "wait3 pid %ld",
+	    (void) fprintf(data->file, "wait3 pid %d",
 			   cond->data.wait3->pid);
 	break;
       case NTFY_SAFE_EVENT:
@@ -136,7 +138,7 @@ ntfy_dump(client, cond, context)
 		       cond->data.event);
 	break;
       case NTFY_DESTROY:
-	(void) fprintf(data->file, "destroy status %lx",
+	(void) fprintf(data->file, "destroy status %x",
 		       cond->data.status);
 	break;
       default:
@@ -145,27 +147,27 @@ ntfy_dump(client, cond, context)
     }
     /* Copy function list, if appropriate */
     if (cond->func_count > 1) {
-	(void) fprintf(data->file, "\n\t\tfunctions: %lx %lx %lx %lx %lx",
+	(void) fprintf(data->file, "\n\t\tfunctions: %p %p %p %p %p",
 		       cond->callout.functions[0],
 		       cond->callout.functions[1],
 		       cond->callout.functions[2],
 		       cond->callout.functions[3],
 		       cond->callout.functions[4]);
 	(void) fprintf(data->file,
-		       "\n\t\tfunc count %ld, func next %ld\n",
+		       "\n\t\tfunc count %d, func next %d\n",
 		       cond->func_count, cond->func_next);
     } else
-	(void) fprintf(data->file, ", func: %lx\n",
+	(void) fprintf(data->file, ", func: %p\n",
 		       cond->callout.function);
     if (data->type == NOTIFY_DISPATCH) {
 	if (cond->arg && cond->release)
 	    (void) fprintf(data->file,
-			   "\targ: %lx, release func: %lx\n",
+			   "\targ: %lx, release func: %p\n",
 			   cond->arg, cond->release);
 	else if (cond->arg)
 	    (void) fprintf(data->file, "\targ: %lx\n", cond->arg);
 	else if (cond->release)
-	    (void) fprintf(data->file, "\trelease func: %lx\n",
+	    (void) fprintf(data->file, "\trelease func: %p\n",
 			   cond->release);
     }
     return (NTFY_ENUM_NEXT);

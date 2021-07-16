@@ -13,7 +13,7 @@ static char     sccsid[] = "@(#)pw_btchrop.c 20.16 93/06/28 Copyr 1985 Sun Micro
 /*
  * Pw_batchrop.c
  */
-#include <xview_private/pw_impl.h>
+#include <xview_private/pw_btchrop_.h>
 
 Xv_public int
 pw_batchrop(pw, x, y, op, sbp, n)

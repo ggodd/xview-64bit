@@ -13,7 +13,7 @@ static char     sccsid[] = "@(#)icon_data.c 1.17 93/06/28";
  */
 /*****************************************************************************/
 
-#include <xview_private/icon_impl.h>
+#include <xview_private/icon_obj_.h>
 
 Xv_pkg          xv_icon_pkg = {
     "Icon",			/* seal -> package name */

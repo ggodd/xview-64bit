@@ -4,6 +4,8 @@
  *      file for terms of the license.
  */
 
+#include <xview_private/drop_.h>
+#include <xview_private/win_treeop_.h>
 #include <X11/Xlib.h>
 #include <xview/xview.h>
 #include <xview/seln.h>
@@ -15,13 +17,8 @@
 
 #define DD_FAILED  -1
 
-#ifdef __STDC__
-static int HandleNewDrop(Event *ev, XClientMessageEvent *cM, Xv_window window, char *buffer, unsigned int bsize);
-#else
-static int HandleNewDrop();
-#endif
 
-Xv_object win_data();
+static int HandleNewDrop(Event *ev, XClientMessageEvent *cM, Xv_window window, char* buffer, unsigned int bsize);
 
 int
 xv_decode_drop(ev, buffer, bsize)

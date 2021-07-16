@@ -15,6 +15,8 @@ static char     sccsid[] = "@(#)defaults.c 20.33 93/06/28";
  * database.  Any errors are printed on the console as warning messeges.
  */
 
+#include <xview_private/defaults_.h>
+#include <xview_private/gettext_.h>
 #include <stdio.h>		/* Standard I/O library */
 #include <ctype.h>
 #include <sys/types.h>
@@ -23,6 +25,7 @@ static char     sccsid[] = "@(#)defaults.c 20.33 93/06/28";
 #ifdef OW_I18N
 #include <xview/server.h>
 #endif
+#include <xview/pkg.h>
 #include <xview/xv_error.h>
 /* mbuck@debian.org */
 #if 1
@@ -33,9 +36,15 @@ static char     sccsid[] = "@(#)defaults.c 20.33 93/06/28";
 #include <X11/Xatom.h>
 #include <X11/Xresource.h>
 #include <xview_private/i18n_impl.h>
+#include <xview_private/xv_.h>
 
 /* ---------------------------------------------------------- */
+static Bool symbol_equal(register char *symbol1, register char *symbol2);
+#ifdef OW_I18N
+static Bool xv_XrmGetResource(XrmDatabase rdb, char *name, char *class, char **type, XrmValue *value);
+#endif 
 
+extern Xv_public_data Display *xv_default_display;
 static char     defaults_returned_value[DEFAULTS_MAX_VALUE_SIZE];
 
 /* 
@@ -54,13 +63,10 @@ static char     defaults_returned_value[DEFAULTS_MAX_VALUE_SIZE];
  */
 XrmDatabase defaults_rdb;/* merged defaults database */
 
-static Bool     symbol_equal();
 #ifdef OW_I18N
-static Bool	xv_XrmGetResource();
 static char	*defaults_locale = NULL;
 #endif /* OW_I18N */
 
-extern Display *xv_default_display;
 
 /* ---------------------------------------------------------- */
 
@@ -145,7 +151,7 @@ defaults_get_boolean(name, class, default_bool)
 	(void) sprintf(buffer,
 	       XV_MSG("\"%s\" is an unrecognized boolean value (Defaults package)"),
 		       string_value);
-	xv_error(NULL,
+	xv_error((Xv_object)NULL,
 		 ERROR_STRING, buffer,
 		 0);
 	value = default_bool;
@@ -180,7 +186,7 @@ defaults_get_character(name, class, default_char)
 	sprintf(buffer, 
 		XV_MSG("\"%s\" is not a character constant (Defaults package)"),
 		string_value);
-	xv_error(NULL,
+	xv_error((Xv_object)NULL,
 		 ERROR_STRING, buffer,
 		 0);
 	return default_char;
@@ -256,7 +262,7 @@ defaults_get_integer(name, class, default_integer)
 	sprintf(buffer, 
 		XV_MSG("\"%s\" is not an integer (Defaults package)"), 
 		string_value);
-	xv_error(NULL,
+	xv_error((Xv_object)NULL,
 		 ERROR_STRING, buffer,
 		 0);
 	return default_integer;
@@ -296,7 +302,7 @@ defaults_get_integer_check(name, class, default_int, minimum, maximum)
 	sprintf(buffer, 
 	XV_MSG("The value of name \"%s\" (class \"%s\") is %d,\nwhich is not between %d and %d. (Defaults package)"),
 		name, class, value, minimum, maximum);
-	xv_error(NULL,
+	xv_error((Xv_object)NULL,
 		 ERROR_STRING, buffer,
 		 0);
 	return default_int;

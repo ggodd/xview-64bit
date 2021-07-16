@@ -14,9 +14,8 @@ static char     sccsid[] = "@(#)bitmask.c 20.15 93/06/28";
  * Bitmask handling
  */
 
-#define bitmask_c
-#include <xview_private/bitmask.h>
-#include <xview/base.h>
+#include <xview_private/bitmask_.h>
+#include <xview_private/xv_.h>
 
 Bitmask        *
 xv_bitss_new_mask(max_bits)

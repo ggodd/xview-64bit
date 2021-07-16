@@ -53,18 +53,10 @@ static	CmdInfo		cmdInfo = {
 /* ----------------------------------------------------------------------
  *      Local Forward Declarations
  * ---------------------------------------------------------------------*/
-
-#ifdef __STDC__
-static	Command *MatchCommand(char *keyword);
-static	CmdAttr *MatchAttr(Command *cmd, char *name);
-static	int EncodeAttrValue(CmdAttr *attr, FILE *stream);
-static	int DecodeAttrValue(CmdAttr *attr, char *valuestr);
-#else
-static	Command *MatchCommand();
-static	CmdAttr *MatchAttr();
-static	int EncodeAttrValue();
-static	int DecodeAttrValue();
-#endif
+static Command *MatchCommand(char *keyword);
+static CmdAttr *MatchAttr(Command *cmd, char *name);
+static int EncodeAttrValue(CmdAttr *attr, FILE *stream);
+static int DecodeAttrValue(CmdAttr *attr, char *valuestr);
 
 /* ----------------------------------------------------------------------
  *      SetCmdStream

@@ -14,9 +14,18 @@ static char     sccsid[] = "@(#)txt_field.c 20.31 93/06/28";
  * Procedures to do field matching in text subwindows.
  */
 
+#include <xview_private/txt_field_.h>
+#include <xview_private/ev_field_.h>
+#include <xview_private/txt_again_.h>
+#include <xview_private/txt_event_.h>
+#include <xview_private/txt_find_.h>
+#include <xview_private/txt_getkey_.h>
+#include <xview_private/txt_input_.h>
+#include <xview_private/txt_popup_.h>
+#include <xview_private/txt_sel_.h>
+#include <xview_private/txt_selsvc_.h>
 #include <string.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <xview_private/txt_18impl.h>
 #include <sys/time.h>
@@ -30,9 +39,9 @@ static char     sccsid[] = "@(#)txt_field.c 20.31 93/06/28";
 #define    NUM_OF_COL		2
 #define    MAX_STR_LENGTH       1024
 
-Es_index ev_find_enclose_end_marker();
-Es_index ev_match_field_in_esh();
-
+static int check_selection(CHAR *buf, unsigned buf_len, Es_index *first, Es_index *last_plus_one, CHAR *marker1, unsigned marker1_len, unsigned field_flag);
+static Es_index get_start_position(Textsw_folio folio, Es_index *first, Es_index *last_plus_one, CHAR *symbol1, unsigned symbol1_len, CHAR *symbol2, unsigned symbol2_len, unsigned field_flag, int do_search);
+static void textsw_get_match_symbol(CHAR *buf, int buf_len, CHAR *match_buf, int *match_buf_len, unsigned *direction);
 
 #ifdef OW_I18N
 
@@ -62,12 +71,6 @@ static char     *match_table[NUM_OF_COL][MAX_SYMBOLS] =
 {"}", ")", "\"", "'", "`", "]", "<|", "*/",}};
 #endif /* OW_I18N */
 
-#ifdef __STDC__
-static void textsw_get_match_symbol(CHAR *buf, int buf_len, CHAR *match_buf, int *match_buf_len, unsigned *direction);
-#else
-static void textsw_get_match_symbol();
-#endif
-
 Pkg_private void
 textsw_begin_match_field(view)
     register Textsw_view_handle view;
@@ -80,9 +83,9 @@ textsw_begin_match_field(view)
 Pkg_private int
 textsw_end_match_field(view, event_code, x, y)
     register Textsw_view_handle view;
+    int event_code;
     int             x, y;
 {
-    Pkg_private int textsw_match_selection_and_normalize();
     register Textsw_folio folio = FOLIO_FOR_VIEW(view);
     unsigned        field_flag = (event_code == TXTSW_NEXT_FIELD) ? TEXTSW_FIELD_FORWARD : TEXTSW_FIELD_BACKWARD;
     CHAR           *start_marker;
@@ -102,9 +105,6 @@ Done:
     textsw_end_function(view, TXTSW_FUNC_FIELD);
     return (0);
 }
-
-
-static void     textsw_get_match_symbol();
 
 static int
 check_selection(buf, buf_len, first, last_plus_one,

@@ -14,6 +14,8 @@ static char     sccsid[] = "@(#)win_cntral.c 20.20 93/06/28";
  * Implements library routines for centralized window event management.
  */
 
+#include <xview_private/win_cntral_.h>
+#include <xview_private/xv_.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <errno.h>
@@ -23,12 +25,10 @@ static char     sccsid[] = "@(#)win_cntral.c 20.20 93/06/28";
 #include <xview/win_input.h>
 #include <xview/win_notify.h>
 
-static Notify_error win_send();
+static Notify_error win_send(Notify_client client, register Event *event, Notify_event_type when, Notify_arg arg, Notify_copy copy_func, Notify_release release_func);
 
 extern int      errno;
 extern Event    xv_last_event;
-
-void            notify_perror();
 
 /*
  * Public interface:

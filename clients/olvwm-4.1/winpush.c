@@ -32,6 +32,9 @@
 #include "virtual.h"
 #include "client.h"
 #include "evbind.h"
+#include "winpush.h"
+#include "winframe.h"
+#include "info.h"
 
 /***************************************************************************
 * global data
@@ -39,7 +42,6 @@
 
 extern Atom AtomDeleteWindow;
 extern Atom AtomPushpinState;
-extern void FrameAllowEvents();
 
 /***************************************************************************
 * private data
@@ -50,7 +52,16 @@ static Bool     pushpinStateAfterPress;  /* State of the pushpin
 					  * after the user pressed
 				   	  * the mouse button. */
 static SemanticAction currentAction = ACTION_NONE;
-void PushPinChangePinState();
+
+static void locallyChangePushPinState(Display *dpy, WinPushPin *winInfo, Bool newState);
+static int eventButtonPress(Display *dpy, XEvent *event, WinPushPin *winInfo);
+static void eventButtonRelease(Display *dpy, XEvent *event, WinPushPin *winInfo);
+static void eventMotionNotify(Display *dpy, XEvent *event, WinPushPin *winInfo);
+static int drawPushPin(Display *dpy, WinPushPin *winInfo);
+static int destroyPushPin(Display *dpy,WinPushPin * winInfo);
+static int focusselectPushPin(Display *dpy, WinPushPin *winInfo, Bool selected);
+static int heightfuncPushPin(WinPushPin *win, XConfigureRequestEvent *pxcre);
+static int widthfuncPushPin(WinPushPin *win, XConfigureRequestEvent *pxcre);
 
 /***************************************************************************
 * private functions
@@ -100,7 +111,7 @@ WinPushPin	*winInfo;
 /* 
  * eventButtonRelease - handle button release events on the pushpin window 
  */
-static int
+static void
 eventButtonRelease(dpy, event, winInfo)
 Display	*dpy;
 XEvent	*event;
@@ -126,7 +137,7 @@ WinPushPin	*winInfo;
 /* 
  * eventMotionNotify - handle pointer moves
  */
-static int
+static void
 eventMotionNotify(dpy, event, winInfo)
 Display	*dpy;
 XEvent	*event;
@@ -330,7 +341,7 @@ int x,y;
                         (unsigned char *)&(w->pushpinin), 1);
 
 	/* register the window */
-	WIInstallInfo(w);
+	WIInstallInfo((WinGeneric *)w);
 
         MapRaised((WinGeneric *)w);
 
@@ -345,8 +356,8 @@ Display *dpy;
 	classPushPin.core.kind = WIN_PUSHPIN;
 	classPushPin.core.xevents[Expose] = WinEventExpose;
 	classPushPin.core.xevents[ButtonPress] = eventButtonPress;
-	classPushPin.core.xevents[ButtonRelease] = eventButtonRelease;
-	classPushPin.core.xevents[MotionNotify] = eventMotionNotify;
+	classPushPin.core.xevents[ButtonRelease] = (FuncPtr)eventButtonRelease;
+	classPushPin.core.xevents[MotionNotify] = (FuncPtr)eventMotionNotify;
 	classPushPin.core.focusfunc = focusselectPushPin;
 	classPushPin.core.drawfunc = drawPushPin;
 	classPushPin.core.destroyfunc = destroyPushPin;

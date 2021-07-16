@@ -22,25 +22,6 @@
  */
 typedef int (*InterposerFunc)();
 
-/* global functions */
-extern void EventLoop();
-extern int PropagateEventToParent();
-extern void PropagatePressEventToChild();
-extern Time LastEventTime;
-extern Bool AwaitEvents();
-extern void GrabKeys();
-extern void RefreshKeyGrabs();
-extern void GrabButtons();
-extern void RefreshButtonGrabs();
-extern Bool UpdateBindings();
-extern void InitEvents();
-extern void InitBindings();
-
-/* interposition */
-extern void InstallInterposer();
-extern void UninstallInterposer();
-extern InterposerFunc InterposerInstalled();
-extern void EnableInterposerDelegation();
 
 enum {
     DISPOSE_DISPATCH,
@@ -67,7 +48,6 @@ enum {
 };
 
 extern unsigned int ModMaskMap[MOD_MASK_COUNT];
-extern unsigned int FindModifierMask();
 
 /* mouse binding match states */
 typedef enum {
@@ -191,7 +171,6 @@ typedef struct _keyBinding {
 } KeyBinding;
 
 extern KeyBinding *LookupKeyBinding(/* SemanticAction */);
-extern KeySym ModifierToKeysym();
 
 /* convert a button number to a button mask */
 #define ButtonToMask(b) (1<<(b+7))
@@ -209,12 +188,29 @@ extern KeySym ModifierToKeysym();
 
 /* timeouts */
 typedef void (*TimeoutFunc)();
-extern void TimeoutRequest();	/* int time, TimeoutFunc f, void *closure */
-extern void TimeoutCancel();	/* no params */
 
 /*
  * declared in evbind.c
  */
 extern Bool mouselessSuspended;
+
+typedef struct _wingeneric WinGeneric;
+
+WinGeneric *lookupWindow(XEvent *event);
+void saveTimestamp(XEvent *event);
+void handleMappingNotify(Display *dpy, XEvent *e);
+void EventLoop(Display *dpy);
+void PropagateEventToParent(Display *dpy, XEvent *event, WinGeneric *win);
+void PropagatePressEventToChild(Display *dpy, XButtonPressedEvent *event, WinGeneric *win);
+unsigned int FindModifierMask(KeyCode kc);
+KeySym ModifierToKeysym(unsigned int mod);
+Bool AwaitEvents(Display *dpy, struct timeval *timeout);
+void InstallInterposer(InterposerFunc func, void *cl);
+void UninstallInterposer(void);
+InterposerFunc InterposerInstalled(void);
+void EnableInterposerDelegation(void);
+void TimeoutRequest(int t, TimeoutFunc f, void *c);
+void TimeoutCancel(void);
+void InitEvents(Display *dpy);
 
 #endif /* _OLWM_EVENT_H */

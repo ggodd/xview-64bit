@@ -432,14 +432,25 @@ EXTERN_FUNCTION (Xv_opaque * xv_get_selected_windows, (Xv_object window));
 EXTERN_FUNCTION (XID win_pointer_under, (Xv_object window, int x, int y));
 EXTERN_FUNCTION (int win_translate_xy, (Xv_object src, Xv_object dst, int src_x, int src_y, int *dst_x, int *dst_y));
 
+#include <xview/macros.h>
+
+#define window_create(...) \
+    MACRO_DEF2(_window_create, Xv_Window, Xv_pkg*, __VA_ARGS__)
+
+#define window_get(...) \
+    MACRO_DEF2(_window_get, Xv_Window, Window_attribute, __VA_ARGS__)
+
+#define window_set(...) \
+    MACRO_DEF1(_window_set, Xv_Window, __VA_ARGS__)
+
 /*
  * PUBLIC functions 
  * For SunView 1 Compatibility
  */
 
-EXTERN_FUNCTION (Xv_Window window_create, (Xv_Window window, Xv_pkg *pkg, DOTDOTDOT));
-EXTERN_FUNCTION (Xv_opaque window_get, (Xv_Window window, Window_attribute attr, DOTDOTDOT));
-EXTERN_FUNCTION (int window_set, (Xv_Window window, DOTDOTDOT));
+EXTERN_FUNCTION (Xv_Window _window_create, (Xv_Window window, Xv_pkg *pkg, DOTDOTDOT));
+EXTERN_FUNCTION (Xv_opaque _window_get, (Xv_Window window, Window_attribute attr, DOTDOTDOT));
+EXTERN_FUNCTION (int _window_set, (Xv_Window window, DOTDOTDOT));
 EXTERN_FUNCTION (int window_destroy, (Xv_Window window));
 
 

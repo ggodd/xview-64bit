@@ -22,16 +22,10 @@ static char     sccsid[] = "@(#)sb_destroy.c 1.35 93/06/28";
 /*
  * Include files:
  */
-#include <xview_private/sb_impl.h>
+#include <xview_private/sb_destroy_.h>
 #include <xview/canvas.h>
 #include <xview/frame.h>
 #include <xview/screen.h>
-
-/*
- * Declaration of Functions Defined in This File (in order):
- */
-
-Pkg_private int scrollbar_destroy_internal();
 
 /******************************************************************/
 

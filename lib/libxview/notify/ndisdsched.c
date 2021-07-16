@@ -14,12 +14,9 @@ static char     sccsid[] = "@(#)ndisdsched.c 20.13 93/06/28 Copyr 1985 Sun Micro
  * Ndis_d_sched.c - Default scheduler for the dispatcher.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndisdsched_.h>
 #include <xview_private/ndis.h>
 
-pkg_private Notify_value ndis_default_scheduler();
-pkg_private Notify_value ndis_special_client_scheduler();
-static Notify_value save_sched_func();
 static int		special_client_set;
 static Notify_client	special_client;
 

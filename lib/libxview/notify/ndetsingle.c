@@ -15,7 +15,7 @@ static char     sccsid[] = "@(#)ndetsingle.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * cycle, if not already in the middle of it.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndetsingle_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/ndis.h>	/* For ndis_client == NTFY_CLIENT_NULL check */
 #include <errno.h>

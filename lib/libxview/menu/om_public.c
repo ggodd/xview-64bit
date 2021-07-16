@@ -10,6 +10,13 @@ static char     sccsid[] = "@(#)om_public.c 20.146 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/om_public_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/om_render_.h>
+#include <xview_private/om_set_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/xv_.h>
 #include <xview/win_input.h>	/* includes types & time */
 #ifndef FILE
 #undef NULL
@@ -35,7 +42,6 @@ static char     sccsid[] = "@(#)om_public.c 20.146 93/06/28";
 #include <xview_private/fm_impl.h>
 #include <xview/xview.h>
 
-#include <xview/defaults.h>
 #include <xview/font.h>
 #include <xview/panel.h>
 #include <xview/win_struct.h>
@@ -51,48 +57,10 @@ static char     sccsid[] = "@(#)om_public.c 20.146 93/06/28";
 
 /* ------------------------------------------------------------------------- */
 
-/*
- * Public
- */
-Xv_public Xv_opaque menu_return_value();
-Xv_public Xv_opaque menu_return_item();
-Xv_public void  menu_default_pin_proc();
-
-Sv1_public Xv_opaque menu_get();
-Sv1_public void menu_destroy_with_proc();
-
-/*
- * Toolkit private
- */
-Xv_private void frame_get_rect();
-Xv_private void frame_set_rect();
-Xv_private void menu_return_default();
-Xv_private void menu_select_default();
-Xv_private void menu_item_set_parent();
-Xv_private void menu_accelerator_notify_proc();
-
-/*
- * Package private
- */
-Pkg_private int menu_create_internal();
-Pkg_private int menu_create_item_internal();
-Pkg_private int menu_item_destroy_internal();
-Pkg_private Xv_opaque menu_pullright_return_result();
-Pkg_private Xv_opaque menu_sets();
-Pkg_private Xv_opaque menu_gets();
-Pkg_private Xv_opaque menu_pkg_find();
-Pkg_private Xv_opaque menu_item_sets();
-Pkg_private Xv_opaque menu_item_gets();
-Pkg_private void menu_return_no_value();
-Pkg_private void menu_done();
-Pkg_private void menu_render();
-Pkg_private void menu_set_pin_window();
-Pkg_private void menu_window_event_proc();
-Pkg_private void menu_shadow_event_proc();
-Pkg_private Notify_value menu_client_window_event_proc();
-
-/* destroy routines for menus and menu_items */
-Pkg_private void menu_destroys(), menu_item_destroys();
+static Xv_opaque menu_return_result(Xv_menu_info *menu, Xv_menu_group_info *group, Xv_menu_item_info *parent);
+static void pin_button_notify_proc(Panel_item item, Event *event);
+static void pin_choice_notify_proc(Panel_item item, int value, Event *event);
+static void menu_create_pin_window(Menu menu_public, Frame parent_frame, CHAR *frame_label);
 
 /* Pkg_private (server XV_KEY_DATA keys) */
 int    menu_active_menu_key;
@@ -100,10 +68,7 @@ int    menu_active_menu_key;
 /*
  * Private
  */
-static void menu_create_pin_window();
 static int menu_group_info_key;
-static Xv_opaque menu_return_result();
-static void pin_choice_notify_proc(Panel_item item, int value, Event *event);
 
 /* Cache the standard menu data obtained from the defaults database */
 static Xv_menu_info *m_cache;
@@ -130,9 +95,9 @@ extern int panel_item_destroy_flag;
 /* VARARGS3 */
 Xv_public void
 #ifdef ANSI_FUNC_PROTO
-menu_show(Menu menu_public, Xv_Window win, struct inputevent *iep, ...)
+_menu_show(Menu menu_public, Xv_Window win, struct inputevent *iep, ...)
 #else
-menu_show(menu_public, win, iep, va_alist)
+_menu_show(menu_public, win, iep, va_alist)
     Menu            menu_public;
     Xv_Window       win;
     struct inputevent *iep;
@@ -446,8 +411,8 @@ menu_create_internal(parent, object, avlist)	/*ARGSUSED*/
 	}
 	m_cache->color_index = -1;
 	m_cache->column_major = TRUE;
-	m_cache->default_image.bold_font = NULL;
-	m_cache->default_image.font = NULL;
+	m_cache->default_image.bold_font = 0;
+	m_cache->default_image.font = 0;
 	m_cache->default_image.left_margin = 1;
 	m_cache->default_image.margin = 1;
 	m_cache->default_image.right_margin = 1;
@@ -823,9 +788,9 @@ menu_return_no_value(menu_public)
 /* VARARGS1 */
 Sv1_public      Menu_item
 #ifdef ANSI_FUNC_PROTO
-menu_find(Menu menu_public, ...)
+_menu_find(Menu menu_public, ...)
 #else
-menu_find(menu_public, va_alist)
+_menu_find(menu_public, va_alist)
     Menu            menu_public;
 va_dcl
 #endif			/*** WARNING: menu_find does not support ATTR_LIST. ***/

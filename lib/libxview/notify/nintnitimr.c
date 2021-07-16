@@ -14,7 +14,9 @@ static char     sccsid[] = "@(#)nintnitimr.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * Nint_n_itimer.c - Implement the notify_next_itimer_func interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/nintnitimr_.h>
+#include <xview_private/ndetitimer_.h>
+#include <xview_private/nint_next_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/nint.h>
 

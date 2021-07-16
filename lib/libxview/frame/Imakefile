@@ -22,7 +22,13 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=	frame.h
-HDRSPRIVATE=    fm_impl.h frame_base.h frame_cmd.h frame_help.h
+HDRSPRIVATE=    fm_impl.h frame_base.h frame_cmd.h frame_help.h fm_bdry_.h \
+                fmbs_dsty_.h fmbs_get_.h fmbs_set_.h fmcmd_dsty_.h \
+                fmcmd_get_.h fm_cmdline_.h fmcmd_set_.h fm_destroy_.h \
+                fm_display_.h fm_geom_.h fm_get_.h fm_rescale_.h \
+                fmhlp_dsty_.h fmhlp_get_.h fmhlp_set_.h fm_input_.h \
+                frame_sw_.h frame_base_.h fm_layout_.h fm_set_.h \
+                frame_init_.h fm_win_.h frame_.h frame_cmd_.h frame_help_.h
 
 DATA_OBJS = fm_data.o fm_rodata.o
 

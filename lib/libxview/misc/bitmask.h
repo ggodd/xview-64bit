@@ -23,15 +23,4 @@ typedef struct bm_ {
 #define BITSPERBYTE 8
 #endif
 
-#ifndef bitmask_c
-
-extern Bitmask * xv_bitss_new_mask();
-extern void xv_bitss_dispose_mask();
-extern Bitmask * xv_bitss_set_mask();
-extern unsigned int xv_bitss_get_mask();
-extern int xv_bitss_cmp_mask();
-extern Bitmask * xv_bitss_copy_mask();
-
-#endif /* bitmask_c */
-
 #endif /* bitmask_h */

@@ -40,6 +40,10 @@ static char     sccsid[] = "@(#)ps_impl.c 20.41 93/06/28";
  * available.
  */
 
+#include <xview_private/ps_impl_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/finger_tbl_.h>
+#include <xview_private/gettext_.h>
 #include <stdio.h>
 #include <xview_private/portable.h>  
 #include <xview_private/ps_impl.h>
@@ -54,42 +58,41 @@ static char     sccsid[] = "@(#)ps_impl.c 20.41 93/06/28";
 #include <stdlib.h> 
 #endif /* SVR4 */
 
-static Es_status ps_commit();
-static Es_handle ps_destroy(), ps_scratch_destroy();
-static Es_index ps_get_length(), ps_scratch_get_length();
-static Es_index ps_get_position(), ps_scratch_get_position();
-static Es_index ps_set_position(), ps_scratch_set_position();
-
-#ifdef __STDC__
-static Es_index ps_read(Es_handle esh, unsigned int len, CHAR *bufp, unsigned int *resultp);
-static Es_index ps_scratch_read(Es_handle esh, unsigned int len, CHAR *bufp, unsigned int *resultp);
-static Es_index ps_replace(Es_handle esh, Es_index last_plus_one, int count, CHAR *buf, int *count_used);
-static Es_index ps_scratch_replace(Es_handle esh, Es_index last_plus_one, int count, CHAR *buf, int *count_used);
-static int ps_set(Es_handle esh, Attr_attribute *attrs);
+static Es_handle ps_NEW(int piece_count);
+static Es_status ps_commit(Es_handle esh);
+static Es_handle ps_destroy(Es_handle esh);
+static Es_handle ps_scratch_destroy(Es_handle esh);
 static Es_index ps_get_length(Es_handle esh);
-static caddr_t ps_get(Es_handle esh, Es_attribute attribute, ...);
-static int get_current_offset(Piece_table private);
-static Es_index write_header_etc(Es_handle esh, Piece_table private, Es_index last_plus_one, int count, CHAR *buf, int *count_used, Es_index *contents_start, int *deleted_pieces_length, int first_deleted, int last_plus_one_deleted);
-static void copy_pieces(ft_handle to_table, int to_index, ft_handle from_table, int first, int last_plus_one);
-#else
-static Es_index ps_read();
-static Es_index ps_scratch_read();
-static Es_index ps_replace();
-static Es_index ps_scratch_replace();
-static int ps_set();
-static Es_index ps_get_length();
-static caddr_t ps_get();
-static int get_current_offset();
-static Es_index write_header_etc();
-static void copy_pieces();
+static Es_index ps_scratch_get_length(Es_handle esh);
+static Es_index ps_get_position(Es_handle esh);
+static Es_index ps_scratch_get_position(Es_handle esh);
+static Es_index ps_set_position(Es_handle esh, register Es_index pos);
+static Es_index ps_scratch_set_position(Es_handle esh, register Es_index pos);
+#ifdef DEBUG
+static int ps_pieces_are_consistent(register Piece_table private);
 #endif
-
-static int	get_current_offset(Piece_table private);
+static Es_index ps_scratch_read(Es_handle esh, unsigned int len, register CHAR *bufp, unsigned int *resultp);
+static Es_index ps_scratch_replace(Es_handle esh, Es_index last_plus_one, int count, CHAR *buf, int *count_used);
+static Piece split_piece(ft_handle pieces, register int current, register long int delta);
+static Es_index ps_read(Es_handle esh, unsigned int len, register CHAR *bufp, unsigned int *resultp);
+static Es_index ps_debug_read(Es_handle esh, unsigned int len, register CHAR *bufp, unsigned int *resultp);
+static Es_index ps_replace(Es_handle esh, Es_index last_plus_one, int count, CHAR *buf, int *count_used);
+static Es_index ps_debug_replace(Es_handle esh, Es_index last_plus_one, int count, CHAR *buf, int *count_used);
+static Es_index write_record_header(Es_handle esh, register Piece_table private, Es_index last_plus_one, int dp_count);
+static int record_deleted_pieces(Es_handle esh, Piece pieces, int first, int last_plus_one, Es_index *next);
+static Es_index write_header_etc(Es_handle esh, register Piece_table private, Es_index last_plus_one, int count, CHAR *buf, int *count_used, Es_index *contents_start, int *deleted_pieces_length, int first_deleted, int last_plus_one_deleted);
+static Es_handle ps_pieces_for_span(Es_handle esh, Es_index first, Es_index last_plus_one, Es_handle to_recycle);
+static void copy_pieces(register ft_handle to_table, int to_index, register ft_handle from_table, int first, int last_plus_one);
+static int get_current_offset(register Piece_table private);
+static void ps_insert_pieces(Es_handle esh, Es_handle to_insert);
+static Es_index adjust_pos_after_edit(register Es_index pos, register Es_index start, register Es_index delta);
+static void ps_undo_to_mark(Es_handle esh, Es_index mark, int (*notify_proc)(), caddr_t notify_data);
+static int ps_set(Es_handle esh, Attr_attribute *attrs);
 
 static struct es_ops ps_ops = {
     ps_commit,
     ps_destroy,
-    ps_get,
+    _ps_get,
     ps_get_length,
     ps_get_position,
     ps_set_position,
@@ -122,7 +125,6 @@ static          Es_handle
 ps_NEW(piece_count)
     int             piece_count;
 {
-    Pkg_private ft_object ft_create();
     Es_handle       esh = NEW(Es_object);
     register Piece_table private = NEW(struct piece_table_object);
 
@@ -153,8 +155,6 @@ ps_create(client_data, original, scratch)
     Xv_opaque       client_data;
     Es_handle       original, scratch;
 {
-    Pkg_private ft_object ft_create();
-    Pkg_private void ft_set();
     Es_handle       esh = ps_NEW(100);
     register Piece_table private;
     register Piece  pieces;
@@ -1606,9 +1606,9 @@ ps_undo_to_mark(esh, mark, notify_proc, notify_data)
 
 caddr_t
 #ifdef ANSI_FUNC_PROTO
-ps_get(Es_handle esh, Es_attribute attribute, ...)
+_ps_get(Es_handle esh, Es_attribute attribute, ...)
 #else
-ps_get(esh, attribute, va_alist)
+_ps_get(esh, attribute, va_alist)
     Es_handle       esh;
     Es_attribute    attribute;
 va_dcl
@@ -1644,7 +1644,7 @@ va_dcl
 	va_end(args);
 	return ((caddr_t) pieces_for_span);
       case ES_HAS_EDITS:
-	return ((caddr_t) (private->oldest_not_undone_mark != ES_INFINITY));
+	return ((caddr_t)(long)(private->oldest_not_undone_mark != ES_INFINITY));
       case ES_PS_ORIGINAL:
 	return ((caddr_t) (private->original));
       case ES_PS_SCRATCH:

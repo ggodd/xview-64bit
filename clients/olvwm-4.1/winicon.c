@@ -37,9 +37,12 @@
 #include "virtual.h"
 #include "selection.h"
 #include "states.h"
-
-extern 	Bool	PropGetWMName();
-extern 	Bool	PropGetWMIconName();
+#include "usermenu.h"
+#include "properties.h"
+#include "info.h"
+#include "wingframe.h"
+#include "usleep.h"
+#include "events.h"
 
 /***************************************************************************
 * private data
@@ -49,26 +52,33 @@ extern 	Bool	PropGetWMIconName();
 				ExposureMask | ButtonMotionMask | \
 				EnterWindowMask | FocusChangeMask)
 
+extern Time LastEventTime;
+
 /* Class function vector */
 static ClassIconFrame classIconFrame;
 
 /***************************************************************************
 * forward-declared functions
 ***************************************************************************/
-
+static int menuPressIcon(Display *dpy, XEvent *event, WinIconFrame *iconInfo);
+static int selectDoubleClickIcon(Display *dpy, XEvent *event, WinIconFrame *iconInfo);
+static int adjustClickIcon(Display *dpy, XEvent *event, WinIconFrame *iconInfo);
+static void iconCalcName(WinIconFrame *winIcon, Window pane);
+static void iconSetName(WinIconFrame *winIcon, Window pane);
+static int selectDragIcon(Display *dpy, XEvent *ev, WinIconFrame *iframe, XButtonEvent *lastpress);
+static int newconfigIcon(WinIconFrame *winInfo, XConfigureRequestEvent *pxcre);
+static int newposIcon(WinIconFrame *winInfo, int x, int y);
+static void drawDashedRect(Display *dpy, WinIconFrame *winInfo, Window win, int x, int y, int w, int h);
+static void drawIconBorder(Display *dpy, WinIconFrame *winInfo, Bool bselect);
+static int drawIcon(Display *dpy, WinIconFrame *winInfo);
+static int destroyIcon(Display *dpy, WinIconFrame *winInfo);
+static int heightIconName(WinIconFrame *win);
 static int heightTopIcon(WinIconFrame *win);
 static int heightBottomIcon(WinIconFrame *win);
 static int widthBothIcon(WinIconFrame *win);
+static int fullrestoreIcon(Client *client, Time timestamp);
+static int eventConfigureRequest(Display *dpy, XConfigureRequestEvent *req, WinIconFrame *iconInfo);
 
-#ifdef __STDC__
-static int heightBottomIcon(WinIconFrame *win);
-static int heightTopIcon(WinIconFrame *win);
-static int widthBothIcon(WinIconFrame *win);
-#else
-static int heightBottomIcon();
-static int heightTopIcon();
-static int widthBothIcon();
-#endif
 
 /***************************************************************************
 * private event functions
@@ -82,7 +92,7 @@ XEvent *event;
 WinIconFrame *iconInfo;
 {
     if (iconInfo->core.client->wmDecors->menu_type != MENU_NONE)
-	ShowStandardMenu(iconInfo, event, False);
+	ShowStandardMenu((WinGenericFrame *)iconInfo, event, False);
 }
 
 static int
@@ -227,7 +237,7 @@ int x,y;
 {
 	Client	*cli = winInfo->core.client;
 
-	WinNewPosFunc(winInfo,x,y);
+	WinNewPosFunc((WinGeneric *)winInfo,x,y);
 	if (winInfo->iconslot == NULL &&
 		!ClientIsPinnable(winInfo->core.client) &&
 		(!(GRV.FreeIconSlots) || winInfo->fManuallyPositioned || 
@@ -652,7 +662,7 @@ XWindowAttributes *paneattrs;
 	}
 
 	/* register the window */
-	WIInstallInfo(w);
+	WIInstallInfo((WinGeneric *)w);
 
 	/* set cursor for frame */
 	XDefineCursor( dpy, w->core.self, GRV.IconPointer );
@@ -671,12 +681,12 @@ Display *dpy;
 {
 	classIconFrame.core.kind = WIN_ICON;
 	classIconFrame.core.xevents[Expose] = WinEventExpose;
-	classIconFrame.core.xevents[ButtonRelease] = GFrameEventButtonRelease;
-	classIconFrame.core.xevents[MotionNotify] = GFrameEventMotionNotify;
-	classIconFrame.core.xevents[ButtonPress] = GFrameEventButtonPress;
-	classIconFrame.core.xevents[EnterNotify] = GFrameEventEnterNotify;
-	classIconFrame.core.xevents[FocusIn] = GFrameEventFocus;
-	classIconFrame.core.xevents[FocusOut] = GFrameEventFocus;
+	classIconFrame.core.xevents[ButtonRelease] = (FuncPtr)GFrameEventButtonRelease;
+	classIconFrame.core.xevents[MotionNotify] = (FuncPtr)GFrameEventMotionNotify;
+	classIconFrame.core.xevents[ButtonPress] = (FuncPtr)GFrameEventButtonPress;
+	classIconFrame.core.xevents[EnterNotify] = (FuncPtr)GFrameEventEnterNotify;
+	classIconFrame.core.xevents[FocusIn] = (FuncPtr)GFrameEventFocus;
+	classIconFrame.core.xevents[FocusOut] = (FuncPtr)GFrameEventFocus;
 	classIconFrame.core.xevents[ConfigureRequest] = eventConfigureRequest;
 	classIconFrame.core.focusfunc = GFrameFocus;
 	classIconFrame.core.drawfunc = drawIcon;

@@ -10,8 +10,15 @@ static char     sccsid[] = "@(#)window_get.c 20.109 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/window_get_.h>
+#include <xview_private/font_.h>
+#include <xview_private/windowutil_.h>
+#include <xview_private/win_cursor_.h>
+#include <xview_private/win_damage_.h>
+#include <xview_private/win_geom_.h>
+#include <xview_private/win_input_.h>
+#include <xview_private/xv_.h>
 #include <stdio.h>
-#include <xview_private/windowimpl.h>
 #include <xview_private/i18n_impl.h>
 #include <pixrect/pixrect.h>
 #include <pixrect/pixfont.h>
@@ -29,15 +36,18 @@ static char     sccsid[] = "@(#)window_get.c 20.109 93/06/28";
 #endif /* OW_I18N */
 #include <xview/win.h>
 
+static int get_mask_bit(Inputmask *mask, Window_input_event code, Xv_Window win_public);
+static Xv_opaque window_empty_event_proc(void);
+#ifdef OW_I18N
+static XIC xv_window_create_ic(Xv_Window win_public, XIM im, Window xid, XIMStyle style);
+#endif 
+
 /*
  * Private
  */
 
-static int      get_mask_bit();
-static Xv_opaque  window_empty_event_proc();
 static struct timeval alarmdata;
 #ifdef OW_I18N
-static XIC xv_window_create_ic();
 #ifdef FULL_R5
 #define XV_SUPPORTED_STYLE_COUNT               12
 #else /*FULL_R5 */
@@ -46,19 +56,12 @@ static XIC xv_window_create_ic();
 #endif /* OW_I18N */
 
 
-/* BUG: should be in hdr file */
-extern void		win_xmask_to_im(); /* defined in win_input.c */
-extern unsigned int	win_im_to_xmask(); /* defined in win_input.c */
-Xv_private Xv_font	xv_find_olglyph_font(); /* defined in font.c */
-
-XID win_findintersect();
-
 /* VARARGS2 */
 Xv_public       Xv_opaque
 #ifdef ANSI_FUNC_PROTO
-window_get(Xv_Window win_public, Window_attribute attr, ...)
+_window_get(Xv_Window win_public, Window_attribute attr, ...)
 #else
-window_get(win_public, attr, va_alist)
+_window_get(win_public, attr, va_alist)
     Xv_Window       win_public;
     Window_attribute attr;
 va_dcl
@@ -208,7 +211,6 @@ window_get_attr(win_public, status, attr, valist)
       case WIN_X_CLIP_RECTS:{
 	    static Xv_xrectlist xrects;
 	    Rectlist       *rl;
-	    extern Rectlist *win_get_damage();
 
 	    if ((rl = win_get_damage(win_public)) != RECTLIST_NULL) {
 		xrects.count = win_convert_to_x_rectlist(rl, xrects.rect_array,
@@ -241,8 +243,8 @@ window_get_attr(win_public, status, attr, valist)
 	    /* return win number of child underlying cursor */
 	    short           x, y;
 
-	    x = va_arg(valist, int);
-	    y = va_arg(valist, int);
+	    x = va_arg(valist, Attr_attribute);
+	    y = va_arg(valist, Attr_attribute);
 	    v = (Xv_opaque) win_findintersect(win_public, x, y);
 	}
 	break;
@@ -436,7 +438,7 @@ window_get_attr(win_public, status, attr, valist)
 	    Inputmask       im;
 
 	    (void) win_xmask_to_im(win->xmask, &im);
-	    v = (Xv_opaque) get_mask_bit(&im, va_arg(valist, Window_input_event), win_public);
+	    v = (Xv_opaque) get_mask_bit(&im, (Window_input_event)va_arg(valist, Attr_attribute), win_public);
 	    break;
 	}
       case WIN_CONSUME_X_EVENT_MASK:

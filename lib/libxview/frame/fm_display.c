@@ -14,6 +14,8 @@ static char     sccsid[] = "@(#)fm_display.c 20.83 93/06/28";
  * Handle frame displaying and size changes.
  */
 
+#include <xview_private/fm_display_.h>
+#include <xview_private/fm_geom_.h>
 #include <X11/Xlib.h>
 #include <xview_private/fm_impl.h>
 #include <xview_private/draw_impl.h>
@@ -524,7 +526,7 @@ frame_kbd_done(frame_public, sw)
 }
 
 /* ARGSUSED */
-Pkg_private
+Pkg_private void
 frame_set_color(frame, fg, bg)
     Frame_class_info *frame;
     XColor *fg;

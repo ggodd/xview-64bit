@@ -19,13 +19,11 @@ static char     sccsid[] = "@(#)ow_evt.c 1.30 93/06/28";
  * 
  */
 
-#include <xview_private/ow_impl.h>
-
-/*
- * Package private functions
- */
-Pkg_private Notify_value openwin_event();
-Pkg_private Notify_value openwin_view_event();
+#include <xview_private/ow_evt_.h>
+#include <xview_private/ow_paint_.h>
+#include <xview_private/ow_rescale_.h>
+#include <xview_private/ow_resize_.h>
+#include <xview_private/ow_view_.h>
 
 /*-------------------Function Definitions-------------------*/
 

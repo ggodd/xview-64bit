@@ -17,6 +17,7 @@
  *
  */
 
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -27,6 +28,7 @@
 
 #include "cmdstream.h"
 #include "error.h"
+#include "slave.h"
 
 /* ----------------------------------------------------------------------
  *	Local Data
@@ -43,7 +45,6 @@ static SlaveInfo slaveInfo = {
 /* ----------------------------------------------------------------------
  *	Local Forward Declarations
  * ---------------------------------------------------------------------*/
-static	void		SlaveFailure();
 static	int		input[2],output[2];
 
 /* ----------------------------------------------------------------------

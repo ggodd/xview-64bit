@@ -10,7 +10,10 @@ static char     sccsid[] = "@(#)pw_line.c 20.36 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview_private/pw_impl.h>
+#include <xview_private/pw_line_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/xv_rop_.h>
+#include <xview_private/xv_.h>
 #include <xview_private/i18n_impl.h>
 #include <pixrect/pr_line.h>
 
@@ -28,7 +31,6 @@ pw_line(pw, x0, y0, x1, y1, brush, tex, op)
     unsigned long   gc_mask = GCLineWidth | GCLineStyle;
     char           *dash_set = NULL;
     int             p_len;
-    char           *pw_short_to_char();
     Xv_Drawable_info *info;
     Display        *display;
     Drawable        xid;

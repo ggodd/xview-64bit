@@ -13,6 +13,12 @@ static char     sccsid[] = "@(#)icon_obj.c 20.33 90/02/26";
  */
 /***********************************************************************/
 
+#include <xview_private/icon_obj_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/icon_input_.h>
+#include <xview_private/xv_.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -27,19 +33,9 @@ static char     sccsid[] = "@(#)icon_obj.c 20.33 90/02/26";
 #include <xview/wmgr.h>
 #include <xview/notify.h>
 #include <xview_private/draw_impl.h>
-#include <xview/defaults.h>
-
-/*
- * Public
- */
-extern Notify_value icon_input();
 
 
-/*
- * private to module 
- */
-static void icon_set_wrk_space_color();
-
+static void icon_set_wrk_space_color(Icon icon_public);
 
 /*****************************************************************************/
 /* icon_create                                                               */
@@ -47,9 +43,9 @@ static void icon_set_wrk_space_color();
 
 Icon
 #ifdef ANSI_FUNC_PROTO
-icon_create(Attr_attribute attr1, ...)
+_icon_create(Attr_attribute attr1, ...)
 #else
-icon_create(attr1, va_alist)
+_icon_create(attr1, va_alist)
     Attr_attribute attr1;
 va_dcl
 #endif
@@ -64,9 +60,9 @@ va_dcl
         va_end(valist);
     }
     else
-        avlist[0] = NULL;
+        avlist[0] = 0;
 
-    return (Icon) xv_create_avlist(NULL, ICON, avlist);
+    return (Icon) xv_create_avlist(0, ICON, avlist);
 }
 
 /*ARGSUSED*/
@@ -107,6 +103,7 @@ icon_init(parent, object, avlist)
 /*****************************************************************************/
 /* icon_destroy	                                                             */
 /*****************************************************************************/
+void
 icon_destroy(icon_public)
     Icon            icon_public;
 {
@@ -141,9 +138,9 @@ icon_destroy_internal(icon_public, status)
 
 int
 #ifdef ANSI_FUNC_PROTO
-icon_set(Icon icon_public, ...)
+_icon_set(Icon icon_public, ...)
 #else
-icon_set(icon_public, va_alist)
+_icon_set(icon_public, va_alist)
     Icon            icon_public;
 va_dcl
 #endif
@@ -168,7 +165,7 @@ icon_set_internal(icon_public, avlist)
     short label_changed = FALSE;
     short change_color = FALSE;
     
-    for (; (int)*avlist; avlist = attr_next(avlist)) {
+    for (; *avlist; avlist = attr_next(avlist)) {
 	arg1 = avlist[1];
 	switch ((int)*avlist) {
 
@@ -463,12 +460,12 @@ Icon            icon_public;
 	  sprintf( msg,
 		  XV_MSG("icon: color name \"%s\" not in database"),
 		  color_name );
-	  xv_error( NULL, ERROR_SEVERITY, ERROR_RECOVERABLE,
+	  xv_error( 0, ERROR_SEVERITY, ERROR_RECOVERABLE,
 		   ERROR_STRING, msg,
 		   ERROR_PKG, ICON,
 		   NULL );
       } else if ( !XAllocColor( display, cmap, &color ) )  {
-	  xv_error( NULL, ERROR_SEVERITY, ERROR_RECOVERABLE,
+	  xv_error( 0, ERROR_SEVERITY, ERROR_RECOVERABLE,
 		   ERROR_STRING, 
 		   XV_MSG("icon: all color cells are allocated"),
 		   ERROR_PKG, ICON,

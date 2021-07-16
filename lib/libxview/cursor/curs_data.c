@@ -10,7 +10,7 @@ static char     sccsid[] = "@(#)curs_data.c 1.15 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview_private/curs_impl.h>
+#include <xview_private/cursor_.h>
 
 Xv_pkg          xv_cursor_pkg = {
     "Cursor",			/* seal -> package name */

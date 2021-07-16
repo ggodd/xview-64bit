@@ -14,17 +14,20 @@ static char     sccsid[] = "@(#)ndet_die.c 20.14 93/06/28 Copyr 1985 Sun Micro";
  * Ndet_die.c - Notify_die implementation.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndet_die_.h>
+#include <xview_private/ndet_death_.h>
+#include <xview_private/ntfy_debug_.h>
+#include <xview_private/ntfy_cond_.h>
+#include <xview_private/ntfyprotec_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/ndis.h>
 
-extern          ntfy_errno_no_print;
+extern int ntfy_errno_no_print;
 
 extern          Notify_error
 notify_die(status)
     Destroy_status  status;
 {
-    NTFY_ENUM       ndet_immediate_destroy(), ndet_remove_all();
     NTFY_ENUM       enum_code;
     Notify_error    return_code;
 

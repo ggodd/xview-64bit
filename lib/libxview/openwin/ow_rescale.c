@@ -18,21 +18,19 @@ static char     sccsid[] = "@(#)ow_rescale.c 1.21 93/06/28";
  * Description: Rescale and openwin
  */
 
-#include <xview_private/ow_impl.h>
+#include <xview_private/ow_rescale_.h>
+#include <xview_private/ow_resize_.h>
+#include <xview_private/ow_view_.h>
+#include <xview_private/windowutil_.h>
 #include <xview/font.h>
 #include <xview_private/windowimpl.h>
-
-/*
- * Package private functions
- */
-Pkg_private     openwin_rescale();
 
 /*-------------------Function Definitions-------------------*/
 
 /*
  * openwin_rescale - resize the openwin for the given scale
  */
-Pkg_private
+Pkg_private void
 openwin_rescale(owin_public, scale)
     Openwin         owin_public;
     int             scale;

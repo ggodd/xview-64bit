@@ -22,7 +22,8 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=	screen.h
-HDRSPRIVATE=	scrn_impl.h scrn_vis.h
+HDRSPRIVATE=	scrn_impl.h scrn_vis.h screen_.h scrn_get_.h scrn_lyout_.h \
+                scrn_vis_.h
 
 DATA_OBJS = scrn_data.o
 

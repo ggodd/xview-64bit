@@ -10,14 +10,21 @@ static char     sccsid[] = "@(#)sel_clnt.c 20.41 93/06/29";
  *	file for terms of the license.
  */
 
+#include <xview_private/sel_clnt_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/sel_agent_.h>
+#include <xview_private/sel_common_.h>
+#include <xview_private/sel_util_.h>
+#include <xview_private/svr_x_.h>
+#include <xview_private/xv_.h>
 #include <xview_private/i18n_impl.h>
 #include <xview_private/portable.h>
+#include <xview/sel_svc.h>
 #include <xview/server.h>
-#include <xview_private/seln_impl.h>
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <xview/sel_compat.h>
-#include <xview/defaults.h>
 #ifdef __linux__
 #include <sys/types.h>
 #include <unistd.h>
@@ -48,23 +55,12 @@ typedef enum {
 }               Seln_seize_result;
 
 
-/*
- * Procedures
- */
-/*
- * static void			seln_client_remove();
- */
-static Seln_result seln_svc_hold_file();
-static Seln_result seln_local_request();
-static Seln_seize_result seln_seize();
-static Seln_function_buffer process_svc_inform(),
-                execute_fn();
-
-Pkg_private Seln_result selection_send_yield_internal();
-Pkg_private Seln_result selection_send_yield();
-Pkg_private void seln_give_up_selection();
-Pkg_private Seln_result selection_agent_acquire();
-Pkg_private void selection_init_holder_info();
+static Seln_result seln_local_request(Seln_holder *holder, Seln_request *buffer);
+static Seln_result selection_send_yield_without_telling_server(Xv_Server server, Seln_rank rank, Seln_holder *holder);
+static Seln_seize_result seln_seize(Xv_Server server, char *client_data, Seln_rank asked, Seln_rank *given);
+static Seln_function_buffer process_svc_inform(Xv_Server server, Seln_inform_args *buffer, Seln_function_buffer *result);
+static Seln_function_buffer execute_fn(Xv_Server server, Seln_inform_args *args);
+static Seln_result seln_svc_hold_file(Xv_Server server, Seln_file_info input);
 
 int seln_debug;
 

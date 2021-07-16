@@ -10,8 +10,10 @@ static char     sccsid[] = "@(#)sel_item.c 1.11 91/04/18";
  *	file for terms of the license.
  */
 
+#include <xview_private/sel_item_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/xv_.h>
 #include <xview/window.h>
-#include <xview_private/sel_impl.h>
 #ifdef SVR4 
 #include <stdlib.h> 
 #endif /* SVR4 */
@@ -68,7 +70,7 @@ sel_item_set_avlist(sel_item_public, avlist)
 
 {
     Attr_avlist	    attrs;
-    Xv_opaque	    data = NULL;
+    Xv_opaque	    data = (Xv_opaque)NULL;
     int		    data_set = FALSE;
     int		    length_set = FALSE;
     int		    nbr_bytes;
@@ -78,7 +80,7 @@ sel_item_set_avlist(sel_item_public, avlist)
     Sel_owner_info  *sel_owner;
     XID             xid;
     
-    for (attrs = avlist; (int)*attrs; attrs = attr_next(attrs)) {
+    for (attrs = avlist; *attrs; attrs = attr_next(attrs)) {
 	switch ((int)attrs[0]) {
 	  case SEL_COPY:
 	    sel_item->copy = (Bool) attrs[1];

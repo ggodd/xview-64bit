@@ -14,7 +14,8 @@ static char     sccsid[] = "@(#)ndetgexcep.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * Ndet_g_except.c - Implement notify_get_exception_func call.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndetgexcep_.h>
+#include <xview_private/ndet_g_fd_.h>
 #include <xview_private/ndet.h>
 
 extern          Notify_func

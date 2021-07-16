@@ -11,6 +11,7 @@ static char     sccsid[] = "@(#)xv_debug.c 20.18 93/06/28";
  */
 
 #include <stdio.h>
+#include <xview_private/gen_impl.h>
 #include <xview_private/i18n_impl.h>
 #include <xview_private/portable.h>
 #include <xview/pkg.h>
@@ -42,13 +43,10 @@ unsigned char   xv_debug_flags[((int) _svdebug_last_plus_one) / 8] = {
  * SV error handlers when running with debugging on. All handlers are defined
  * via a procedure pointer so that they can be replaced if necessary.
  */
-static void     _xview_abort();
-#ifdef ANSI_FUNC_PROTO
-static void	_xview_dprintf(FILE *file, char *fmt, ...);
-#else
-static void     _xview_dprintf();
-#endif
-static int      _xview_take_breakpoint();
+static void _xview_abort(void);
+static void _xview_dprintf(FILE *file, char *fmt, ...);
+static int _xview_take_breakpoint(void);
+
 void            (*xv_abort) () = _xview_abort;
 void            (*xv_dprintf) () = _xview_dprintf;
 int             (*xv_take_breakpoint) () = _xview_take_breakpoint;

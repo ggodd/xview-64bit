@@ -10,16 +10,17 @@ static char     sccsid[] = "@(#)svr_get.c 20.69 93/06/28";
  *	file for terms of the license.
  */
 
+
+#include <xview_private/svr_get_.h>
+#include <xview_private/font_.h>
+#include <xview_private/svr_atom_.h>
+#include <xview_private/svr_set_.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <xview/win_event.h>
 #include <xview_private/svr_impl.h>
 #include <xview_private/portable.h>
 #include <xview/sel_svc.h>
-
-Xv_private Xv_opaque xv_font_with_name();
-Xv_opaque server_get_atom_data();
-char * server_get_atom_name();
 
 Pkg_private     Xv_opaque
 server_get_attr(server_public, status, attr, valist)
@@ -29,7 +30,6 @@ server_get_attr(server_public, status, attr, valist)
     va_list         valist;
 {
     register Server_info *server = SERVER_PRIVATE(server_public);
-    extern Xv_opaque server_get_attr_tier2();
 
     switch ((int)attr) {
       case SERVER_ATOM: {
@@ -187,7 +187,7 @@ server_get_attr(server_public, status, attr, valist)
 	return ((Xv_opaque) server->sel_modmask);
 
       case SERVER_ATOM_NAME: {
-	register Atom atom = va_arg(valist, Atom);
+	register Atom atom = (Atom)va_arg(valist, Attr_attribute);
 	return((Xv_opaque)server_get_atom_name(server, atom)); 
       }
 
@@ -262,7 +262,7 @@ server_get_attr_tier2(server_public, status, attr, valist)
 
     switch (attr) {
       case SERVER_NTH_SCREEN:{
-            register int    number = va_arg(valist, int);
+            register int    number = va_arg(valist, Attr_attribute);
  
             if ((number < 0) || (number >= MAX_SCREENS)) {
                 goto Error;
@@ -345,7 +345,7 @@ server_get_attr_tier2(server_public, status, attr, valist)
         return ((Xv_opaque) server->dnd_ack_key);
 
       case SERVER_ATOM_DATA: {
-        register Atom           atom = va_arg(valist, Atom);
+        register Atom           atom = (Atom)va_arg(valist, Atom);
         register Xv_opaque      data;
 
         data = server_get_atom_data(server, atom, status);

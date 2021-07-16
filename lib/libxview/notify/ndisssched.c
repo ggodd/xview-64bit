@@ -14,8 +14,12 @@ static char     sccsid[] = "@(#)ndisssched.c 20.12 93/06/28 Copyr 1985 Sun Micro
  * Ndis_s_sched.c - Implement the notify_set_sheduler_func.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndisdsched_.h>
+#include <xview_private/ndisssched_.h>
+#include <xview_private/ntfyprotec_.h>
 #include <xview_private/ndis.h>
+
+extern Notify_value(*ndis_scheduler) ();
 
 extern          Notify_func
 notify_set_scheduler_func(scheduler_func)

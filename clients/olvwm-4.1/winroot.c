@@ -41,6 +41,11 @@
 #include "usermenu.h"
 #include "selection.h"
 #include "evbind.h"
+#include "info.h"
+#include "wincolor.h"
+#include "winnofoc.h"
+#include "states.h"
+#include "moveresize.h"
 
 /***************************************************************************
 * global data
@@ -58,6 +63,26 @@ extern Bool	DoingWindowState;
 ***************************************************************************/
 
 static ClassRoot classRoot;
+
+static Window findLeafWindow(Display *dpy, Window win, int srcx, int srcy, int *dstx, int *dsty);
+static void redistributeKeystroke(Display *dpy, XKeyEvent *key, Window dstwin, int dstx, int dsty);
+#if 0
+static Bool matchKeystrokeToSpec(XEvent *event, KeySpec *spec);
+#endif
+static int eventEnterNotify(Display *dpy, XEvent *pEvent, WinRoot *winInfo);
+static int eventConfigureRequest(Display *dpy, XEvent *pEvent, WinRoot *winInfo);
+static int eventMapRequest(Display *dpy, XEvent *pEvent, WinRoot *winInfo);
+static void selectInBox(Display *dpy, WinRoot *winInfo, int boxX, int boxY, unsigned int boxW, unsigned int boxH, Time timestamp, void *closure);
+static int eventMotionNotify(Display *dpy, XEvent *pEvent, WinRoot *winInfo);
+static int eventButtonRelease(Display *dpy, XEvent *pEvent, WinRoot *winInfo);
+static int eventButtonPress(Display *dpy, XEvent *pEvent, WinRoot *winInfo);
+static int eventKeyPressRelease(Display *dpy, XEvent *pEvent, WinRoot *winInfo);
+static int eventPropertyNotify(Display *dpy, XEvent *pEvent, WinRoot *winInfo);
+static int eventClientMessage(Display *dpy, XEvent *pEvent, WinRoot *winInfo);
+static int eventUnmapNotify(Display *dpy, XEvent *pEvent, WinRoot *winInfo);
+static int destroyRoot(Display *dpy, WinRoot *winInfo);
+static void writeProtocols(Display *dpy, Window rootwin);
+static void writeIconSize(Display *dpy, Window rootwin);
 
 /***************************************************************************
 * private functions
@@ -209,7 +234,7 @@ eventEnterNotify(dpy, pEvent, winInfo)
 	    /* FIXME: return value? */
             return True;
 
-	ColorWindowCrossing(dpy, pEvent, winInfo);
+	ColorWindowCrossing(dpy, pEvent, (WinGeneric *)winInfo);
 
 	if (GRV.FocusFollowsMouse)
 	    NoFocusTakeFocus(dpy, pEvent->xcrossing.time,
@@ -334,7 +359,7 @@ eventMotionNotify(dpy, pEvent, winInfo)
 	switch(winInfo->currentAction) {
 	case ACTION_SELECT:	
 		ClearSelections(dpy);
-		selectFunc = AddSelection;
+		selectFunc = (FuncPtr)AddSelection;
 		break;
 	case ACTION_ADJUST:	
 		selectFunc = ToggleSelection;
@@ -412,7 +437,7 @@ eventButtonPress(dpy, pEvent, winInfo)
 		    GrabModeAsync, GrabModeAsync, None, None,
 		    pEvent->xbutton.time)))
 	    {
-		PropagatePressEventToChild(dpy, pEvent, child);
+		PropagatePressEventToChild(dpy, (XButtonPressedEvent *)pEvent, child);
 		/* FIXME: return value? */
 		return True;
 	    }
@@ -456,7 +481,6 @@ eventKeyPressRelease(dpy, pEvent, winInfo)
 	WinRoot		*winInfo;
 {
 
-	extern Bool	ExecuteKeyboardFunction();
 	Bool		isbound;
 
 	isbound = ExecuteKeyboardFunction(dpy, pEvent);
@@ -522,7 +546,6 @@ eventUnmapNotify(dpy, pEvent, winInfo)
 	WinRoot		*winInfo;
 {
 	WinGeneric *wg;
-	extern Time TimeFresh();
 
 	wg = WIGetInfo(pEvent->xunmap.window);
 	if (wg != NULL) {

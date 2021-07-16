@@ -104,26 +104,5 @@ extern	NTFY_CLIENT *ndis_client_latest;/* Latest Notify_client=>NTFY_CLIENT
 					   conversion success: for fast lookup
 					   (nulled if client flushed) */
 
-extern	Notify_value (*ndis_scheduler)(); /* The scheduler */
-extern	Notify_value ndis_default_scheduler(); /* The default scheduler */
-extern	Notify_value ndis_special_client_scheduler(); /* The special client scheduler */
-extern	Notify_value ndis_default_prioritizer(); /* Default prioritizer */
-
-/*
- * The following is part of the private interface to the dispatcher
- * that the detector calls:
- */
-extern	Notify_error ndis_enqueue();	/* Detector calls to q notification
-					   (takes a ntfy_client followed by a
-					   ntfy_condition) */
-extern  Notify_error ndis_dispatch();	/* Dispatch to all clients according
-					   to the scheduler */
-
-void	ndis_flush_condition();		/* Flush condition from dispatcher q
-					   (Notify_client client,
-					    NTFY_TYPE type, NTFY_DATA data,
-					    int use_data) */
-void	ndis_flush_wait3();		/* Flush all conditions for pid
-					   (Notify_client client, int pid) */
 #endif	/* NDIS_DEFINED */
 

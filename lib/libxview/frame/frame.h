@@ -159,7 +159,7 @@ typedef enum {
 	FRAME_CLOSED	= FRAME_ATTR(ATTR_BOOLEAN,		  15),
 	FRAME_CLOSED_RECT	= FRAME_ATTR(ATTR_RECT_PTR,		  20),
 	FRAME_WM_COMMAND_STRINGS= FRAME_ATTR_LIST(ATTR_NULL, ATTR_STRING, 21),
-#if defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT)
+#if defined(__x86_64__) || defined(__ia64__) || defined(_XV_API_BROKEN_64BIT) || defined(__amd64__)
 	FRAME_WM_COMMAND_ARGC_ARGV
 				= FRAME_ATTR(ATTR_OPAQUE_PAIR, 		  22),
 #else

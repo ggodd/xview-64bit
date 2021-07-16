@@ -14,7 +14,7 @@ static char     sccsid[] = "@(#)nint_set.c 20.12 93/06/28 Copyr 1985 Sun Micro";
  * Nint_set.c - Implement the nint_set_func private interface.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/nint_set_.h>
 #include <xview_private/ndet.h>
 #include <xview_private/nint.h>
 

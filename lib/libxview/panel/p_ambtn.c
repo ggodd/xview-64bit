@@ -10,7 +10,11 @@ static char     sccsid[] = "@(#)p_ambtn.c 1.21 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview_private/panel_impl.h>
+#include <xview_private/p_ambtn_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/p_btn_.h>
+#include <xview_private/p_utl_.h>
+#include <xview_private/xv_.h>
 #include <xview/openmenu.h>
 #include <xview_private/draw_impl.h>
 
@@ -23,17 +27,18 @@ static char     sccsid[] = "@(#)p_ambtn.c 1.21 93/06/28";
 	XV_PRIVATE(Ambtn_info, Xv_panel_ambtn, item)
 #define AMBTN_FROM_ITEM(ip)	AMBTN_PRIVATE(ITEM_PUBLIC(ip))
 
-/* Declare all ambtn item handler procedures used in the Ops Vector Table */
-static void     ambtn_begin_preview(), ambtn_cancel_preview(),
-		ambtn_accept_preview(), ambtn_accept_menu(), ambtn_accept_key(),
-		ambtn_paint(), ambtn_remove(), ambtn_accept_kbd_focus(),
-		ambtn_yield_kbd_focus();
-
-/* Local routines */
-static void ambtn_menu_busy_proc();
-static void ambtn_menu_done_proc();
-static void ambtn_paint_value();
-
+static void ambtn_begin_preview(Panel_item item_public, Event *event); 
+static void ambtn_cancel_preview(Panel_item item_public, Event *event);
+static void ambtn_accept_preview(Panel_item item_public, Event *event);
+static void ambtn_accept_menu(Panel_item item_public, Event *event);
+static void ambtn_accept_key(Panel_item item_public, Event *event);
+static void ambtn_paint(Panel_item item_public);
+static void ambtn_remove(Panel_item item_public);
+static void ambtn_accept_kbd_focus(Panel_item item_public);
+static void ambtn_yield_kbd_focus(Panel_item item_public);
+static void ambtn_menu_busy_proc(Menu menu);
+static void ambtn_menu_done_proc(Menu menu, Xv_opaque result);
+static void ambtn_paint_value(Item_info *ip, int state);
 
 /*
  * Panel Operations Vector Table for this item.

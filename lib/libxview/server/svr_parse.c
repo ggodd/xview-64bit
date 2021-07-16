@@ -10,6 +10,10 @@ static char     sccsid[] = "@(#)svr_parse.c 1.9 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/svr_parse_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_casecmp_.h>
 #include <ctype.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
@@ -161,12 +165,12 @@ AVKeyword shortKeywordTbl[] = {
 /*
  * Functions to implement parsing engine
  */
-static AcceleratorValue getAcceleratorValue();
-static void avGetXtAcceleratorValue();
-static void avGetOLITAcceleratorValue();
-static void avGetXViewAcceleratorValue();
-static CHAR *avAddKey();
-static void avAddModif();
+static AcceleratorValue getAcceleratorValue(CHAR *resourceString, XrmDatabase db);
+static void avGetXtAcceleratorValue(AcceleratorValue *avp, CHAR *pos);
+static void avGetOLITAcceleratorValue(AcceleratorValue *avp, CHAR *pos);
+static void avGetXViewAcceleratorValue(AcceleratorValue *avp, CHAR *pos);
+static void avAddModif(AcceleratorValue *avp, AVModif modif);
+static CHAR *avAddKey(AcceleratorValue *avp, CHAR *pos);
 
 #define XV_KWRD_KEYPRESS        XV_PROC_CODE("<Key>")
 
@@ -174,15 +178,6 @@ static void avAddModif();
  * END of declarations for parsing engine
  */
 
-
-/* ACC_XVIEW */
-Xv_private int		server_parse_keystr();
-#ifdef OW_I18N
-Xv_private int		xv_wsncasecmp();
-#else
-Xv_private int		xv_strncasecmp();
-#endif /* OW_I18N */
-/* ACC_XVIEW */
 
 extern XrmDatabase defaults_rdb;/* merged defaults database */
 
@@ -210,7 +205,8 @@ server_parse_keystr(server_public, keystr, keysym, code, modifiers,
 Xv_server	server_public;
 CHAR		*keystr;
 KeySym		*keysym;	/* return */
-short		*code;		/* return */
+/*fgao short		*code;*/		/* return */
+KeyCode* code;
 unsigned int	*modifiers;	/* return */
 unsigned int	diamond_mask;
 char		*qual_str;	/* return */
@@ -219,9 +215,10 @@ char		*qual_str;	/* return */
     Display		*dpy;
     unsigned int	alt_modmask,
                         meta_modmask;
-    int			keycode, ret_val = XV_OK, 
+    int			/*fgao keycode,*/ ret_val = XV_OK, 
 			shift_ksym_exist = FALSE, 
 			shifted = FALSE;
+	KeyCode keycode;
     KeySym		unmod_keysym, shifted_ksym;
     CHAR		*tmp_str = NULL;
     AcceleratorValue	av;

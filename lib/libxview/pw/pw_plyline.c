@@ -10,7 +10,10 @@ static char     sccsid[] = "@(#)pw_plyline.c 20.23 89/07/31";
  *	file for terms of the license.
  */
 
-#include <xview_private/pw_impl.h>
+#include <xview_private/pw_plyline_.h>
+#include <xview_private/pw_line_.h>
+#include <xview_private/xv_.h>
+#include <xview_private/xv_rop_.h>
 #include <pixrect/pr_line.h>
 
 extern short    pw_tex_dashed[];
@@ -34,7 +37,6 @@ pw_polyline(pw, dx, dy, npts, ptlist, mvlist, brush, tex, op)
     unsigned long   gc_mask = GCLineWidth | GCLineStyle;
     char           *dash_set;
     int             p_len;
-    char           *pw_short_to_char();
     register int    i, j;
     short           start, close = 0;
     u_char         *t_mvlist;

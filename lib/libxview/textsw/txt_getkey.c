@@ -14,18 +14,29 @@ static char     sccsid[] = "@(#)txt_getkey.c 20.36 93/06/29";
  * GET key processing.
  */
 
-#include <xview/pkg.h>
+#include <xview_private/txt_getkey_.h>
+#include <xview_private/ev_display_.h>
+#include <xview_private/ev_edit_.h>
+#include <xview_private/ev_op_bdry_.h>
+#include <xview_private/txt_again_.h>
+#include <xview_private/txt_attr_.h>
+#include <xview_private/txt_edit_.h>
+#include <xview_private/txt_event_.h>
+#include <xview_private/txt_file_.h>
+#include <xview_private/txt_incl_.h>
+#include <xview_private/txt_input_.h>
+#include <xview_private/txt_putkey_.h>
+#include <xview_private/txt_scroll_.h>
+#include <xview_private/txt_sel_.h>
+#include <xview_private/txt_selsvc_.h>
 #include <xview/attrol.h>
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>	/* For declaration of ev_add_finder */
 #include <errno.h>
 
-extern int      errno;
+static void textsw_do_get(register Textsw_view_handle view, int local_operands);
 
-static void     textsw_do_get();
-Pkg_private Es_index textsw_find_mark_internal();
-Pkg_private Es_index textsw_insert_pieces();
+extern int      errno;
 
 Pkg_private void
 textsw_begin_get(view)
@@ -137,9 +148,6 @@ textsw_do_get(view, local_operands)
      *           secondary is possibly deleted (if pending delete)
      *
      */
-    extern void     ev_check_insert_visibility(), ev_scroll_if_old_insert_visible();
-    extern int      ev_get_selection();
-    extern Es_handle textsw_esh_for_span();
     register Textsw_folio folio = FOLIO_FOR_VIEW(view);
     register Ev_chain views = folio->views;
     register Es_handle secondary, primary;
@@ -324,7 +332,6 @@ textsw_insert_pieces(view, pos, pieces)
     register Es_index pos;
     Es_handle       pieces;
 {
-    Pkg_private Es_index textsw_set_insert();
     register Textsw_folio folio = FOLIO_FOR_VIEW(view);
     register Ev_chain chain = folio->views;
     Es_index        delta, old_insert_pos, old_length = es_get_length(chain->esh), new_insert_pos,
@@ -370,7 +377,6 @@ Pkg_private void
 textsw_put_then_get(view)
     Textsw_view_handle view;
 {
-    extern Es_handle textsw_esh_for_span();
     register Textsw_folio textsw = FOLIO_FOR_VIEW(view);
     Es_index        first, last_plus_one, insert;
     register int    is_pending_delete;
@@ -418,8 +424,6 @@ textsw_put_then_get(view)
  * 
  * ===============================================================
  */
-Pkg_private void textsw_remove_mark_internal();
-
 Pkg_private     Ev_mark_object
 textsw_add_mark_internal(textsw, position, flags)
     Textsw_folio    textsw;

@@ -69,17 +69,4 @@ typedef struct {			/* new _OL_WIN_ATTR format */
 #define WMWindowNotBusy	0
 #define WMWindowIsBusy	1
 
-/*
- * PRIVATE functions
- */
-#ifdef __STDC__
-Xv_private int wmgr_add_decor(Frame frame_public, Atom *decor_list, int num_of_decor);
-Xv_private int wmgr_delete_decor(Frame frame_public, Atom *decor_list, int num_of_decor);
-Xv_private int wmgr_set_win_attr(Frame frame_public, WM_Win_Type *win_attr);
-#else
-Xv_private int wmgr_add_decor();
-Xv_private int wmgr_delete_decor();
-Xv_private int wmgr_set_win_attr();
-#endif
-
 #endif /* _wmgr_decor_h_already_included */

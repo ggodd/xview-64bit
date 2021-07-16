@@ -14,6 +14,10 @@ static char     sccsid[] = "@(#)xv_parse.c 20.59 93/06/28";
  * Do standard parse on argv to defaults.
  */
 
+#include <xview_private/xv_parse_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/xv_.h>
 #ifdef _XV_DEBUG
 #include <xview_private/xv_debug.h>
 #else
@@ -21,7 +25,7 @@ static char     sccsid[] = "@(#)xv_parse.c 20.59 93/06/28";
 #endif
 #include <xview_private/i18n_impl.h>
 #include <xview_private/portable.h>
-#include <xview/defaults.h>
+#include <xview_private/xv_parse_.h>
 #include <xview/pkg.h>
 #include <xview/xv_error.h>
 #include <xview/fullscreen.h>
@@ -34,7 +38,6 @@ static char     sccsid[] = "@(#)xv_parse.c 20.59 93/06/28";
 extern XrmDatabase defaults_rdb;
 
 Xv_private int  list_fonts;
-Xv_private int	xv_parse_one();
 
 #ifdef _XV_DEBUG
 Xv_private int  server_gather_stats;
@@ -46,6 +49,12 @@ typedef struct {
     char           *def_name[2];/* defaults name(s) */
     char            num_args;
 }               Cmd_line_flag;
+
+static Cmd_line_flag *find_cmd_flag(register char *key);
+#ifdef _XV_DEBUG
+static int xv_generic_debug_help(FILE *fd);
+#endif
+static void xv_add_cmdline_entry(Cmd_line_flag *slot, char *resource_name, char *value1, char *value2, char **argv);
 
 typedef struct _cmd_line_entry{
     char			*resource_name; /* -xrm, -Wd */
@@ -125,8 +134,6 @@ typedef enum {
 #endif
 }               Flag_name;
 
-static Cmd_line_flag *find_cmd_flag();
-
 static Cmd_line_flag cmd_line_flags[] = {
     "-Wx", "-scale", "window.scale.cmdline", 0, 1,
     "-Wt", "-font", "font.name.cmdline", 0, 1,
@@ -190,11 +197,6 @@ static Cmd_line_flag cmd_line_flags[] = {
 
 static Cmd_line_entry		*cmdline_entered_first = NULL;
 static Cmd_line_entry		*cmdline_entered_last = NULL;
-
-Xv_private void		xv_merge_cmdline();
-Xv_private void		xv_get_cmdline_str();
-Xv_private void		xv_get_cmdline_argv();
-static void		xv_add_cmdline_entry();
 
 static Defaults_pairs known_scales[] = {
 	"small", WIN_SCALE_SMALL,
@@ -432,7 +434,7 @@ xv_parse_one(app_name, argc, argv)
 
       case FLAG_DISABLE_RETAINED:
 	/* boolean value -- if specified then TRUE */
-	sprintf(int_val1, "%d", TRUE);
+	sprintf(int_val1, "%ld", TRUE);
         xv_add_cmdline_entry(slot, NULL, int_val1, NULL, argv);
 	break;
 

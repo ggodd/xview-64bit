@@ -7,21 +7,21 @@ static char     sccsid[] = "@(#)gettext.c 50.21 93/06/28";
 #endif
 #endif
 
+#include <xview_private/gettext_.h>
 #ifdef __linux__
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>            /* close() */
 #endif
 #include <string.h>
+#include <xview/pkg.h>
 #include <xview_private/gettext.h>
 
-char * dgettext(char *, char *), *bindtextdomain();
-/* static char *_gettext(); */
-/* char *fgets(), *getenv(); */
+static void initbindinglist(void);
+static int searchmmaplist(char *path);
+static char *lookupdefbind(char *domain_name);
+static char *findtextdomain(char *domain_name);
 static char *_gettext(struct message_so messages, char *key_string);
-#if !defined(__linux__) || !defined(__GLIBC__)
-caddr_t mmap();
-#endif
 
 static struct domain_binding *firstbind=0, *lastbind=0;
 

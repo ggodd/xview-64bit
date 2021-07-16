@@ -15,6 +15,10 @@ static char     sccsid[] = "@(#)ndet_fcntl.c 20.13 93/06/28 Copyr 1985 Sun Micro
  * fds managing.
  */
 
+#include <xview_private/ndet_fcntl_.h>
+#include <xview_private/ndet_loop_.h>
+#include <xview_private/ntfyprotec_.h>
+#include <xview_private/sys_fcntl_.h>
 #include <xview_private/ntfy.h>
 #include <xview_private/ndet.h>
 #include <signal.h>
@@ -46,7 +50,7 @@ fcntl(int fd, int cmd, ...) {
     int             arg;
 
     va_start(args, cmd);
-    arg = va_arg(args, int);
+    arg = va_arg(args, Attr_attribute);
     va_end(args);
 #endif /* __linux__ */
 

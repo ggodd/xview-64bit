@@ -24,7 +24,8 @@ XCOMM # @(#)Imakefile 1.10 90/01/11 SMI
 
 HDRSPUBLIC=	file_chsr.h file_list.h path.h hist.h
 HDRSPRIVATE=	fchsr_impl.h flist_impl.h xv_path_util.h \
-		path_impl.h hist_impl.h
+		path_impl.h hist_impl.h fc_layout_.h file_chsr_.h file_list_.h \
+		hist_list_.h hist_menu_.h path_.h xv_path_util_.h
 
 DATA_OBJS = fchsr_data.o\
 	   flist_data.o\

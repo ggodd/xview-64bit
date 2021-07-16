@@ -194,30 +194,6 @@ typedef struct sel_client_info {
 } Sel_client_info;
 
 
-
-Pkg_private int xv_sel_add_prop_notify_mask();
-Pkg_private Atom xv_sel_get_property();
-Pkg_private void xv_sel_free_property();
-Pkg_private int xv_sel_predicate();
-Pkg_private int xv_sel_check_property_event();
-Pkg_private int xv_sel_handle_incr();
-Pkg_private struct timeval *xv_sel_cvt_xtime_to_timeval();
-Pkg_private Time xv_sel_cvt_timeval_to_xtime();
-Pkg_private Sel_atom_list *xv_sel_find_atom_list();
-Pkg_private Sel_prop_list *xv_sel_get_prop_list();
-Pkg_private Sel_req_tbl *xv_sel_add_new_req();
-Pkg_private Sel_req_tbl *xv_sel_set_reply();
-Pkg_private Sel_reply_info *xv_sel_get_reply();
-Pkg_private Sel_cmpat_info  *xv_sel_get_compat_data();
-
-Pkg_private int SelOwnerIsLocal();
-Pkg_private void xv_sel_send_old_pkg_sel_clear();
-Pkg_private void xv_sel_free_compat_data();
-
-Xv_private int  xv_seln_handle_req();
-Xv_private void xv_sel_send_old_owner_sel_clear();
-Xv_private void xv_sel_set_compat_data();
-
 #if !defined(__linux__) || defined(__DEFINE_SEL_IMPL_VARS)
 XContext  selCtx;
 XContext  reqCtx;

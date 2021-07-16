@@ -10,10 +10,9 @@
  * ol_misc.c Window adornment module
  */
 
+#include <olgx_private/ol_misc_.h>
 #include <stdio.h>
 #include <X11/Xlib.h>
-
-#include "olgx_impl.h"
 
 void
 olgx_draw_resize_corner(info, win, x, y, type, state)

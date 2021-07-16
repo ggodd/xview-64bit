@@ -22,7 +22,7 @@ XCOMM # @(#)Imakefile	1.8 28 Jun 1993 SMI
 #endif
 
 HDRSPUBLIC=     svrimage.h
-HDRSPRIVATE=    svrim_impl.h
+HDRSPRIVATE=    svrim_impl.h svrim_ops_.h svrim_pblc_.h
 
 DATA_OBJS = svrim_data.o
 

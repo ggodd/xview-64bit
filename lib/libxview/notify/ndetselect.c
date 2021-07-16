@@ -14,14 +14,19 @@ static char     sccsid[] = "@(#)ndetselect.c 20.13 93/06/28 Copyr 1985 Sun Micro
  * Ndet_select.c - Notifier's version of select.  Will do notification cycle
  * if not already in the middle of it.
  */
+#include <xview_private/ndetselect_.h>
+#include <xview_private/ntfy_debug_.h>
+#include <xview_private/sys_select_.h>
 #include <sys/types.h>
 #include <xview_private/ntfy.h>
 #include <xview_private/ndet.h>
 #include <xview_private/ndis.h>	/* For ndis_client == NTFY_CLIENT_NULL check */
 #include <errno.h>
 
-static Notify_value ndet_select_in_func(), ndet_select_out_func(),
-                ndet_select_except_func(), ndet_select_itimer_func();
+static Notify_value ndet_select_in_func(Notify_client nclient, int fd);
+static Notify_value ndet_select_out_func(Notify_client nclient, int fd);
+static Notify_value ndet_select_except_func(Notify_client nclient, int fd);
+static Notify_value ndet_select_itimer_func(Notify_client nclient, int which);
 
 static fd_set   ndet_select_ibits, ndet_select_obits, ndet_select_ebits;
 static int      ndet_select_nfds, ndet_select_timeout;

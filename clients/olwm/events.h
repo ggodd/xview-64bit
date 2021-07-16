@@ -17,26 +17,6 @@
  */
 typedef int (*InterposerFunc)();
 
-/* global functions */
-extern void EventLoop();
-extern int PropagateEventToParent();
-extern void PropagatePressEventToChild();
-extern Time LastEventTime;
-extern Bool AwaitEvents();
-extern void GrabKeys();
-extern void RefreshKeyGrabs();
-extern void GrabButtons();
-extern void RefreshButtonGrabs();
-extern Bool UpdateBindings();
-extern void InitEvents();
-extern void InitBindings();
-
-/* interposition */
-extern void InstallInterposer();
-extern void UninstallInterposer();
-extern InterposerFunc InterposerInstalled();
-extern void EnableInterposerDelegation();
-
 enum {
     DISPOSE_DISPATCH,
     DISPOSE_USED,
@@ -62,7 +42,6 @@ enum {
 };
 
 extern unsigned int ModMaskMap[MOD_MASK_COUNT];
-extern unsigned int FindModifierMask();
 
 /* mouse binding match states */
 typedef enum {
@@ -172,5 +151,22 @@ extern void TimeoutCancel();	/* no params */
  * declared in evbind.c
  */
 extern Bool mouselessSuspended;
+struct _wingeneric;
+struct _wingeneric *lookupWindow(XEvent *event);
+void saveTimestamp(XEvent *event);
+void handleMappingNotify(Display *dpy, XEvent *e);
+void EventLoop(Display *dpy);
+int PropagateEventToParent(Display *dpy, XEvent *event, struct _wingeneric *win);
+void PropagatePressEventToChild(Display *dpy, XButtonPressedEvent *event, struct _wingeneric *win);
+unsigned int FindModifierMask(KeyCode kc);
+KeySym ModifierToKeysym(unsigned intmod);
+Bool AwaitEvents(Display *dpy, struct timeval *timeout);
+void InstallInterposer(InterposerFunc func,void * cl);
+void UninstallInterposer(void);
+InterposerFunc InterposerInstalled(void);
+void EnableInterposerDelegation(void);
+void TimeoutRequest(int t, TimeoutFunc f, void *c);
+void TimeoutCancel(void);
+void InitEvents(Display *dpy);
 
 #endif /* _OLWM_EVENTS_H */

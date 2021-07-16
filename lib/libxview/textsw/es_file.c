@@ -83,6 +83,10 @@ static char     sccsid[] = "@(#)es_file.c 20.49 93/06/28";
  * ps_impl.c, because fseek fflush's the writable scratch file a lot.
  */
 
+#include <xview_private/es_file_.h>
+#include <xview_private/attr_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/xv_.h>
 #include <string.h>
 #include <fcntl.h>
 #ifdef SVR4
@@ -103,7 +107,6 @@ static char     sccsid[] = "@(#)es_file.c 20.49 93/06/28";
 #include <xview/pkg.h>
 #include <xview/attrol.h>
 #include <xview_private/primal.h>
-#include <xview_private/es.h>
 #ifdef OW_I18N
 #include <xview/generic.h>
 #include <xview/server.h>
@@ -120,52 +123,12 @@ extern int      errno, sys_nerr;
 extern char    *sys_errlist[];
 #endif
 
-static void update_read_buf();  /* update the read buf if overlaps write buf */
-#ifdef __STDC__
-static Es_status es_file_commit(Es_handle esh);
-static Es_handle es_file_destroy(Es_handle esh);
-static Es_index es_file_get_length(Es_handle esh);
-static Es_index es_file_get_position(Es_handle esh);
-static Es_index es_file_set_position(Es_handle esh, Es_index pos);
-static Es_index es_file_read(Es_handle esh, int count, CHAR *buf, int *count_read);
-static Es_index es_file_replace(Es_handle esh, int last_plus_one, int count, CHAR *buf, int *count_used);
-static int es_file_set(Es_handle esh, Attr_avlist attrs);
-static caddr_t es_file_get(Es_handle esh, Es_attribute attribute, ...);
-#else
-static Es_status es_file_commit();
-static Es_handle es_file_destroy();
-static Es_index es_file_get_length();
-static Es_index es_file_get_position();
-static Es_index es_file_set_position();
-static Es_index es_file_read();
-static Es_index es_file_replace();
-static int es_file_set();
-static caddr_t es_file_get();
-#endif
-
-static struct es_ops es_file_ops = {
-    es_file_commit,
-    es_file_destroy,
-    es_file_get,
-    es_file_get_length,
-    es_file_get_position,
-    es_file_set_position,
-    es_file_read,
-    es_file_replace,
-    es_file_set
-};
-
 typedef struct _es_file_buf {
     Es_index        start;	/* Disk position, valid iff used > 0 */
     unsigned        used;	/* # valid chars in buf */
     CHAR           *chars;
 }               es_file_buf;
 typedef es_file_buf *Es_file_buf;
-#define	BUF_INVALIDATE(_buf)	(_buf)->used = 0
-#define	BUF_LAST_PLUS_ONE(_buf)	((_buf)->start + (_buf)->used)
-#define	BUF_CONTAINS_POS(_buf, _pos)					\
-	((_buf)->used > 0 &&						\
-	(_buf)->start <= (_pos) && (_pos) < BUF_LAST_PLUS_ONE(_buf))
 
 struct private_data {
     Es_status       status;
@@ -189,6 +152,42 @@ struct private_data {
 #endif    
 };
 typedef struct private_data *Es_file_data;
+
+static void update_read_buf(Es_file_data private, Es_index start, Es_index end, CHAR *buf);
+static int es_file_set(Es_handle esh, Attr_avlist attrs);
+static int es_file_seek(register Es_file_data private, Es_index pos, char *caller);
+static int es_file_fill_buf(register Es_file_data private, register Es_file_buf buf, register Es_index first, register Es_index last_plus_one);
+static int es_file_flush_write_buf(register Es_file_data private, register Es_file_buf buf);
+static int es_file_move_write_buf(register Es_file_data private, register Es_index include, register Es_index also_include, CHAR **include_offset);
+static void es_file_maybe_truncate_buf(register Es_file_buf buf, register Es_index new_last_plus_one);
+static Es_status es_file_commit(Es_handle esh);
+static Es_handle es_file_destroy(Es_handle esh);
+static Es_index es_file_get_length(Es_handle esh);
+static Es_index es_file_get_position(Es_handle esh);
+static Es_index es_file_set_position(Es_handle esh, register Es_index pos);
+static Es_index es_file_read(Es_handle esh, int count, CHAR *buf, register int *count_read);
+static Es_index es_file_replace(Es_handle esh, int last_plus_one, register int count, CHAR *buf, int *count_used);
+#ifdef OW_I18N
+static int es_file_make_wchar_file(register Es_handle esh, int open_option);
+#endif 
+
+static struct es_ops es_file_ops = {
+    es_file_commit,
+    es_file_destroy,
+    es_file_get,
+    es_file_get_length,
+    es_file_get_position,
+    es_file_set_position,
+    es_file_read,
+    es_file_replace,
+    es_file_set
+};
+
+#define	BUF_INVALIDATE(_buf)	(_buf)->used = 0
+#define	BUF_LAST_PLUS_ONE(_buf)	((_buf)->start + (_buf)->used)
+#define	BUF_CONTAINS_POS(_buf, _pos)					\
+	((_buf)->used > 0 &&						\
+	(_buf)->start <= (_pos) && (_pos) < BUF_LAST_PLUS_ONE(_buf))
 
 /* Bits for flags */
 #define COMMIT_DONE	0x00000001
@@ -236,7 +235,7 @@ update_read_buf(private,start,end,buf)
     }
 }
     
-Pkg_private int
+Pkg_private void
 es_file_append_error(error_buf, file_name, status)
     char           *error_buf;
     CHAR           *file_name;
@@ -353,7 +352,6 @@ es_file_create(name, options, status)
     int             options;
     Es_status      *status;
 {
-    extern          int fstat();
     Es_handle       esh = NEW(Es_object);
     register Es_file_data private;
     int             open_option;
@@ -1284,7 +1282,6 @@ es_file_make_wchar_file(esh, open_option)
     char            *filename;
     char	    old_filename[MAXNAMLEN];
     int             fd, new_fd, len;
-    extern int	    es_mb_to_wc_fd();
 
     if ((esh == NULL) || (esh->ops != &es_file_ops)) {
 	return(NULL);

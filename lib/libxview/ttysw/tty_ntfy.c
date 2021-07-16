@@ -14,6 +14,19 @@ static char     sccsid[] = "@(#)tty_ntfy.c 20.45 93/06/28";
  * Notifier related routines for the ttysw.
  */
 
+#include <xview_private/tty_ntfy_.h>
+#include <xview_private/cim_size_.h>
+#include <xview_private/csr_change_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/term_ntfy_.h>
+#include <xview_private/tty_main_.h>
+#include <xview_private/ttyselect_.h>
+#include <xview_private/txt_dbx_.h>
+#include <xview_private/txt_disp_.h>
+#include <xview_private/txt_input_.h>
+#include <xview_private/win_damage_.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #include <sys/time.h>
@@ -34,7 +47,6 @@ static char     sccsid[] = "@(#)tty_ntfy.c 20.45 93/06/28";
 #include <xview/rectlist.h>
 #include <xview/win_input.h>
 #include <xview/win_notify.h>
-#include <xview/defaults.h>
 #include <xview/ttysw.h>
 #include <xview/notice.h>
 #include <xview/frame.h>
@@ -55,8 +67,6 @@ static char     sccsid[] = "@(#)tty_ntfy.c 20.45 93/06/28";
 
 #define PTY_OFFSET	(int) &(((Ttysw_folio)0)->ttysw_pty)
 
-extern void     textsw_display();
-
 /* #else */
 #include <xview_private/charimage.h>
 #include <xview_private/charscreen.h>
@@ -66,16 +76,11 @@ extern void     textsw_display();
 #define	TTYSW_USEC_DELAY 100000
 /* Duplicate of what's in ttysw_tio.c */
 
-Notify_value    ttysw_itimer_expired();
-static Notify_value ttysw_pty_output_pending();
-Notify_value    ttysw_pty_input_pending();
-static Notify_value ttysw_prioritizer();
+static Notify_value ttysw_pty_output_pending(Tty tty_public, int pty);
+static Notify_value ttysw_prioritizer(Tty tty_public, register int nfd, fd_set *ibits_ptr, fd_set *obits_ptr, fd_set *ebits_ptr, int nsig, int *sigbits_ptr, register int *auto_sigbits_ptr, int *event_count_ptr, Notify_event *events, Notify_arg *args);
+
 Notify_func     ttysw_cached_pri;	/* Default prioritizer */
 
-extern Notify_value ttysw_text_destroy();	/* Destroy func for termsw */
-extern Notify_value ttysw_text_event();	/* Event func for termsw */
-
-/* static */ void cim_resize();
 
 /*
  * These three procedures are no longer needed because the pty driver bug
@@ -87,7 +92,7 @@ extern Notify_value ttysw_text_event();	/* Event func for termsw */
 /* Accelerator to avoid excessive notifier activity */
 int             ttysw_waiting_for_pty_input;
 /* Accelerator to avoid excessive notifier activity */
-static          ttysw_waiting_for_pty_output;
+static int ttysw_waiting_for_pty_output;
 
 /* shorthand - Duplicate of what's in ttysw_main.c */
 
@@ -236,7 +241,7 @@ ttysw_sendsig(ttysw, textsw, sig)
 	 * this BEFORE killpg, or we'll flush the prompt coming back from the
 	 * shell after the process dies.
 	 */
-	(void) ttysw_flush_input((caddr_t) ttysw);
+	(void) ttysw_flush_input(ttysw);
 
 	if (textsw) {
 	    Termsw_folio    termsw =
@@ -296,7 +301,7 @@ ttysw_display(ttysw, ie)
     Ttysw_folio     ttysw;
     Event	    *ie;
 {
-    if (ttysw_getopt((caddr_t) ttysw, TTYOPT_TEXT)) {
+    if (ttysw_getopt(ttysw, TTYOPT_TEXT)) {
 	textsw_display(TEXTSW_FROM_TTY(ttysw));
     } else {
 	(void) ttysw_prepair(event_xevent(ie));
@@ -351,7 +356,7 @@ ttysw_reset_conditions(ttysw_view)
     /* Toggle between window input and pty output being done */
     termsw = TERMSW_FOLIO_FOR_VIEW(TERMSW_VIEW_PRIVATE_FROM_TTY_PRIVATE(ttysw));
     if ((iwbp > irbp && ttysw_pty_output_ok(ttysw)) ||
-	    (ttysw_getopt((caddr_t) ttysw, TTYOPT_TEXT) && termsw != NULL &&
+	    (ttysw_getopt(ttysw, TTYOPT_TEXT) && termsw != NULL &&
 	    termsw->pty_eot > -1)) {
 	if (!ttysw_waiting_for_pty_output) {
 	    /* Wait for output to complete on pty */
@@ -390,7 +395,7 @@ ttysw_reset_conditions(ttysw_view)
      * Try to optimize displaying by waiting for image to be completely
      * filled after being cleared (vi(^F ^B) page) before painting.
      */
-    if (!ttysw_getopt((caddr_t) ttysw, TTYOPT_TEXT) && delaypainting)
+    if (!ttysw_getopt(ttysw, TTYOPT_TEXT) && delaypainting)
 	(void) notify_set_itimer_func((Notify_client) (TTY_PUBLIC(ttysw)),
 				      ttysw_itimer_expired,
 				ITIMER_REAL, &ttysw_itimerval, ITIMER_NULL);
@@ -475,9 +480,9 @@ ttysw_resize(ttysw_view)
      * Turn off page mode because send characters through character image
      * manager during resize.
      */
-    pagemode = ttysw_getopt((caddr_t) ttysw, TTYOPT_PAGEMODE);
-    (void) ttysw_setopt((caddr_t) ttysw, TTYOPT_PAGEMODE, 0);
-    if (ttysw_getopt((caddr_t) ttysw, TTYOPT_TEXT)) {
+    pagemode = ttysw_getopt(ttysw, TTYOPT_PAGEMODE);
+    (void) ttysw_setopt(ttysw, TTYOPT_PAGEMODE, 0);
+    if (ttysw_getopt(ttysw, TTYOPT_TEXT)) {
 	(void) xv_tty_new_size(ttysw, textsw_screen_column_count(TTY_PUBLIC(ttysw)),
 			       textsw_screen_line_count(TTY_PUBLIC(ttysw)));
     } else {
@@ -492,7 +497,7 @@ ttysw_resize(ttysw_view)
 	}
     }
     /* Turn page mode back on */
-    (void) ttysw_setopt((caddr_t) ttysw, TTYOPT_PAGEMODE, pagemode);
+    (void) ttysw_setopt(ttysw, TTYOPT_PAGEMODE, pagemode);
 }
 
 /* BUG ALERT: No XView prefix */

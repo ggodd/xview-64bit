@@ -32,7 +32,7 @@ Xv_private int	(*xv_take_breakpoint)();
 
 Xv_private int		xv_ask_for_debugger, xv_got_debugger;
 Xv_private unsigned char	xv_debug_flags[];
-Xv_private int		xv_set_debug_flag();
+Xv_private int xv_set_debug_flag(int flag, int bool);
 #define DEBUG_FLAG_ON(flag)	\
 	(xv_debug_flags[((unsigned)(flag))/8] & \
 	 (0x80>>(((unsigned)(flag))%8)) )

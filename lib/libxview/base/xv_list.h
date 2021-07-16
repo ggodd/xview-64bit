@@ -62,18 +62,6 @@ typedef Xv_sl_link		 Xv_sl_head;
 	for (_this = _head, _next = XV_SL_SAFE_NEXT(_this); \
 		 _this; _this = _next, _next = XV_SL_SAFE_NEXT(_this))
 
-Xv_private void
-xv_sl_init();
-
-Xv_private Xv_sl_link
-xv_sl_add_after();
-
-Xv_private Xv_sl_link
-xv_sl_remove_after();
-
-Xv_private Xv_sl_link
-xv_sl_remove();
-
 /* Following assume xv_sl_link is aligned at start of embedding struct. */
 #define XV_SL_TO_LINK(_formal)	((Xv_sl_link)(_formal))
 #define XV_SL_TO_HEAD(_formal)	((Xv_sl_head)(_formal))

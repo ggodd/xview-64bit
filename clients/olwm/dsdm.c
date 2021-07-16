@@ -111,6 +111,17 @@ static int SitesFound = 0;
 static Time selectionTime;
 static Bool selectionOwned = False;
 
+static void *GetInterestProperty(Display *dpy, Window win, unsigned long *nitems);
+static Region MakeRegionFromRect(int x, int y, unsigned int w, unsigned int h);
+static Region GetWindowRegion(Display *dpy, WinGeneric *winInfo, Bool offset);
+static void SubtractWindowFromVisibleRegion(Display *dpy, Window winInfo, Region visrgn);
+static void ProcessInterestProperty(Display *dpy, WinGeneric* winInfo, int screen, void *data, unsigned long datalen, Region visrgn, int xoff, int yoff);
+static void FindDropSites(Display *dpy);
+static void FreeDropSites(void);
+static void WriteSiteRectList(Display *dpy, Window win, Atom prop);
+static Bool convertTarget(Display *dpy, Window requestor, Atom target, Atom property);
+static void handleDSDMrequest(XEvent *event);
+
 /* ===== regions ========================================================== */
 
 /*

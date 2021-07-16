@@ -10,7 +10,11 @@ static char     sccsid[] = "@(#)scrn_vis.c 20.23 93/06/28";
  *	file for terms of the license.
  */
 
-#include <xview_private/scrn_impl.h>
+#include <xview_private/scrn_vis_.h>
+#include <xview_private/scrn_vis_.h>
+#include <xview_private/cms_.h>
+#include <xview_private/windowlayt_.h>
+#include <xview_private/xv_.h>
 #include <xview/server.h>
 
 
@@ -81,8 +85,6 @@ screen_new_visual(display, screen, xid, depth, visual_info)
     unsigned int depth;
     XVisualInfo *visual_info;
 {
-    Xv_private Xv_opaque cms_default_colormap();
-
     Screen_visual      *visual;
     GC			gc;
     XGCValues       	gc_values;

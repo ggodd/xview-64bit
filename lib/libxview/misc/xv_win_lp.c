@@ -15,6 +15,12 @@ static char     sccsid[] = "@(#)xv_win_lp.c 1.11 93/06/28";
  * Distribution: Restricted
  */
 
+#include <xview_private/xv_win_lp_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/ndisdispch_.h>
+#include <xview_private/ndisdsched_.h>
+#include <xview_private/win_input_.h>
+#include <xview_private/windowutil_.h>
 #include <X11/Xlib.h>
 #include <xview_private/i18n_impl.h>
 #include <xview_private/ntfy.h> /* must appear before notify.h */
@@ -30,8 +36,6 @@ static Frame		xv_loop_frame = (Frame)NULL;
 static Xv_opaque	xv_return;
 
 static int count = 0; /* Keep track of modal count */
-
-extern Notify_func	notify_set_scheduler_func();
 
 Xv_public Xv_opaque
 xv_window_loop(frame)
@@ -62,7 +66,7 @@ printf("save_loop_frame = %lx\n", (unsigned long)save_loop_frame);
      * to false
      */
     if (save_loop_frame)  {
-	 if (window_set_tree_flag(save_loop_frame, NULL, FALSE, FALSE) != XV_OK)  {
+	 if (window_set_tree_flag(save_loop_frame, 0, FALSE, FALSE) != XV_OK)  {
             xv_error(save_loop_frame,
                     ERROR_STRING,
                         XV_MSG("xv_window_loop : Attempt to unblock input to windows failed (1)"),
@@ -76,7 +80,7 @@ printf("save_loop_frame = %lx\n", (unsigned long)save_loop_frame);
      * so that during xv_window_loop they will be the only
      * non-deaf windows
      */
-    if (window_set_tree_flag(frame, NULL, FALSE, TRUE) != XV_OK)  {
+    if (window_set_tree_flag(frame, 0, FALSE, TRUE) != XV_OK)  {
         xv_error(frame,
                 ERROR_STRING,
                     XV_MSG("xv_window_loop : Attempt to block input to windows failed"),
@@ -180,7 +184,7 @@ printf("save_loop_frame = %lx\n", (unsigned long)save_loop_frame);
      * Unset window_loop flag for frame and its subwindows
      */
 if (--count)
-    if (window_set_tree_flag(frame, NULL, FALSE, FALSE) != XV_OK)  {
+    if (window_set_tree_flag(frame, 0, FALSE, FALSE) != XV_OK)  {
         xv_error(frame,
                 ERROR_STRING,
                     XV_MSG("xv_window_loop : Attempt to unblock input to windows failed (2)"),
@@ -200,7 +204,7 @@ if (--count)
      * xv_window_loop() once again.
      */
     if (save_loop_frame)  {
-        if (window_set_tree_flag(save_loop_frame, NULL, FALSE, TRUE) != XV_OK)  {
+        if (window_set_tree_flag(save_loop_frame, 0, FALSE, TRUE) != XV_OK)  {
             xv_error(save_loop_frame,
                     ERROR_STRING,
                         XV_MSG("xv_window_loop : Attempt to block input to windows failed"),

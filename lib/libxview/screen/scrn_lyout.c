@@ -10,8 +10,10 @@ static char     sccsid[] = "@(#)scrn_lyout.c 20.26 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/scrn_lyout_.h>
+#include <xview_private/windowlayt_.h>
+#include <xview_private/win_geom_.h>
 #include <stdio.h>
-#include <xview_private/scrn_impl.h>
 #include <xview/rect.h>
 #include <xview/frame.h>
 #include <xview/win.h>
@@ -26,7 +28,7 @@ screen_layout(root, child, op, d1, d2, d3, d4, d5)
     register Xv_Window child;
     Window_layout_op op;
 /* Alpha compatibility, mbuck@debian.org */
-#if defined(__alpha) || defined(__x86_64__) || defined(_XV_API_BROKEN_64BIT)
+#if defined(__alpha) || defined(__x86_64__) || defined(_XV_API_BROKEN_64BIT) || defined(__amd64__)
     unsigned long *d1, *d2, *d3, *d4, *d5;
 #endif
 {
@@ -40,7 +42,7 @@ screen_layout(root, child, op, d1, d2, d3, d4, d5)
      */
     if (!top_level)
 	return (op == WIN_CREATE) ?
-	    FALSE : window_layout(root, child, op, d1, d2, d3, d4, d5);
+	    FALSE : window_layout(root, child, op, (Xv_opaque)d1, (Xv_opaque)d2, (Xv_opaque)d3, (Xv_opaque)d4, (Xv_opaque)d5);
 
     switch (op) {
       case WIN_CREATE:
@@ -97,6 +99,6 @@ screen_layout(root, child, op, d1, d2, d3, d4, d5)
 					  (Attr_attribute)WIN_LAYOUT_PROC);
 	result = layout_proc(root, child, op, d1, d2, d3, d4, d5);
     } else
-        result = window_layout(root, child, op, d1, d2, d3, d4, d5);
+        result = window_layout(root, child, op, (Xv_opaque)d1, (Xv_opaque)d2, (Xv_opaque)d3, (Xv_opaque)d4, (Xv_opaque)d5);
     return result;
 }

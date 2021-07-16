@@ -9,7 +9,9 @@ static char     sccsid[] = "@(#)font_data.c 1.15 93/06/28";
  *	pending in the U.S. and foreign countries. See LEGAL NOTICE 
  *	file for terms of the license.
  */
-#include <xview_private/font_impl.h>
+#include <xview_private/font_.h>
+#include <xview_private/font_set_.h>
+#include <xview_private/font_get_.h>
 
 Xv_pkg          xv_font_pkg = {
     "Font", ATTR_PKG_FONT,

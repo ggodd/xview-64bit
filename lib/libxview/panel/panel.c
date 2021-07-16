@@ -10,24 +10,26 @@ static char     sccsid[] = "@(#)panel.c 20.84 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/panel_.h>
+#include <xview_private/defaults_.h>
+#include <xview_private/p_event_.h>
+#include <xview_private/p_paint_.h>
+#include <xview_private/p_view_.h>
+#include <xview_private/win_input_.h>
+#include <xview_private/xv_.h>
 #include <X11/X.h>
-#include <xview_private/panel_impl.h>
 #include <xview_private/draw_impl.h>
 #include <xview/font.h>
-#include <xview/defaults.h>
 #include <xview/notify.h>
 #include <xview/server.h>
 
-#ifdef OW_I18N
-Xv_private void _xv_status_start(), _xv_status_done(), _xv_status_draw();
-#endif /* OW_I18N */
-Xv_private void	win_set_no_focus();
-Pkg_private int panel_init();
-Pkg_private int panel_view_init();
-Pkg_private int panel_destroy();
 
-static int panel_layout();
-static int panel_unregister_view();
+#if defined(__alpha) || defined(__x86_64__) || defined(__amd64__)
+static int panel_layout(Panel panel_public, Xv_Window child, Window_layout_op op, unsigned long d1, unsigned long d2, unsigned long d3, unsigned long d4, unsigned long d5);
+#else
+static int panel_layout(Panel panel_public, Xv_Window child, Window_layout_op op, int d1, int d2, int d3, int d4, int d5);
+#endif
+static int panel_unregister_view(Panel_info *panel,Xv_Window view);
 
 #ifndef __linux__
 Xv_private_data Defaults_pairs xv_kbd_cmds_value_pairs[4];
@@ -47,8 +49,6 @@ static Defaults_pairs shiftmasks[] = {
 };
 
 Attr_attribute  panel_context_key;
-
-static panel_unregister_view(Panel_info *panel, Xv_Window view);
 
 /*ARGSUSED*/
 Pkg_private int
@@ -92,7 +92,7 @@ panel_init(parent, panel_public, avlist)
 	SERVER_ATOM, "_SUN_SELECTION_END");
     panel->atom.seln_yield = (Atom) xv_get(server,
 	SERVER_ATOM, "_SUN_SELN_YIELD"); /* for SunView1 selection clients */
-    panel->caret = NULL;
+    panel->caret = 0;
     panel->caret_on = FALSE;
     panel->current_col_x = PANEL_ITEM_X_START;
     panel->drag_threshold = defaults_get_integer("openWindows.dragThreshold",
@@ -289,7 +289,7 @@ panel_destroy(panel_public, status)
 }
 
 
-static
+static int
 panel_layout(panel_public, child, op, d1, d2, d3, d4, d5)
     Panel           panel_public;
     Xv_Window       child;

@@ -111,8 +111,14 @@ typedef struct es_ops	*Es_ops;
 #define es_replace(esh, last_plus_one, count, buf, count_used)		\
 	(*(esh)->ops->replace)(						\
 	  (esh), (last_plus_one), (count), (buf), (count_used))
+
+#include <xview/macros.h>
+
+#define es_set(...) \
+    MACRO_DEF1(_es_set, Es_handle, __VA_ARGS__)
+
 /* VARARGS */
-EXTERN_FUNCTION( int es_set, (Es_handle esh, DOTDOTDOT ));
+EXTERN_FUNCTION( int _es_set, (Es_handle esh, DOTDOTDOT ));
 
 /*	  ES_STATUS accesses the entity_stream equivalent of errno, but this
  *	status is per instance, not global.  Caller must explicitly clear.

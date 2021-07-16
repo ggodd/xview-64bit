@@ -8,10 +8,11 @@
  * OPEN LOOK object drawing package Sun Microsystems, Inc.
  */
 
+#include <olgx_private/ol_draw_.h>
+#include <olgx_private/ol_button_.h>
+#include <olgx_private/ol_init_.h>
 #include <stdio.h>
 #include <X11/Xlib.h>
-
-#include "olgx_impl.h"
 
 int
 calc_add_ins(width, add_ins)

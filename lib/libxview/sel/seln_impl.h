@@ -223,17 +223,5 @@ typedef struct {
 
 #define SELN_REPORT(event)	seln_report_event(0, event)
 
-/*	routines to manipulate the function-key state		*/
-
-Pkg_private Seln_result seln_get_reply_buffer();
-Pkg_private Seln_result seln_send_yield();
-Pkg_private void 	seln_init_reply();
-Pkg_private Seln_rank	selection_to_rank();
-Pkg_private Atom	seln_rank_to_selection();
-Pkg_private void	selection_agent_get_holder();
-Pkg_private int		seln_equal_agent();
-Pkg_private Xv_opaque	seln_agent_client();
-
-Pkg_private int		seln_equal_access();
 
 #endif

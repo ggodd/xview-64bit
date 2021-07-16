@@ -57,11 +57,6 @@
 #define MENU_MAX_FRAMES 10
 /* ACC_XVIEW */
 
-
-/***** Procedures *****/
-Pkg_private int menu_create_internal(), menu_destroy_internal();
-
-
 /***** Enumerations *****/
 typedef enum {
     MENU_STATUS_PIN = -2,
@@ -302,11 +297,5 @@ typedef struct menu_item {
     unsigned	toggle_feedback_on:1;
 
 }  Xv_menu_item_info;
-
-#ifdef __STDC__
-Pkg_private int compute_item_size(Xv_menu_info *menu, struct image *std_image, int *status, int call_gen_proc);
-#else
-Pkg_private int compute_item_size();
-#endif
 
 #endif /* _xview_walkmenu_impl_h_already_included */

@@ -16,6 +16,7 @@ static char     sccsid[] = "@(#)mem.c 1.22 93/06/28";
  * "/usr/src/usr.lib/libpixrect/mem/mem.c".
  */
 
+#include <xview_private/mem_.h>
 #include <sys/types.h>
 #include <pixrect/pixrect.h>
 #include <pixrect/pr_impl_make.h>
@@ -33,8 +34,6 @@ static char     sccsid[] = "@(#)mem.c 1.22 93/06/28";
 #ifdef i386
 extern struct pixrectops mem_ops;
 #endif /* i386 */
-static int      xv_pr_error();
-int             xv_mem_destroy();
 
 /*
  * Default patterns for pw_line and pw_polyline.

@@ -11,24 +11,12 @@ static char     sccsid[] = "@(#)fc_layout.c 1.15 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/fc_layout_.h>
 #include <stdio.h>
 #include <xview/xview.h>
 #include <xview/font.h>
 #include <xview/panel.h>
 #include <xview/scrollbar.h>
-#include <xview_private/fchsr_impl.h>
-
-
-static void	fc_calc_xs();
-static int	fc_calc_ys();
-static int	fc_calc_ys_top_down();
-static int	fc_calc_ys_bottom_up();
-static int	fc_recalc_ys();
-static int	fc_calc_min_width();
-static int	fc_calc_min_height();
-static int	fc_calc_default_width();
-static int	fc_calc_default_height();
-
 
 /*
  * Substitute for xv_rows/xv_cols, since they may do xv_get
@@ -336,7 +324,8 @@ fc_recalc_ys( private, top, exten_rect )
     int max_exten;
     Rect *list_rect;
 
-    top_of_bottom = fc_calc_ys_bottom_up( private, exten_rect );
+    /*top_of_bottom = fc_calc_ys_bottom_up( private, exten_rect );*/
+    top_of_bottom = fc_calc_ys_bottom_up( private );
 
     list_row_height = (int) xv_get(private->ui.list, PANEL_LIST_ROW_HEIGHT);
 

@@ -14,11 +14,10 @@ static char     sccsid[] = "@(#)ndet_wait.c 20.12 93/06/28 Copyr 1985 Sun Micro"
  * Ndet_wait.c - Implement wait3 specific calls.
  */
 
-#include <xview_private/ntfy.h>
+#include <xview_private/ndet_wait_.h>
+#include <xview_private/ntfy_debug_.h>
 #include <xview_private/ndet.h>
 #include <errno.h>
-
-extern          errno;
 
 pkg_private int
 ndet_check_pid(pid)

@@ -32,18 +32,21 @@
 #include "selection.h"
 #include "client.h"
 #include "kbdfuncs.h"
+#include "winnofoc.h"
+#include "virtual.h"
+#include "info.h"
+#include "virtual.h"
+#include "wincolor.h"
 
-extern unsigned int FindModifierMask();
 extern Atom AtomOlwmNoFocusWin;
 extern Atom AtomProtocols;
 extern Atom AtomTakeFocus;
-extern void ClientSetCurrent();
 
 /***************************************************************************
 * global data
 ***************************************************************************/
 
-Window NoFocusWin = NULL;
+Window NoFocusWin = (Window)NULL;
 WinNoFocus *NoFocusWinInfo;
 
 /***************************************************************************
@@ -51,6 +54,11 @@ WinNoFocus *NoFocusWinInfo;
 ***************************************************************************/
 
 static 	ClassNoFocus 	classNoFocus;
+
+static int destroyNoFocus(Display* dpy, WinGeneric *winInfo);
+static int eventClientMessage(Display* dpy, XEvent *event, WinNoFocus *winInfo);
+static int eventSelection(Display* dpy, XEvent *pEvent, WinNoFocus *winInfo);
+static int NoFocusKey(Display* dpy, XEvent *event, WinGeneric *winInfo);
 
 /***************************************************************************
 * private functions
@@ -191,11 +199,11 @@ NoFocusInit(dpy)
 Display *dpy;
 {
 	classNoFocus.core.kind = WIN_NOFOCUS;
-	classNoFocus.core.xevents[ButtonPress] = NoFocusEventBeep;
-	classNoFocus.core.xevents[ButtonRelease] = NoFocusEventBeep;
+	classNoFocus.core.xevents[ButtonPress] = (FuncPtr)NoFocusEventBeep;
+	classNoFocus.core.xevents[ButtonRelease] = (FuncPtr)NoFocusEventBeep;
 	classNoFocus.core.xevents[KeyPress] = NoFocusKey;  /*NoFocusEventBeep;
 	classNoFocus.core.xevents[KeyRelease] = NoFocusEventBeep; */
-	classNoFocus.core.xevents[ClientMessage] = eventClientMessage;
+	classNoFocus.core.xevents[ClientMessage] = (FuncPtr)eventClientMessage;
 	classNoFocus.core.xevents[SelectionRequest] = eventSelection;
 	classNoFocus.core.xevents[SelectionClear] = eventSelection;
 	classNoFocus.core.focusfunc = NULL;
@@ -225,14 +233,14 @@ ScreenInfo *scrInfo;
 	ClientSetCurrent(NoFocusWinInfo->core.client);
 	ClientDefaultWindowState(dpy);
 	if (scrInfo != NULL && GRV.ColorTracksInputFocus)
-	    InstallDefaultColormap(dpy, scrInfo->rootwin, True);
+	    InstallDefaultColormap(dpy, (WinGeneric *)scrInfo->rootwin, True);
 }
 
 /*
  * NoFocusEventBeep -- beep on keyboard/mouse events for the no-focus window
  *	Also used by busy windows
  */
-int
+void
 NoFocusEventBeep(dpy, event, winInfo)
 Display	*dpy;
 XEvent	*event;

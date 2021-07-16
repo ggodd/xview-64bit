@@ -14,9 +14,25 @@ static char     sccsid[] = "@(#)txt_file.c 20.81 93/06/28";
  * File load/save/store utilities for text subwindows.
  */
 
+#include <xview_private/txt_file_.h>
+#include <xview_private/es_file_.h>
+#include <xview_private/ev_edit_.h>
+#include <xview_private/es_mem_.h>
+#include <xview_private/getlogindr_.h>
+#include <xview_private/gettext_.h>
+#include <xview_private/txt_attr_.h>
+#include <xview_private/txt_disp_.h>
+#include <xview_private/txt_edit_.h>
+#include <xview_private/txt_event_.h>
+#include <xview_private/txt_input_.h>
+#include <xview_private/txt_once_.h>
+#include <xview_private/txt_popup_.h>
+#include <xview_private/txt_scroll_.h>
+#include <xview_private/txt_sel_.h>
+#include <xview_private/txt_selsvc_.h>
+#include <xview_private/xv_.h>
 #include <stdio.h>			/* sprintf() */
 #include <xview_private/primal.h>
-#include <xview_private/txt_impl.h>
 #include <xview_private/ev_impl.h>
 #include <xview_private/txt_18impl.h>
 #if defined(SVR4) || defined(__linux__)
@@ -48,24 +64,6 @@ static char     sccsid[] = "@(#)txt_file.c 20.81 93/06/28";
 	if ((unsigned)(to_test) != 0) (flags) |= (flag);	\
 	else (flags) &= ~(flag)
 
-#if defined(SVR4) || defined(__linux__)
-
-#ifdef __STDC__
-extern char    *getcwd(char *buf, size_t size);
-#else
-extern char    *getcwd();
-#endif
-
-#else
-
-#ifdef __STDC__
-extern char    *getwd(char *buf);
-#else
-extern char    *getwd();
-#endif
-
-#endif /* SVR4 */
-
 #if defined(__linux__) && defined(__GLIBC__)
 /* martin.buck@bigfoot.com */
 #include <errno.h>
@@ -74,18 +72,24 @@ extern int      errno, sys_nerr;
 extern char    *sys_errlist[];
 #endif
 
-Pkg_private int textsw_change_directory();
-Pkg_private void textsw_display(), textsw_display_view_margins();
-Pkg_private void textsw_input_before();
-Pkg_private void textsw_init_undo(), textsw_replace_esh();
-Pkg_private Es_index textsw_input_after();
-Pkg_private Es_status es_copy();
+static void textsw_make_temp_name(CHAR *in_here);
+static Es_status textsw_save_store_common(register Textsw_folio folio, CHAR *output_name, int reload);
+static Es_status textsw_save_internal(register Textsw_folio folio, char *error_buf, int locx, int locy);
 #ifdef OW_I18N
-Pkg_private void textsw_invalid_data_notice();
+static Es_status textsw_get_from_fd(register Textsw_view_handle view, int fd, int print_error_msg, CHAR *filename);
+#else
+static Es_status textsw_get_from_fd(register Textsw_view_handle view, int fd, int print_error_msg);
 #endif
-char *xv_getlogindir();
+static unsigned textsw_store_file_internal(Textsw abstract, CHAR *filename, int locx, int locy);
+#ifdef SVR4
+static Es_status textsw_checkpoint_internal(Textsw_folio folio);
+#endif 
+#if defined(DEBUG) && !defined(lint)
+static void debug_dump_fds(FILE *stream);
+#endif
 
 static unsigned tmtn_counter;
+
 static void
 textsw_make_temp_name(in_here)
     CHAR           *in_here;
@@ -159,7 +163,6 @@ textsw_create_file_ps(folio, name, scratch_name, status)
 #ifdef OW_I18N
     char           *scratch_name_mbs;
 #endif
-    Pkg_private Es_handle es_file_create();
     register Es_handle original_esh, scratch_esh, piece_esh;
 
     original_esh = es_file_create(name, 0, status);
@@ -317,7 +320,6 @@ textsw_create_mem_ps(folio, original)
     Textsw_folio    folio;
     register Es_handle original;
 {
-    Pkg_private Es_handle es_mem_create();
     register Es_handle scratch;
     Es_status       status;
     Es_handle       ps_esh = ES_NULL;
@@ -628,7 +630,6 @@ textsw_save_store_common(folio, output_name, reload)
     register Es_handle output;
     Es_status       result;
     Es_index        length;
-    Pkg_private Es_handle es_file_create();
 
     output = es_file_create(output_name, ES_OPT_APPEND, &result);
     if (!output)
@@ -655,7 +656,7 @@ textsw_save_store_common(folio, output_name, reload)
 	if (reload) {
 	    result = textsw_load_file_internal(
 				 folio, output_name, scratch_name, &new_esh,
-					       ES_CANNOT_SET, NULL);
+					       ES_CANNOT_SET, 0);
 	    if ((result == ES_SUCCESS) &&
 		(length != es_get_length(new_esh))) {
 		/* Added a newline - repaint to fix line tables */
@@ -768,7 +769,6 @@ textsw_save_internal(folio, error_buf, locx, locy)
     char           *error_buf;
     int             locx, locy;	/* Currently unused */
 {
-    Pkg_private Es_handle es_file_make_backup();
     CHAR            original_name[MAXNAMLEN], *name;
     register char  *msg;
     Es_handle       backup, original = ES_NULL;
@@ -1000,7 +1000,7 @@ textsw_get_from_fd(view, fd, print_error_msg)
     return (result);
 }
 
-Pkg_private int
+Pkg_private void
 textsw_cd(textsw, locx, locy)
     Textsw_folio    textsw;
     int             locx, locy;
@@ -1063,7 +1063,7 @@ textsw_get_from_file(view, filename, print_error_msg)
 }
 
 
-Pkg_private int
+Pkg_private void
 textsw_file_stuff(view, locx, locy)
     Textsw_view_handle view;
     int             locx, locy;
@@ -1173,6 +1173,7 @@ InternalError:
             NULL);
     }
 }
+
 Pkg_private     Textsw_status
 textsw_file_stuff_from_str(view, buf, locx, locy)
     Textsw_view_handle view;
@@ -1582,12 +1583,6 @@ textsw_reset_2(abstract, locx, locy, preserve_memory, cmd_is_undo_all_edit)
     int             cmd_is_undo_all_edit;	/* This is for doing an "Undo
 						 * All edit" */
 {
-#ifndef SVR4
-    pkg_private Es_status textsw_checkpoint_internal();
-#else /* SVR4 */
-    static Es_status textsw_checkpoint_internal();
-#endif /* SVR4 */
-    Pkg_private Es_handle es_mem_create();
     Es_handle       piece_esh, old_original_esh, new_original_esh;
 #ifdef OW_I18N
     CHAR           *name, save_name[MAXNAMLEN], scratch_name[MAXNAMLEN];
@@ -1599,7 +1594,7 @@ textsw_reset_2(abstract, locx, locy, preserve_memory, cmd_is_undo_all_edit)
     Textsw_folio    folio = FOLIO_FOR_VIEW(VIEW_ABS_TO_REP(abstract));
     register int    old_count = folio->again_count;
     int             old_memory_length = 0;
-    int             wrap_around_size = (int) es_get(
+    int             wrap_around_size = (int)(long)es_get(
 				  folio->views->esh, ES_PS_SCRATCH_MAX_LEN);
     short           is_readonly = TXTSW_IS_READ_ONLY(folio);	/* jcb */
 
@@ -1689,7 +1684,7 @@ textsw_reset_2(abstract, locx, locy, preserve_memory, cmd_is_undo_all_edit)
     }
 Return:
     (void) textsw_set_insert(folio, 0L);
-    textsw_init_again(folio, NULL);
+    textsw_init_again(folio, 0);
     textsw_init_again(folio, old_count);	/* restore number of again
 						 * level */
     (void) es_set(folio->views->esh,
@@ -2138,7 +2133,7 @@ textsw_file_name(textsw, name)
 	return (2);
     if ((*name = (CHAR *) es_get(original, ES_NAME)) == NULL)
 	return (3);
-    if (name[0] == '\0')
+    if (name[0] == NULL)
 	return (4);
     return (0);
 }
@@ -2446,7 +2441,6 @@ static     Es_status
 textsw_checkpoint_internal(folio)
     Textsw_folio    folio;
 {
-    Pkg_private Es_handle es_file_create();
     Es_handle       cp_file;
     Es_status       result;
 
@@ -2695,7 +2689,8 @@ textsw_handle_esc_accelerators(abstract, ie)
 {
     register Textsw_view_handle view = VIEW_ABS_TO_REP(abstract);
     register Textsw_folio textsw = FOLIO_FOR_VIEW(view);
-    CHAR            dummy[1024];
+    /*fgao CHAR            dummy[1024];*/
+    CHAR* dummy;
 
     if (event_shift_is_down(ie)) {	/* select & include current line */
 	unsigned        span_to_beginning_flags =
@@ -2753,7 +2748,7 @@ textsw_handle_esc_accelerators(abstract, ie)
 	    (void) textsw_create_popup_frame(view, (int) TEXTSW_MENU_FILE_STUFF);
 	}
 
-    } else if (0 == textsw_file_name(textsw, dummy)) {
+    } else if (0 == textsw_file_name(textsw, &dummy)) {
 	if (TXTSW_IS_READ_ONLY(textsw))
 	    return (0);
 	return (1);

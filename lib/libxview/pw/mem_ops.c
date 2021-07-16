@@ -10,13 +10,14 @@ static char     sccsid[] = "@(#)mem_ops.c 1.19 93/06/28";
  *	file for terms of the license.
  */
 
+#include <xview_private/mem_.h>
+#include <xview_private/gettext_.h>
 #include <sys/types.h>
 #include <pixrect/pixrect.h>
 #include <xview_private/i18n_impl.h>
 #include <xview/xv_error.h>
 
-extern int      xv_mem_destroy();
-static int      xv_pr_error();
+static int xv_pr_error(Pixrect *pr);
 
 /*
  * "Pixrect" operations vector
