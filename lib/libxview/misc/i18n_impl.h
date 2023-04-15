@@ -48,7 +48,7 @@
 #define	xv_domain		XV_TEXT_DOMAIN
 #else  /* XGETTEXT */
 /* Initial value assigned at xv_init.c */
-Xv_private_data CONST char	*xv_domain;
+Xv_private_data extern CONST char	*xv_domain;
 #endif /* XGETTEXT */
 
 #define XV_MSG(s)		(dgettext(xv_domain, s))
